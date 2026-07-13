@@ -1,0 +1,303 @@
+package com.example.viewmodel
+
+import android.app.Application
+import android.content.Context
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.viewModelScope
+import com.example.data.AppDatabase
+import com.example.data.CommunicationLog
+import com.example.data.Relative
+import com.example.data.RelativeRepository
+import com.example.data.QuickTemplate
+import com.example.data.FamilyMemory
+import androidx.work.Data
+import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.PeriodicWorkRequestBuilder
+import androidx.work.WorkManager
+import com.example.work.ReminderWorker
+import java.util.concurrent.TimeUnit
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
+
+class RelativeViewModel(application: Application) : AndroidViewModel(application) {
+
+    private val db = AppDatabase.getDatabase(application, viewModelScope)
+    private val repository = RelativeRepository(
+        db.relativeDao(),
+        db.communicationLogDao(),
+        db.quickTemplateDao(),
+        db.familyMemoryDao()
+    )
+
+    // Raw database state flows
+    val relatives: StateFlow<List<Relative>> = repository.allRelatives
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    val logs: StateFlow<List<CommunicationLog>> = repository.allLogs
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    val templates: StateFlow<List<QuickTemplate>> = repository.allTemplates
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    val memories: StateFlow<List<FamilyMemory>> = repository.allMemories
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    // Search & Filter state
+    val searchQuery = MutableStateFlow("")
+    val selectedCategory = MutableStateFlow("الكل") // "الكل", "والدان", "أشقاء", "أعمام/أخوال", "أقارب آخرون"
+
+    // Filtered Relatives Flow
+    val filteredRelatives: StateFlow<List<Relative>> = combine(
+        relatives,
+        searchQuery,
+        selectedCategory
+    ) { relativesList, query, category ->
+        relativesList.filter { relative ->
+            val matchesSearch = relative.name.contains(query, ignoreCase = true) || 
+                                relative.phone.contains(query)
+            val matchesCategory = category == "الكل" || relative.relationshipDegree == category
+            matchesSearch && matchesCategory
+        }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    // UI triggers/States for Dialogs and Forms
+    val showAddRelativeDialog = MutableStateFlow(false)
+    val showSettingsDialog = MutableStateFlow(false)
+    val showImportContactsDialog = MutableStateFlow(false)
+    val showRecordLogDialog = MutableStateFlow<Relative?>(null)
+    val showLogsHistoryDialog = MutableStateFlow<Relative?>(null)
+    val showQuickTemplatesDialog = MutableStateFlow<Relative?>(null)
+    val showSetReminderDialog = MutableStateFlow<Relative?>(null)
+
+    // Dark mode state persisted in SharedPreferences
+    private val prefs = application.getSharedPreferences("app_settings", Context.MODE_PRIVATE)
+    val isDarkMode = MutableStateFlow(prefs.getBoolean("dark_mode", false))
+
+    fun toggleDarkMode(enabled: Boolean) {
+        isDarkMode.value = enabled
+        prefs.edit().putBoolean("dark_mode", enabled).apply()
+    }
+
+    // Font selection state persisted in SharedPreferences
+    val selectedFont = MutableStateFlow(prefs.getString("selected_font", "Thamanyah") ?: "Thamanyah")
+
+    fun selectFont(fontName: String) {
+        selectedFont.value = fontName
+        prefs.edit().putString("selected_font", fontName).apply()
+    }
+
+    // Contact importing state
+    val deviceContacts = MutableStateFlow<List<Triple<String, String, Boolean>>>(emptyList())
+    val isLoadingContacts = MutableStateFlow(false)
+
+    // Load actual device contacts using ContentResolver
+    fun fetchDeviceContacts(context: Context) {
+        viewModelScope.launch(Dispatchers.IO) {
+            isLoadingContacts.value = true
+            val contactsList = mutableListOf<Triple<String, String, Boolean>>()
+            try {
+                val contentResolver = context.contentResolver
+                val uri = android.provider.ContactsContract.CommonDataKinds.Phone.CONTENT_URI
+                val projection = arrayOf(
+                    android.provider.ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME,
+                    android.provider.ContactsContract.CommonDataKinds.Phone.NUMBER,
+                    "account_type"
+                )
+                contentResolver.query(uri, projection, null, null, null)?.use { cursor ->
+                    val nameIndex = cursor.getColumnIndex(android.provider.ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME)
+                    val numberIndex = cursor.getColumnIndex(android.provider.ContactsContract.CommonDataKinds.Phone.NUMBER)
+                    val accountTypeIndex = cursor.getColumnIndex("account_type")
+                    while (cursor.moveToNext()) {
+                        if (nameIndex != -1 && numberIndex != -1) {
+                            val name = cursor.getString(nameIndex) ?: ""
+                            val number = cursor.getString(numberIndex) ?: ""
+                            val accountType = if (accountTypeIndex != -1) cursor.getString(accountTypeIndex) else null
+                            val isGoogle = accountType?.contains("google", ignoreCase = true) == true
+                            if (name.isNotEmpty() && number.isNotEmpty()) {
+                                contactsList.add(Triple(name, number, isGoogle))
+                            }
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+            // Sort, remove duplicates, and update state
+            deviceContacts.value = contactsList
+                .distinctBy { it.second.replace("\\s|-|\\(|\\)".toRegex(), "") }
+                .sortedBy { it.first }
+            isLoadingContacts.value = false
+        }
+    }
+
+    // Insert functions
+    fun addRelative(name: String, phone: String, relationshipDegree: String, intervalDays: Int, notes: String) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val relative = Relative(
+                name = name,
+                phone = phone,
+                relationshipDegree = relationshipDegree,
+                contactIntervalDays = intervalDays,
+                notes = notes
+            )
+            val id = repository.insertRelative(relative)
+            scheduleReminderForRelative(relative.copy(id = id.toInt()))
+        }
+    }
+
+    fun deleteRelative(relative: Relative) {
+        viewModelScope.launch(Dispatchers.IO) {
+            repository.deleteRelative(relative)
+            cancelReminderForRelative(relative.id)
+        }
+    }
+
+    fun scheduleReminderForRelative(relative: Relative) {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val workManager = WorkManager.getInstance(getApplication())
+                val data = Data.Builder()
+                    .putString("relative_name", relative.name)
+                    .putInt("relative_id", relative.id)
+                    .build()
+
+                val workRequest = PeriodicWorkRequestBuilder<ReminderWorker>(
+                    relative.contactIntervalDays.toLong(), TimeUnit.DAYS
+                )
+                    .setInputData(data)
+                    .build()
+
+                workManager.enqueueUniquePeriodicWork(
+                    "reminder_${relative.id}",
+                    ExistingPeriodicWorkPolicy.UPDATE,
+                    workRequest
+                )
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
+    fun cancelReminderForRelative(relativeId: Int) {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val workManager = WorkManager.getInstance(getApplication())
+                workManager.cancelUniqueWork("reminder_$relativeId")
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
+    fun recordCommunication(relativeId: Int, type: String, notes: String) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val log = CommunicationLog(
+                relativeId = relativeId,
+                type = type,
+                notes = notes,
+                timestamp = System.currentTimeMillis()
+            )
+            repository.insertLog(log)
+        }
+    }
+
+    fun insertTemplate(template: QuickTemplate) {
+        viewModelScope.launch(Dispatchers.IO) {
+            repository.insertTemplate(template)
+        }
+    }
+
+    fun updateRelativeInterval(relative: Relative, newIntervalDays: Int) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val updated = relative.copy(contactIntervalDays = newIntervalDays)
+            repository.updateRelative(updated)
+            scheduleReminderForRelative(updated)
+        }
+    }
+
+    // Helper functions to check status
+    fun getRelativeStatus(relative: Relative): RelativeStatus {
+        if (relative.lastContactDate == 0L) {
+            return RelativeStatus.NEEDS_CONTACT_URGENT // "متأخر جداً - لم يتم الاتصال به مطلقاً"
+        }
+        val diffMs = System.currentTimeMillis() - relative.lastContactDate
+        val diffDays = (diffMs / (1000 * 60 * 60 * 24)).toInt()
+        val interval = relative.contactIntervalDays
+
+        return when {
+            diffDays >= interval + 7 -> RelativeStatus.OVERDUE_CRITICAL
+            diffDays >= interval -> RelativeStatus.NEEDS_CONTACT
+            diffDays >= interval / 2 -> RelativeStatus.OK_SOON
+            else -> RelativeStatus.CONNECTED
+        }
+    }
+
+    // --- SMART FEATURE 2: Auto-suggest Relationship Degree ---
+    fun suggestRelationshipDegree(name: String): String {
+        val lower = name.lowercase()
+        return when {
+            lower.contains("ماما") || lower.contains("امي") || lower.contains("أمي") || lower.contains("والدتي") ||
+            lower.contains("بابا") || lower.contains("ابي") || lower.contains("أبي") || lower.contains("والدي") -> "والدان"
+            
+            lower.contains("اخي") || lower.contains("أخي") || lower.contains("اختي") || lower.contains("أختي") ||
+            lower.contains("شقيقي") || lower.contains("شقيقتي") -> "أشقاء"
+            
+            lower.contains("عمي") || lower.contains("عمتي") || lower.contains("خالي") || lower.contains("خالتي") ||
+            lower.contains("عم") || lower.contains("عمة") || lower.contains("خال") || lower.contains("خالة") -> "أعمام/أخوال"
+            
+            else -> "أقارب آخرون"
+        }
+    }
+
+    // --- SMART FEATURE 3: Smart Message Generator ---
+    fun generateLocalSmartMessage(relativeName: String, relationshipDegree: String, occasion: String): String {
+        val greeting = when (relationshipDegree) {
+            "والدان" -> "تاج رأسي وقرة عيني الغالي ${relativeName}"
+            "أشقاء" -> "أخي الغالي وسندي ${relativeName}"
+            "أعمام/أخوال" -> "عمي/خالي العزيز ${relativeName}"
+            else -> "الغالي ${relativeName}"
+        }
+
+        return when (occasion) {
+            "يوم الجمعة" -> "السلام عليكم ورحمة الله وبركاته يا $greeting. في هذا يوم الجمعة المبارك، أسأل الله أن يملأ قلبكم بالأنوار، ويحفظكم من كل مكروه، ويتقبل طاعاتكم وصالح أعمالكم. جمعة مباركة وطيبة ✨"
+            "عيد الفطر/الأضحى" -> "السلام عليكم ورحمة الله وبركاته يا $greeting. أتقدم إليكم بأصدق التهاني وأطيب التبريكات بمناسبة حلول العيد المبارك، سائلاً المولى عز وجل أن يتقبل منا ومنكم صالح الأعمال، وأن يعيده علينا وعليكم بالخير واليمن والمسرات والبركات 🌸"
+            "سؤال عام عن الحال" -> "السلام عليكم يا $greeting. أردت الاطمئنان على أحوالكم وصحتكم، عساكم بألف خير ونعمة دائماً. مشتاقون لسماع أخباركم الطيبة ورؤيتكم في أقرب فرصة. دمتم سالمين 🤍"
+            "دعاء بالشفاء" -> "السلام عليكم ورحمة الله وبركاته يا $greeting. بلغني وعكتكم الصحية، وأسأل الله العظيم رب العرش العظيم أن يشفيك شفاءً لا يغادر سقماً، وأن يلبسك ثوب الصحة والعافية والوقار، طهور ونور إن شاء الله 🤲"
+            else -> "السلام عليكم يا $greeting. أتمنى لكم يوماً جميلاً مليئاً بالخير والتوفيق والمسرات، دمتم في حفظ الله ورعايته."
+        }
+    }
+
+    // --- SMART FEATURE 4: Family Time Capsule (Memories) ---
+    fun addFamilyMemory(relativeId: Int, relativeName: String, title: String, description: String, imagePath: String? = null) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val memory = FamilyMemory(
+                relativeId = relativeId,
+                relativeName = relativeName,
+                title = title,
+                description = description,
+                imagePath = imagePath,
+                timestamp = System.currentTimeMillis()
+            )
+            repository.insertMemory(memory)
+        }
+    }
+
+    fun deleteFamilyMemory(memory: FamilyMemory) {
+        viewModelScope.launch(Dispatchers.IO) {
+            repository.deleteMemory(memory)
+        }
+    }
+}
+
+enum class RelativeStatus(val label: String, val colorHex: String) {
+    NEEDS_CONTACT_URGENT("تواصل الآن (لم يتصل قط)", "E53935"),
+    OVERDUE_CRITICAL("تأخرت كثيراً في الوصل!", "D32F2F"),
+    NEEDS_CONTACT("حان وقت الصلة اليوم", "EF6C00"),
+    OK_SOON("تواصل معه قريباً", "FBC02D"),
+    CONNECTED("أحسنت! متصل مؤخراً", "2E7D32")
+}
