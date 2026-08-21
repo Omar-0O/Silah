@@ -1,148 +1,150 @@
-# 🌸 تطبيق صِلَة الرَّحِم 🌸
+# 🌸 Silah (صِلَةِ) — Kinship & Family Ties Android Application
 
-> **«مَنْ سَرَّهُ أَنْ يُبْسَطَ لَهُ فِي رِزْقِهِ، وَأَنْ يُنْسَأَ لَهُ فِي أَثَرِهِ، فَلْيَصِلْ رَحِمَهُ»** — حديث شريف.
+> **«مَنْ سَرَّهُ أَنْ يُبْسَطَ لَهُ فِي رِزْقِهِ، وَأَنْ يُنْسَأَ لَهُ فِي أَثَرِهِ، فَلْيَصِلْ رَحِمَهُ»**  
+> *"Whoever would like his provision to be expanded and his lifespan extended, let him maintain his family ties."* — Prophet Muhammad ﷺ
 
-تطبيق **صِلَة الرَّحِم** هو تطبيق أندرويد متكامل ومصمم بأسلوب عصري وأنيق لمساعدتك في تنظيم وتسهيل التواصل مع أقاربك وعائلتك. بفضل نظام التذكيرات الذكي، سجل التواصل، وقوالب الرسائل الجاهزة، يضمن لك التطبيق بقاء حبل الود موصولاً دائماً بكل سهولة ويسر.
-
----
-
-## ✨ المميزات الرئيسية للتطبيق
-
-1. **إدارة ذكية للأقارب ومستويات القرابة:**
-   - تصنيف الأقارب حسب درجة القرابة (الوالدان، الأشقاء، الأعمام/الأخوال، أقارب آخرون).
-   - نظام تصفية وبحث سريع للوصول السلس لأي فرد من أفراد العائلة.
-
-2. **نظام تذكيرات ذكي (Reminders & Notifications):**
-   - جدولة تذكيرات دورية تلقائية لزيارة أو الاتصال بالأقارب.
-   - مدعوم بـ **WorkManager** لضمان عمل التنبيهات في الخلفية حتى عند إغلاق التطبيق وبشكل موفر للطاقة.
-
-3. **سجل تواصل متكامل (Communication Log):**
-   - تسجيل المكالمات، الزيارات، والرسائل مع توثيق التاريخ والوقت ونوع التواصل.
-   - عرض جدول زمني (Timeline) لكل قريب لمعرفة متى كانت آخر مرة تواصلت معه ومستوى صلة الرحم.
-
-4. **قوالب الرسائل السريعة (Quick Templates):**
-   - حفظ واستخدام قوالب رسائل جاهزة ومخصصة للمناسبات المختلفة (أعياد، تهنئة بالجمعة، تمنيات بالشفاء) وإرسالها مباشرة عبر واتساب أو الرسائل القصيرة بلمسة واحدة.
-
-5. **صندوق الذكريات العائلية (Family Memories):**
-   - سجل تفاعلي لحفظ اللحظات السعيدة، الملاحظات العائلية الهامة، والتواريخ المميزة المشتركة مع الأقارب.
-
-6. **استيراد جهات الاتصال من الهاتف (Smart Contacts Import):**
-   - إمكانية استيراد الأقارب بلمحة بصر مباشرة من جهات اتصال هاتفك مع التعرف التلقائي على الأسماء والأرقام.
-
-7. **تخصيص كامل وواجهات خلابة:**
-   - تصميم مبهر وراقي مبني على معايير **Material Design 3**.
-   - دعم كامل للـ **الوضع الداكن (Dark Mode)** والوضع الفاتح بانسجام تام وألوان مريحة للعين.
-   - **تخصيص الخطوط العربية ديناميكياً:** إمكانية الاختيار بين خطوط عربية فاخرة لتغيير خط التطبيق بالكامل وبشكل فوري:
-     - 🌟 **خط ثمانية (Thamanyah OS)** - المظهر الثقافي والعصري الفريد.
-     - 🖋️ **خط القاهرة (Cairo)** - الخط الكلاسيكي الحديث والمتناسق.
-     - 🍃 **خط المراعي (Almarai)** - الخط الناعم والأنيق.
-     - 📐 **خط تجوال (Tajawal)** - الخط الهندسي الممتاز للقراءة السريعة.
+**Silah (صِلَةِ)** is a modern, privacy-focused, **Local-First Native Android Application** built to help users preserve, organize, and nurture family relationships and kinship ties. Featuring automatic call log synchronization, intelligent degree-based reminders, dynamic home screen widgets, and offline-first JSON backup/restore capabilities, Silah seamlessly integrates into daily life to keep family connections strong.
 
 ---
 
-## 🛠️ التقنيات والبيئة البرمجية (Tech Stack)
+## ✨ Key Features
 
-تم بناء التطبيق بأحدث وأقوى تقنيات تطوير تطبيقات أندرويد الأصلية (Native):
-- **لغة البرمجة:** Kotlin 100% (مع استخدام Coroutines و Flow للعمليات غير المتزامنة وسرعة الاستجابة).
-- **واجهة المستخدم:** Jetpack Compose (تصميم تصريحي مرن ومتقدم).
-- **قاعدة البيانات:** Room Database (لحفظ البيانات محلياً على جهازك بأعلى سرعة وأمان وبشكل كامل أوفلاين دون الحاجة لإنترنت).
-- **الخدمات الخلفية:** WorkManager لجدولة مهام التذكير الدورية في الخلفية بكفاءة عالية.
-- **تخصيص الخطوط:** Google Fonts API للمظهر الديناميكي مع توفير ملفات التحقق والشهادات لضمان سرعة التحميل والأداء.
+### 1. 📞 Automatic Call Log Synchronization
+- **Automatic Tracking**: Automatically detects incoming, outgoing, and missed calls from saved relatives via `CallLogManager`.
+- **Zero Effort**: Updates communication records instantly in the background without needing manual logging.
 
----
+### 2. 📲 Smart Contact Import & Reminder Customization
+- **Interactive Importer**: Search phone contacts and import relatives with a single tap.
+- **Custom Reminder Frequencies**: Set tailored reminder intervals for each relative (Daily, Every 3 Days, Weekly, Bi-weekly, Monthly).
+- **Auto-Suggested Relationship Degrees**: Smart relationship degree classification (*Parents*, *Siblings*, *Uncles & Aunts*, *Other Relatives*).
 
-## 🚀 كيفية تشغيل التطبيق محلياً (Run Locally)
+### 3. ⏱️ Arabic Relative Time & Countdown Timers
+- **Humanized Arabic Relative Time**: Precise Arabic time formatting (`"منذ 15 دقيقة ⏱️"`, `"منذ ساعتين ⏱️"`, `"منذ 3 ساعات ⏱️"`, `"أمس"`, `"منذ 4 أيام"`).
+- **Color-Coded Status Tracking**:
+  - 🟢 **Connected**: All good (`"بخير"`)
+  - 🟡 **Due Tomorrow**: Final reminder day (`"غداً اخر موعد"`)
+  - 🟠 **Due Today**: Contact due today (`"حان موعد الاتصال اليوم"`)
+  - 🔴 **Overdue**: Overdue count by days (`"تأخرت ع أيام"`)
 
-لتشغيل المشروع على جهاز الكمبيوتر الخاص بك واختباره على هاتفك الشخصي أو محاكي أندرويد، اتبع الخطوات البسيطة التالية:
+### 4. 🌿 Live Home Screen Smart Widget
+- **Urgency Scoring Algorithm**: Automatically ranks relatives on your home screen widget based on urgency and contact intervals.
+- **Auto-Refresh**: Instantly updates when calls are synced, logs are recorded, or relatives are added/edited/deleted.
+- **One-Tap Quick Actions**: Call or message directly from your device home screen.
 
-### 1. المتطلبات الأساسية:
-* تثبيت **برنامج Android Studio** (يفضل إصدار Ladybug أو أحدث).
-* تثبيت **Java JDK 17** أو أحدث.
+### 5. 🔔 Degree-Aware Smart Notifications
+- **Context-Aware Arabic Copy**:
+  - Uncles/Aunts: *"بقالك فترة مش بتطمن على خالك ✨"* / *"بقالك فترة مش بتطمن على عمتك ✨"*
+  - Parents: *"بقالك فترة مش بتطمن على والدتك 💚"* / *"بقالك فترة مش بتطمن على والدك 💚"*
+  - Siblings: *"بقالك فترة مش بتطمن على أختك 🌸"* / *"بقالك فترة مش بتطمن على أخوك 🌸"*
+  - Other Relatives: *"بقالك فترة مش بتطمن على عمر 🌿"*
+- **WorkManager Powered**: Reliable, battery-efficient periodic background execution.
 
-### 2. خطوات التشغيل عبر Android Studio (الطريقة الموصى بها):
-1. قم بتحميل كود المشروع كملف مضغوط `ZIP` وفك ضغطه، أو قم بعمل `Clone` للمستودع عبر Git.
-2. افتح برنامج **Android Studio** ثم اختر **Open** وحدد المجلد الرئيسي للمشروع.
-3. انتظر قليلاً حتى ينتهي البرنامج من تحميل وإعداد ملفات `Gradle` (Sync) وتحميل المكتبات اللازمة.
-4. قم بتوصيل هاتفك الأندرويد بالكمبيوتر عبر كابل USB مع تفعيل **وضع تصحيح أخطاء USB (USB Debugging)** من خيارات المطور بالهاتف، أو قم بإنشاء هاتف افتراضي (Emulator) من خلال `Device Manager` داخل أندرويد ستوديو.
-5. اضغط على زر التشغيل الأخضر **Run** (أيقونة المثلث الأخضر في الشريط العلوي) ليتم بناء التطبيق وتثبيته مباشرة على هاتفك!
+### 6. 🔒 100% Local-First Architecture & SAF Backup
+- **Complete Privacy**: Zero external server dependencies; all data resides locally in Room Database.
+- **JSON Backup & Restore**: Storage Access Framework (SAF) integration to export/import `silah_backup.json` to Google Drive or local storage effortlessly.
 
----
-
-## 💻 هل يمكنني العمل على المشروع باستخدام VS Code بدلاً من Android Studio؟
-
-**نعم، بكل تأكيد!** يمكنك استخدام **Visual Studio Code (VS Code)** لتطوير وتعديل واختبار المشروع كبديل خفيف وسريع لأندرويد ستوديو.
-
-إليك الدليل الكامل لإعداد بيئة العمل على VS Code وتشغيل المشروع من خلاله:
-
-### 1. الإضافات الهامة التي يجب تثبيتها في VS Code:
-للحصول على تجربة تطوير ممتازة، ابحث عن هذه الإضافات في متجر VS Code وثبتها:
-* **Kotlin (بواسطة fwcd):** لتلوين الكود، وتوفير الإكمال التلقائي، والمساعدة الذكية في كتابة لغة Kotlin.
-* **Gradle for Java:** لإدارة عمليات بناء وتشغيل المشروع بسهولة عبر شريط جانبي مخصص للـ Gradle.
-* **Android iOS Support:** لتسهيل تشغيل وإطلاق التطبيق على المحاكيات أو الأجهزة الحقيقية مباشرة من VS Code.
-* **XML Tools:** لتنسيق وتلوين ملفات الإعدادات والواجهات المكتوبة بصيغة XML (مثل Manifest و Resources).
-
-### 2. تشغيل وبناء التطبيق من خلال سطر الأوامر (Terminal) في VS Code:
-بدلاً من واجهات أندرويد ستوديو، يمكنك تشغيل كل شيء بأوامر بسيطة وسريعة من خلال الـ Terminal المدمج في VS Code:
-
-* **لبناء التطبيق والتحقق من عدم وجود أخطاء برمجية:**
-  ```bash
-  gradle assembleDebug
-  ```
-
-* **لتثبيت وتشغيل التطبيق على هاتف موصل بالجهاز أو محاكي مفعل:**
-  ```bash
-  gradle installDebug
-  ```
-
-* **لتشغيل اختبارات المشروع والتحقق من جودة الكود:**
-  ```bash
-  gradle :app:testDebugUnitTest
-  ```
-
-### 3. مقارنة سريعة لتسهيل اختيارك:
-
-| الميزة | Android Studio (موصى به) | VS Code (البديل الخفيف) |
-| :--- | :--- | :--- |
-| **سرعة واستهلاك الذاكرة** | ثقيل نسبياً ويحتاج مواصفات جهاز عالية | خفيف جداً، سريع، ويستهلك كمية ضئيلة من الرام |
-| **المعاينات الحية (Previews)** | يدعم معاينة تصاميم Compose الحية فورياً | لا يدعم المعاينة المرئية المباشرة (تحتاج تشغيله على هاتف لتصميمه) |
-| **تتبع الأخطاء والتنقل بين الملفات** | جبار واحترافي ومبني خصيصاً للأندرويد | رائع بوجود الإضافات، ولكنه يتطلب إعدادات يدوية في بعض الأحيان |
-| **إدارة المحاكيات والأجهزة** | يحتوي على مدير أجهزة مدمج وسهل الاستخدام | تحتاج تشغيل المحاكي عبر سطر الأوامر أو برنامج خارجي |
-
-> 💡 **نصيحة ذهبية:** إذا كان جهازك بمواصفات متوسطة أو ضعيفة، فـ **VS Code** هو خيارك الأقوى للبرمجة السريعة والتعديل. أما إذا كنت تحتاج لمعاينة التصاميم حياً وتصحيح الأخطاء المتقدمة فـ **Android Studio** يوفر لك كل الأدوات المدمجة لتسهيل هذه الرحلة.
+### 7. 🎨 Soft-UI Design System & Dynamic Arabic Typography
+- **Custom Canvas Graphics**: Geometrically crafted Kinship Knot (`KinshipKnotIcon.kt`).
+- **Dynamic Fonts Engine**: Real-time font switching between premium Arabic typefaces:
+  - 🌟 **Thamanyah OS** (Cultural & Modern)
+  - 🖋️ **Cairo** (Classic & Balanced)
+  - 🍃 **Almarai** (Soft & Elegant)
+  - 📐 **Tajawal** (Geometric & Readable)
 
 ---
 
-## 📁 هيكل كود المشروع (Project Directory Structure)
+## 🛠️ Technology Stack & Architecture
 
-يتبع التطبيق معمارية **MVVM (Model-View-ViewModel)** النظيفة والموصى بها من شركة Google لسهولة صيانة وتطوير المشروع:
+- **Language**: 100% Kotlin (Coroutines, StateFlow, SharedFlow)
+- **UI Framework**: Jetpack Compose (Material Design 3, Soft-UI Palette)
+- **Database**: Room Database (Local-First SQLite ORM)
+- **Background Processing**: Android WorkManager
+- **Widget**: AppWidgetProvider & RemoteViews
+- **Storage**: Storage Access Framework (SAF)
+- **Architecture Pattern**: MVVM (Model-View-ViewModel) + Repository Pattern
+
+---
+
+## 📦 Project Directory Structure
 
 ```text
-app/src/main/java/com/example/
-├── data/                 # طبقة البيانات (Database, Entity, DAO, Repository)
-│   ├── AppDatabase.kt    # إعدادات قاعدة بيانات Room
-│   ├── Entities.kt       # تعريف جداول قاعدة البيانات (قريب، سجل، قالب، ذكرى)
-│   └── Repository.kt     # مستودع البيانات كوسيط بين قاعدة البيانات والـ ViewModel
-│
-├── viewmodel/            # طبقة منطق التطبيق والحالة (ViewModel & Logic)
-│   └── RelativeViewModel.kt # الـ ViewModel الرئيسي الذي يربط الواجهات بالبيانات
-│
-├── ui/                   # طبقة واجهة المستخدم وعناصر Compose
-│   ├── theme/            # إعدادات الألوان والخطوط (Cairo, Thmanyah, Tajawal)
-│   └── screens/          # شاشات التطبيق الرئيسية والفرعية
-│       └── MainDashboard.kt # لوحة التحكم الرئيسية وشاشات الإعدادات والتحكم
-│
-└── work/                 # العمليات الخلفية المستمرة
-    └── ReminderWorker.kt # معالج التذكيرات التلقائية والخلفية
+com.example/
+├── MainActivity.kt               # Entry point & SAF launchers for Backup/Restore
+├── data/
+│   ├── AppDatabase.kt           # Room Database setup
+│   ├── BackupManager.kt          # JSON Export & Import logic
+│   ├── CallLogManager.kt         # Call Log matching & classification
+│   ├── Daos.kt                   # Room Data Access Objects
+│   ├── Entities.kt               # Database Entities (Relative, CommunicationLog, etc.)
+│   └── RelativeRepository.kt    # Repository abstraction layer
+├── ui/
+│   ├── components/
+│   │   ├── CallLogBadge.kt       # Visual call type indicator
+│   │   ├── CommitmentHeaderCard.kt# Progress arc header card
+│   │   ├── DueRelativesCarousel.kt# Horizontal "Due for contact" carousel
+│   │   ├── KinshipKnotIcon.kt    # Custom Canvas Kinship Knot artwork
+│   │   ├── RelativeCard.kt       # Relative card with countdown & CRUD actions
+│   │   └── SilaEmptyStateView.kt # Animated empty state illustration & action triggers
+│   ├── dialogs/
+│   │   ├── AddEditRelativeDialog.kt # Relative creation & edition dialog
+│   │   ├── ImportContactsDialog.kt # Searchable device contact importer with interval picker
+│   │   ├── RecordLogBottomSheet.kt # Quick manual log entry bottom sheet
+│   │   └── SettingsDialog.kt     # App settings & Backup/Restore controls
+│   ├── screens/
+│   │   ├── ChallengesTabScreen.kt# Kinship challenges & badges
+│   │   ├── MainDashboard.kt      # Main Navigation Host & history logs
+│   │   ├── OnboardingScreen.kt   # 3-step animated intro screen
+│   │   ├── RelativesTabScreen.kt # Relatives list, category filters & search
+│   │   ├── SplashScreen.kt       # Spiritual splash screen with Hadith
+│   │   └── TemplatesTabScreen.kt # Quick messaging templates
+│   └── theme/
+│       ├── Color.kt              # Soft-UI palette (PrimaryGreen, SoftGold, etc.)
+│       └── Theme.kt              # Material 3 Theme Configuration
+├── utils/
+│   └── DateUtils.kt              # Exact Arabic relative time calculation
+├── viewmodel/
+│   └── RelativeViewModel.kt      # Core State Flow & Business Logic
+├── widget/
+│   └── SilaAppWidgetProvider.kt  # Home Screen Widget & Urgency Scoring
+└── work/
+    └── ReminderWorker.kt         # Smart degree-aware notification builder
 ```
 
 ---
 
-## 🛡️ الصلاحيات المستخدمة في التطبيق (Permissions)
+## 🚀 Building & Running the Project
 
-يحتاج التطبيق للصلاحيات التالية ليعمل بكفاءة:
-- `READ_CONTACTS`: لاستيراد الأقارب بلمسة زر مباشرة من قائمة أصدقائك وهاتفك.
-- `POST_NOTIFICATIONS` (أندرويد 13 فما فوق): لإرسال التذكيرات الذكية كتنبيهات على شاشة هاتفك مباشرة لضمان عدم تفويت أي صلة رحم.
+### Prerequisites
+- **Android Studio**: Ladybug (2024.2.1) or newer
+- **JDK**: Java 17 or Java 21
+- **Android SDK**: API 24 (Android 7.0) minimum, Target API 34 (Android 14)
+
+### Option 1: Via Android Studio (Recommended)
+1. Clone or download this repository.
+2. Open **Android Studio** and select **Open** -> Choose the `/Silah` folder.
+3. Wait for Gradle Sync to complete.
+4. Click the green **Run** button to launch on an emulator or physical device.
+5. To generate the APK: Go to **Build -> Build Bundle(s) / APK(s) -> Build APK(s)**.
+
+### Option 2: Via Command Line (Gradle Wrapper)
+```bash
+# Build Debug APK
+./gradlew assembleDebug
+
+# Output APK path:
+app/build/outputs/apk/debug/app-debug.apk
+```
 
 ---
 
-بادر بصلة رحمك، واجعل التكنولوجيا وسيلة لتقريب القلوب بلمسة زر واحدة! 💖
+## 🛡️ Android Permissions
+
+- `READ_CONTACTS`: Used to import family members directly from your phone address book.
+- `READ_CALL_LOG`: Used for automatic background call matching with saved relatives.
+- `POST_NOTIFICATIONS` (Android 13+): Used to deliver timely kinship reminder notifications.
+
+---
+
+## 📄 License & Privacy
+
+**Silah** is open-source and built with a **100% Privacy-First Principle**. No personal data, contacts, or call logs ever leave your device.

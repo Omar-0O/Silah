@@ -13,11 +13,17 @@ interface RelativeDao {
     @Query("SELECT * FROM relatives ORDER BY name ASC")
     fun getAllRelatives(): Flow<List<Relative>>
 
+    @Query("SELECT * FROM relatives ORDER BY name ASC")
+    suspend fun getAllRelativesOnce(): List<Relative>
+
     @Query("SELECT * FROM relatives WHERE id = :id")
     suspend fun getRelativeById(id: Int): Relative?
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertRelative(relative: Relative): Long
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertRelatives(relatives: List<Relative>)
 
     @Update
     suspend fun updateRelative(relative: Relative)

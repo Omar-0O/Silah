@@ -16,6 +16,11 @@ import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import com.example.work.ReminderWorker
 import java.util.concurrent.TimeUnit
+import android.net.Uri
+import com.example.data.BackupManager
+import com.example.data.CallLogManager
+import com.example.data.CallType
+import com.example.widget.SilaAppWidgetProvider
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -67,6 +72,7 @@ class RelativeViewModel(application: Application) : AndroidViewModel(application
 
     // UI triggers/States for Dialogs and Forms
     val showAddRelativeDialog = MutableStateFlow(false)
+    val showEditRelativeDialog = MutableStateFlow<Relative?>(null)
     val showSettingsDialog = MutableStateFlow(false)
     val showImportContactsDialog = MutableStateFlow(false)
     val showRecordLogDialog = MutableStateFlow<Relative?>(null)
@@ -89,6 +95,114 @@ class RelativeViewModel(application: Application) : AndroidViewModel(application
     fun selectFont(fontName: String) {
         selectedFont.value = fontName
         prefs.edit().putString("selected_font", fontName).apply()
+    }
+
+    // ─────────────────────────────────────────────────────────────────────
+    // Backup & Restore
+    // ─────────────────────────────────────────────────────────────────────
+    val backupResult = MutableStateFlow<BackupManager.BackupResult?>(null)
+
+    // Launchers are set from MainActivity (Compose context)
+    private var exportLauncher: (() -> Unit)? = null
+    private var importLauncher: (() -> Unit)? = null
+
+    fun setExportLauncher(launcher: () -> Unit) { exportLauncher = launcher }
+    fun setImportLauncher(launcher: () -> Unit) { importLauncher = launcher }
+
+    fun triggerExport() { exportLauncher?.invoke() }
+    fun triggerImport() { importLauncher?.invoke() }
+    fun suggestedBackupName() = BackupManager.suggestedFileName()
+
+    fun exportBackup(context: Context, uri: Uri) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val result = BackupManager.exportToUri(
+                context = context,
+                uri = uri,
+                relatives = relatives.value,
+                logs = logs.value,
+                templates = templates.value
+            )
+            backupResult.value = result
+        }
+    }
+
+    fun importBackup(
+        context: Context,
+        uri: Uri,
+        strategy: BackupManager.ImportConflictStrategy = BackupManager.ImportConflictStrategy.MERGE_NEW_ONLY
+    ) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val result = BackupManager.importFromUri(
+                context = context,
+                uri = uri,
+                relativeDao = db.relativeDao(),
+                communicationLogDao = db.communicationLogDao(),
+                quickTemplateDao = db.quickTemplateDao(),
+                onConflict = strategy
+            )
+            backupResult.value = result
+            if (result.isSuccess) {
+                SilaAppWidgetProvider.triggerWidgetUpdate(getApplication())
+            }
+        }
+    }
+
+    fun clearBackupResult() { backupResult.value = null }
+
+    // Call Log Sync State
+    val isSyncingCallLogs = MutableStateFlow(false)
+
+    /**
+     * Automatic Call Log Sync: Matches call logs with relatives & updates lastContactDate
+     */
+    fun syncCallLogsWithRelatives(context: Context, onComplete: ((Int) -> Unit)? = null) {
+        viewModelScope.launch(Dispatchers.IO) {
+            isSyncingCallLogs.value = true
+            var syncedCount = 0
+            try {
+                val recentCalls = CallLogManager.fetchRecentCallLogs(context, limit = 300)
+                val currentRelatives = relatives.value
+
+                for (relative in currentRelatives) {
+                    val relativeNormalizedPhone = CallLogManager.normalizePhoneNumber(relative.phone)
+                    if (relativeNormalizedPhone.isEmpty()) continue
+
+                    // Find latest call matching this relative
+                    val latestMatchingCall = recentCalls.firstOrNull { call ->
+                        CallLogManager.normalizePhoneNumber(call.number) == relativeNormalizedPhone
+                    }
+
+                    if (latestMatchingCall != null && latestMatchingCall.dateTimestamp > relative.lastContactDate) {
+                        // Record new communication log automatically
+                        val typeString = when (latestMatchingCall.type) {
+                            CallType.INCOMING -> "مكالمة واردة (تلقائي)"
+                            CallType.OUTGOING -> "مكالمة صادرة (تلقائي)"
+                            CallType.MISSED -> "مكالمة مفقودة"
+                            else -> "مكالمة"
+                        }
+                        val durationMinutes = latestMatchingCall.durationSeconds / 60
+                        val notes = "تم رصد $typeString تلقائياً عبر سجل الهاتف (المدة: $durationMinutes دقيقة)"
+
+                        val log = CommunicationLog(
+                            relativeId = relative.id,
+                            type = typeString,
+                            notes = notes,
+                            timestamp = latestMatchingCall.dateTimestamp
+                        )
+                        repository.insertLog(log)
+                        syncedCount++
+                    }
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            } finally {
+                isSyncingCallLogs.value = false
+                if (syncedCount > 0) {
+                    SilaAppWidgetProvider.triggerWidgetUpdate(getApplication())
+                }
+                onComplete?.invoke(syncedCount)
+            }
+        }
     }
 
     // Contact importing state
@@ -147,6 +261,7 @@ class RelativeViewModel(application: Application) : AndroidViewModel(application
             )
             val id = repository.insertRelative(relative)
             scheduleReminderForRelative(relative.copy(id = id.toInt()))
+            SilaAppWidgetProvider.triggerWidgetUpdate(getApplication())
         }
     }
 
@@ -154,6 +269,7 @@ class RelativeViewModel(application: Application) : AndroidViewModel(application
         viewModelScope.launch(Dispatchers.IO) {
             repository.deleteRelative(relative)
             cancelReminderForRelative(relative.id)
+            SilaAppWidgetProvider.triggerWidgetUpdate(getApplication())
         }
     }
 
@@ -163,6 +279,7 @@ class RelativeViewModel(application: Application) : AndroidViewModel(application
                 val workManager = WorkManager.getInstance(getApplication())
                 val data = Data.Builder()
                     .putString("relative_name", relative.name)
+                    .putString("relationship_degree", relative.relationshipDegree)
                     .putInt("relative_id", relative.id)
                     .build()
 
@@ -203,6 +320,7 @@ class RelativeViewModel(application: Application) : AndroidViewModel(application
                 timestamp = System.currentTimeMillis()
             )
             repository.insertLog(log)
+            SilaAppWidgetProvider.triggerWidgetUpdate(getApplication())
         }
     }
 
@@ -217,6 +335,29 @@ class RelativeViewModel(application: Application) : AndroidViewModel(application
             val updated = relative.copy(contactIntervalDays = newIntervalDays)
             repository.updateRelative(updated)
             scheduleReminderForRelative(updated)
+            SilaAppWidgetProvider.triggerWidgetUpdate(getApplication())
+        }
+    }
+
+    fun editRelative(
+        original: Relative,
+        newName: String,
+        newPhone: String,
+        newDegree: String,
+        newIntervalDays: Int,
+        newNotes: String
+    ) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val updated = original.copy(
+                name = newName,
+                phone = newPhone,
+                relationshipDegree = newDegree,
+                contactIntervalDays = newIntervalDays,
+                notes = newNotes
+            )
+            repository.updateRelative(updated)
+            scheduleReminderForRelative(updated)
+            SilaAppWidgetProvider.triggerWidgetUpdate(getApplication())
         }
     }
 

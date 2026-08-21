@@ -12,7 +12,7 @@
         android:layout_height="wrap_content"
         android:layout_alignParentTop="true"
         android:layout_alignParentRight="true"
-        android:text="صلة الرَّحم ✨"
+        android:text="صِلَةِ ✨"
         android:textColor="#3F694D"
         android:textSize="12sp"
         android:textStyle="bold" />
