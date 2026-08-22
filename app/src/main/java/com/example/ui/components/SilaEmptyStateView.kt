@@ -24,8 +24,9 @@ import com.example.ui.theme.SoftGold
 
 @Composable
 fun SilaEmptyStateView(
-    title: String = "أضف أقاربك لتبدأ مسيرة صلة الرحم 💚",
-    subtitle: String = "اختر أقاربك من جهات الاتصال وحدد موعد التذكير المناسب لكل منهم",
+    lang: String = "ar",
+    title: String = if (lang == "en") "Add your relatives to start keeping kin ties 💚" else "أضف أقاربك لتبدأ مسيرة صلة الرحم 💚",
+    subtitle: String = if (lang == "en") "Choose your relatives from contacts and set a reminder schedule for each one" else "اختر أقاربك من جهات الاتصال وحدد موعد التذكير المناسب لكل منهم",
     onImportContactsClick: (() -> Unit)? = null,
     onAddRelativeClick: (() -> Unit)? = null,
     modifier: Modifier = Modifier
@@ -128,7 +129,11 @@ fun SilaEmptyStateView(
                             modifier = Modifier.size(18.dp)
                         )
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("استيراد الأقارب من الهاتف 📲", fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                        Text(
+                            if (lang == "en") "Import Relatives from Phone 📲" else "استيراد الأقارب من الهاتف 📲",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 14.sp
+                        )
                     }
                 }
 
@@ -145,7 +150,11 @@ fun SilaEmptyStateView(
                             modifier = Modifier.size(18.dp)
                         )
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("إضافة قريب يدوياً ＋", fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                        Text(
+                            if (lang == "en") "Add Relative Manually +" else "إضافة قريب يدوياً ＋",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 14.sp
+                        )
                     }
                 }
             }

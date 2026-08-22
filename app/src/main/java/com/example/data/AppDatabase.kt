@@ -11,7 +11,7 @@ import kotlinx.coroutines.launch
 
 @Database(
     entities = [Relative::class, CommunicationLog::class, QuickTemplate::class, FamilyMemory::class],
-    version = 2,
+    version = 3,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -49,7 +49,6 @@ abstract class AppDatabase : RoomDatabase() {
             INSTANCE?.let { database ->
                 scope.launch(Dispatchers.IO) {
                     populateInitialTemplates(database.quickTemplateDao())
-                    populateInitialRelatives(database.relativeDao())
                 }
             }
         }
@@ -83,29 +82,6 @@ abstract class AppDatabase : RoomDatabase() {
                 )
             )
             dao.insertTemplates(initialTemplates)
-        }
-
-        suspend fun populateInitialRelatives(dao: RelativeDao) {
-            // Seed a couple of default relatives to ensure the list is not blank on fresh install
-            val initialRelatives = listOf(
-                Relative(
-                    name = "الوالد الغالي",
-                    phone = "+966500000001",
-                    relationshipDegree = "والدان",
-                    contactIntervalDays = 1,
-                    notes = "باب الجنة الأوسط، احرص على الاتصال به أو زيارته يومياً"
-                ),
-                Relative(
-                    name = "الوالدة العزيزة",
-                    phone = "+966500000002",
-                    relationshipDegree = "والدان",
-                    contactIntervalDays = 1,
-                    notes = "الجنة تحت أقدامها، اتصل بها صباحاً ومساءً"
-                )
-            )
-            for (relative in initialRelatives) {
-                dao.insertRelative(relative)
-            }
         }
     }
 }

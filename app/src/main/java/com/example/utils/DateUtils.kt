@@ -5,16 +5,17 @@ import kotlin.math.abs
 object DateUtils {
 
     /**
-     * Formats a timestamp into a friendly, precise Arabic relative time string
-     * e.g., "منذ 3 ساعات", "منذ ساعتين", "منذ 15 دقيقة", "أمس", "منذ 4 أيام"
+     * Formats a timestamp into a friendly, precise relative time string.
+     * Supports Arabic (default) and English based on the [lang] parameter.
+     * e.g., "منذ 3 ساعات" / "3 hours ago"
      */
-    fun formatRelativeTimeExact(timestamp: Long): String {
-        if (timestamp <= 0L) return "لم يتم بعد 🌸"
+    fun formatRelativeTimeExact(timestamp: Long, lang: String = "ar"): String {
+        if (timestamp <= 0L) return if (lang == "en") "Not yet 🌸" else "لم يتم بعد 🌸"
 
         val now = System.currentTimeMillis()
         val diffMs = now - timestamp
 
-        if (diffMs < 0) return "اليوم"
+        if (diffMs < 0) return if (lang == "en") "Today" else "اليوم"
 
         val seconds = diffMs / 1000
         val minutes = seconds / 60
@@ -24,7 +25,33 @@ object DateUtils {
         val months = days / 30
         val years = days / 365
 
-        return when {
+        return if (lang == "en") when {
+            seconds < 60 -> "Just now ⚡"
+            minutes < 60 -> when (minutes) {
+                1L -> "1 minute ago ⏱️"
+                else -> "$minutes minutes ago ⏱️"
+            }
+            hours < 24 -> when (hours) {
+                1L -> "1 hour ago ⏱️"
+                else -> "$hours hours ago ⏱️"
+            }
+            days < 7 -> when (days) {
+                1L -> "Yesterday"
+                else -> "$days days ago"
+            }
+            weeks < 4 -> when (weeks) {
+                1L -> "1 week ago"
+                else -> "$weeks weeks ago"
+            }
+            months < 12 -> when (months) {
+                1L -> "1 month ago"
+                else -> "$months months ago"
+            }
+            else -> when (years) {
+                1L -> "1 year ago"
+                else -> "More than a year ago"
+            }
+        } else when {
             seconds < 60 -> "منذ لحظات ⚡"
             minutes < 60 -> when (minutes) {
                 1L -> "منذ دقيقة واحدة ⏱️"

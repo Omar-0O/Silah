@@ -21,24 +21,38 @@ class ReminderWorker(
         val relationshipDegree = inputData.getString("relationship_degree") ?: "أقارب آخرون"
         val relativeId = inputData.getInt("relative_id", -1)
 
-        val notificationMessage = buildNotificationMessage(relativeName, relationshipDegree)
+        val prefs = applicationContext.getSharedPreferences("app_settings", Context.MODE_PRIVATE)
+        val userName = prefs.getString("user_name", "") ?: ""
+        val userGender = prefs.getString("user_gender", "male") ?: "male"
+        val lang = prefs.getString("selected_language", "ar") ?: "ar"
 
-        sendNotification(relativeName, notificationMessage, relativeId)
+        val greeting = when {
+            userName.isNotBlank() && lang == "en" -> "Hey $userName ✨, "
+            userName.isNotBlank() -> "يا $userName 🌸، "
+            else -> ""
+        }
+
+        val baseMessage = buildNotificationMessage(relativeName, relationshipDegree, lang)
+        val notificationMessage = "$greeting$baseMessage"
+
+        sendNotification(relativeName, notificationMessage, relativeId, lang)
 
         return Result.success()
     }
 
-    private fun sendNotification(relativeName: String, messageText: String, relativeId: Int) {
+    private fun sendNotification(relativeName: String, messageText: String, relativeId: Int, lang: String) {
         val notificationManager = applicationContext.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         val channelId = "silat_rahim_reminders"
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channelName = if (lang == "en") "Kin Tie Reminders" else "تذكيرات صلة الرحم"
+            val channelDesc = if (lang == "en") "Dedicated channel for kin tie connection reminders" else "قناة مخصصة للتذكير بصلة الأرحام والأقارب"
             val channel = NotificationChannel(
                 channelId,
-                "تذكيرات صلة الرحم",
+                channelName,
                 NotificationManager.IMPORTANCE_HIGH
             ).apply {
-                description = "قناة مخصصة للتذكير بصلة الأرحام والأقارب"
+                description = channelDesc
             }
             notificationManager.createNotificationChannel(channel)
         }
@@ -55,9 +69,11 @@ class ReminderWorker(
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
+        val title = if (lang == "en") "Sila — Kin Tie Reminder 🌸" else "صِلَةِ — تذكير بصلة الرحم 🌸"
+
         val notification = NotificationCompat.Builder(applicationContext, channelId)
-            .setSmallIcon(android.R.drawable.ic_dialog_info)
-            .setContentTitle("صِلَةِ — تذكير بصلة الرحم 🌸")
+            .setSmallIcon(com.example.R.drawable.app_logo)
+            .setContentTitle(title)
             .setContentText(messageText)
             .setStyle(NotificationCompat.BigTextStyle().bigText(messageText))
             .setPriority(NotificationCompat.PRIORITY_HIGH)
@@ -69,34 +85,42 @@ class ReminderWorker(
     }
 
     companion object {
-        fun buildNotificationMessage(name: String, degree: String): String {
+        fun buildNotificationMessage(name: String, degree: String, lang: String = "ar"): String {
             val cleanName = name.trim()
-            return when (degree) {
-                "والدان" -> {
-                    when {
-                        cleanName.contains("أم", ignoreCase = true) || cleanName.contains("والدة", ignoreCase = true) ->
-                            "بقالك فترة مش بتطمن على والدتك 💚"
-                        else -> "بقالك فترة مش بتطمن على والدك 💚"
-                    }
+            if (lang == "en") {
+                return when (degree) {
+                    "والدان" -> "It's been a while since you checked on your parents 💚"
+                    "أشقاء" -> "Time to connect with your siblings 🌸"
+                    "أعمام/أخوال" -> "Don't forget to reach out to your uncles/aunts ✨"
+                    else -> "It's time to connect with $cleanName 🌿"
                 }
-                "أشقاء" -> {
-                    when {
-                        cleanName.contains("أخت", ignoreCase = true) || cleanName.contains("اخت", ignoreCase = true) ->
-                            "بقالك فترة مش بتطمن على أختك 🌸"
-                        else -> "بقالك فترة مش بتطمن على أخوك 🌸"
+            } else {
+                return when (degree) {
+                    "والدان" -> {
+                        when {
+                            cleanName.contains("أم", ignoreCase = true) || cleanName.contains("والدة", ignoreCase = true) ->
+                                "بقالك فترة مش بتطمن على والدتك 💚"
+                            else -> "بقالك فترة مش بتطمن على والدك 💚"
+                        }
                     }
-                }
-                "أعمام/أخوال" -> {
-                    when {
-                        cleanName.contains("خالة", ignoreCase = true) -> "بقالك فترة مش بتطمن على خالتك ✨"
-                        cleanName.contains("خال", ignoreCase = true) -> "بقالك فترة مش بتطمن على خالك ✨"
-                        cleanName.contains("عمة", ignoreCase = true) -> "بقالك فترة مش بتطمن على عمتك ✨"
-                        else -> "بقالك فترة مش بتطمن على عمك ✨"
+                    "أشقاء" -> {
+                        when {
+                            cleanName.contains("أخت", ignoreCase = true) || cleanName.contains("اخت", ignoreCase = true) ->
+                                "بقالك فترة مش بتطمن على أختك 🌸"
+                            else -> "بقالك فترة مش بتطمن على أخوك 🌸"
+                        }
                     }
-                }
-                else -> {
-                    // "أقارب آخرون" أو اسم مخصص — يذكر الاسم المسجل بالكامل
-                    "بقالك فترة مش بتطمن على $cleanName 🌿"
+                    "أعمام/أخوال" -> {
+                        when {
+                            cleanName.contains("خالة", ignoreCase = true) -> "بقالك فترة مش بتطمن على خالتك ✨"
+                            cleanName.contains("خال", ignoreCase = true) -> "بقالك فترة مش بتطمن على خالك ✨"
+                            cleanName.contains("عمة", ignoreCase = true) -> "بقالك فترة مش بتطمن على عمتك ✨"
+                            else -> "بقالك فترة مش بتطمن على عمك ✨"
+                        }
+                    }
+                    else -> {
+                        "بقالك فترة مش بتطمن على $cleanName 🌿"
+                    }
                 }
             }
         }

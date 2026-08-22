@@ -38,6 +38,7 @@ fun AddEditRelativeDialog(
     val context = LocalContext.current
     val view = LocalView.current
     val isEditMode = relativeToEdit != null
+    val lang by viewModel.selectedLanguage.collectAsState()
 
     var name by remember { mutableStateOf(relativeToEdit?.name ?: "") }
     var phone by remember { mutableStateOf(relativeToEdit?.phone ?: "") }
@@ -50,8 +51,20 @@ fun AddEditRelativeDialog(
     var intervalDays by remember { mutableIntStateOf(relativeToEdit?.contactIntervalDays ?: 7) }
     var notes by remember { mutableStateOf(relativeToEdit?.notes ?: "") }
 
+    // Degree labels — always stored as Arabic internally, displayed in the selected language
     val degrees = listOf("والدان", "أشقاء", "أعمام/أخوال", "أقارب آخرون")
-    val intervals = listOf(
+    val degreeLabels = if (lang == "en")
+        listOf("Parents", "Siblings", "Uncles/Aunts", "Other Relatives")
+    else
+        degrees
+
+    val intervals = if (lang == "en") listOf(
+        Pair(1, "Daily"),
+        Pair(3, "Every 3 Days"),
+        Pair(7, "Weekly"),
+        Pair(14, "Every 2 Weeks"),
+        Pair(30, "Monthly")
+    ) else listOf(
         Pair(1, "يومياً"),
         Pair(3, "كل 3 أيام"),
         Pair(7, "كل أسبوع"),
@@ -71,8 +84,10 @@ fun AddEditRelativeDialog(
             ) {
                 // Title
                 Text(
-                    text = if (isEditMode) "تعديل بيانات ${relativeToEdit?.name} ✏️"
-                           else "إضافة قريب جديد لـ صِلَةِ 🌸",
+                    text = if (isEditMode)
+                        (if (lang == "en") "Edit ${relativeToEdit?.name} ✏️" else "تعديل بيانات ${relativeToEdit?.name} ✏️")
+                    else
+                        (if (lang == "en") "Add New Relative to Silah 🌸" else "إضافة قريب جديد لـ صِلَةِ 🌸"),
                     fontSize = 17.sp,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.primary
@@ -87,8 +102,8 @@ fun AddEditRelativeDialog(
                             relationshipDegree = viewModel.suggestRelationshipDegree(it)
                         }
                     },
-                    label = { Text("اسم القريب") },
-                    placeholder = { Text("مثال: أمي الغالية، عاطف") },
+                    label = { Text(if (lang == "en") "Relative's Name" else "اسم القريب") },
+                    placeholder = { Text(if (lang == "en") "e.g. Mom, Uncle Ahmed" else "مثال: أمي الغالية، عاطف") },
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(16.dp),
                     singleLine = true
@@ -98,7 +113,7 @@ fun AddEditRelativeDialog(
                 OutlinedTextField(
                     value = phone,
                     onValueChange = { phone = it },
-                    label = { Text("رقم الهاتف") },
+                    label = { Text(if (lang == "en") "Phone Number" else "رقم الهاتف") },
                     placeholder = { Text("+966500000000") },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
                     modifier = Modifier.fillMaxWidth(),
@@ -107,20 +122,20 @@ fun AddEditRelativeDialog(
                 )
 
                 // Relationship Degree
-                Text("درجة القرابة:", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                Text(if (lang == "en") "Relationship:" else "درجة القرابة:", fontSize = 12.sp, fontWeight = FontWeight.Bold)
                 LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    items(degrees) { degree ->
+                    items(degrees.zip(degreeLabels)) { (degree, label) ->
                         FilterChip(
                             selected = relationshipDegree == degree,
                             onClick = { relationshipDegree = degree },
-                            label = { Text(degree, fontSize = 11.sp) },
+                            label = { Text(label, fontSize = 11.sp) },
                             shape = RoundedCornerShape(12.dp)
                         )
                     }
                 }
 
                 // Reminder Interval
-                Text("معدل التذكيرات الدوري:", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                Text(if (lang == "en") "Reminder Frequency:" else "معدل التذكيرات الدوري:", fontSize = 12.sp, fontWeight = FontWeight.Bold)
                 LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     items(intervals) { (days, label) ->
                         FilterChip(
@@ -136,7 +151,7 @@ fun AddEditRelativeDialog(
                 OutlinedTextField(
                     value = notes,
                     onValueChange = { notes = it },
-                    label = { Text("ملاحظات (اختياري)") },
+                    label = { Text(if (lang == "en") "Notes (optional)" else "ملاحظات (اختياري)") },
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(16.dp),
                     maxLines = 2
@@ -149,22 +164,37 @@ fun AddEditRelativeDialog(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     TextButton(onClick = onDismiss) {
-                        Text("إلغاء", color = MaterialTheme.colorScheme.secondary)
+                        Text(if (lang == "en") "Cancel" else "إلغاء", color = MaterialTheme.colorScheme.secondary)
                     }
                     Spacer(modifier = Modifier.width(8.dp))
                     Button(
                         onClick = {
                             if (name.isBlank() || phone.isBlank()) {
-                                Toast.makeText(context, "يرجى كتابة الاسم ورقم الهاتف على الأقل", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(
+                                    context,
+                                    if (lang == "en") "Please enter a name and phone number"
+                                    else "يرجى كتابة الاسم ورقم الهاتف على الأقل",
+                                    Toast.LENGTH_SHORT
+                                ).show()
                                 return@Button
                             }
                             view.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
                             if (isEditMode && relativeToEdit != null) {
                                 viewModel.editRelative(relativeToEdit, name, phone, relationshipDegree, intervalDays, notes)
-                                Toast.makeText(context, "تم تحديث بيانات $name بنجاح ✅", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(
+                                    context,
+                                    if (lang == "en") "$name updated successfully ✅"
+                                    else "تم تحديث بيانات $name بنجاح ✅",
+                                    Toast.LENGTH_SHORT
+                                ).show()
                             } else {
                                 viewModel.addRelative(name, phone, relationshipDegree, intervalDays, notes)
-                                Toast.makeText(context, "تمت إضافة $name بنجاح في صِلَةِ! ✨", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(
+                                    context,
+                                    if (lang == "en") "$name added to Silah successfully! ✨"
+                                    else "تمت إضافة $name بنجاح في صِلَةِ! ✨",
+                                    Toast.LENGTH_SHORT
+                                ).show()
                             }
                             onDismiss()
                         },
@@ -175,7 +205,10 @@ fun AddEditRelativeDialog(
                         shape = RoundedCornerShape(14.dp)
                     ) {
                         Text(
-                            if (isEditMode) "حفظ التعديلات ✅" else "حفظ وتفعيل التذكير ✨",
+                            if (isEditMode)
+                                (if (lang == "en") "Save Changes ✅" else "حفظ التعديلات ✅")
+                            else
+                                (if (lang == "en") "Save & Activate Reminder ✨" else "حفظ وتفعيل التذكير ✨"),
                             fontWeight = FontWeight.Bold
                         )
                     }

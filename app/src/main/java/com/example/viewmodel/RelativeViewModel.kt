@@ -89,12 +89,31 @@ class RelativeViewModel(application: Application) : AndroidViewModel(application
         prefs.edit().putBoolean("dark_mode", enabled).apply()
     }
 
-    // Font selection state persisted in SharedPreferences
-    val selectedFont = MutableStateFlow(prefs.getString("selected_font", "Thamanyah") ?: "Thamanyah")
+    // App language state persisted in SharedPreferences ("ar" or "en")
+    val selectedLanguage = MutableStateFlow(prefs.getString("selected_language", "ar") ?: "ar")
 
-    fun selectFont(fontName: String) {
-        selectedFont.value = fontName
-        prefs.edit().putString("selected_font", fontName).apply()
+    fun selectLanguage(langCode: String) {
+        selectedLanguage.value = langCode
+        prefs.edit().putString("selected_language", langCode).apply()
+    }
+
+    // User Profile state (Name, Gender & Avatar)
+    val userName = MutableStateFlow(prefs.getString("user_name", "") ?: "")
+    val userGender = MutableStateFlow(prefs.getString("user_gender", "male") ?: "male")
+    val userAvatarId = MutableStateFlow(prefs.getString("user_avatar_id", "avatar_01") ?: "avatar_01")
+
+    fun saveUserProfile(name: String, gender: String) {
+        userName.value = name
+        userGender.value = gender
+        prefs.edit()
+            .putString("user_name", name)
+            .putString("user_gender", gender)
+            .apply()
+    }
+
+    fun saveUserAvatar(avatarId: String) {
+        userAvatarId.value = avatarId
+        prefs.edit().putString("user_avatar_id", avatarId).apply()
     }
 
     // ─────────────────────────────────────────────────────────────────────
@@ -141,7 +160,7 @@ class RelativeViewModel(application: Application) : AndroidViewModel(application
                 onConflict = strategy
             )
             backupResult.value = result
-            if (result.isSuccess) {
+            if (result.success) {
                 SilaAppWidgetProvider.triggerWidgetUpdate(getApplication())
             }
         }
@@ -435,10 +454,12 @@ class RelativeViewModel(application: Application) : AndroidViewModel(application
     }
 }
 
-enum class RelativeStatus(val label: String, val colorHex: String) {
-    NEEDS_CONTACT_URGENT("تواصل الآن (لم يتصل قط)", "E53935"),
-    OVERDUE_CRITICAL("تأخرت كثيراً في الوصل!", "D32F2F"),
-    NEEDS_CONTACT("حان وقت الصلة اليوم", "EF6C00"),
-    OK_SOON("تواصل معه قريباً", "FBC02D"),
-    CONNECTED("أحسنت! متصل مؤخراً", "2E7D32")
+enum class RelativeStatus(val label: String, val labelEn: String, val colorHex: String) {
+    NEEDS_CONTACT_URGENT("تواصل الآن (لم يتصل قط)", "Contact Now (Never Called)", "E53935"),
+    OVERDUE_CRITICAL("تأخرت كثيراً في الوصل!", "Very Overdue!", "D32F2F"),
+    NEEDS_CONTACT("حان وقت الصلة اليوم", "Time to Connect Today", "EF6C00"),
+    OK_SOON("تواصل معه قريباً", "Connect Soon", "FBC02D"),
+    CONNECTED("أحسنت! متصل مؤخراً", "Great! Recently Connected", "2E7D32");
+
+    fun getLabel(lang: String) = if (lang == "en") labelEn else label
 }

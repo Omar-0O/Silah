@@ -35,6 +35,9 @@ import com.example.viewmodel.RelativeViewModel
 import java.text.SimpleDateFormat
 import java.util.*
 
+// Helper: pick the right string based on language
+fun String.ifEn(lang: String, en: String): String = if (lang == "en") en else this
+
 @Composable
 fun AppNavigation(viewModel: RelativeViewModel) {
     val prefs = androidx.compose.ui.platform.LocalContext.current
@@ -44,20 +47,20 @@ fun AppNavigation(viewModel: RelativeViewModel) {
     var showSplash by remember { mutableStateOf(true) }
 
     when {
-        showOnboarding -> OnboardingScreen(onFinished = {
-            prefs.edit().putBoolean("onboarding_done", true).apply()
-            showOnboarding = false
-        })
         showSplash -> SplashScreen(onFinished = { showSplash = false })
+        showOnboarding -> OnboardingScreen(
+            viewModel = viewModel,
+            onFinished = {
+                prefs.edit().putBoolean("onboarding_done", true).apply()
+                showOnboarding = false
+            }
+        )
         else -> MainDashboardScreen(viewModel = viewModel)
     }
 }
 
-@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
 fun MainDashboardScreen(viewModel: RelativeViewModel) {
-    var selectedTab by remember { mutableIntStateOf(0) }
-
     // Dialog state collectors
     val showAddRelativeDialog by viewModel.showAddRelativeDialog.collectAsState()
     val showEditRelativeDialog by viewModel.showEditRelativeDialog.collectAsState()
@@ -65,47 +68,15 @@ fun MainDashboardScreen(viewModel: RelativeViewModel) {
     val showImportContactsDialog by viewModel.showImportContactsDialog.collectAsState()
     val showRecordLogDialog by viewModel.showRecordLogDialog.collectAsState()
     val showLogsHistoryDialog by viewModel.showLogsHistoryDialog.collectAsState()
+    val selectedLanguage by viewModel.selectedLanguage.collectAsState()
 
-    // Enforce Arabic RTL Layout
-    CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
-        Scaffold(
-            bottomBar = {
-                NavigationBar(
-                    containerColor = MaterialTheme.colorScheme.surface,
-                    tonalElevation = 8.dp
-                ) {
-                    NavigationBarItem(
-                        selected = selectedTab == 0,
-                        onClick = { selectedTab = 0 },
-                        icon = { Icon(Icons.Outlined.People, contentDescription = "الأقارب") },
-                        label = { Text("الأقارب", fontWeight = if (selectedTab == 0) FontWeight.Bold else FontWeight.Normal) }
-                    )
-                    NavigationBarItem(
-                        selected = selectedTab == 1,
-                        onClick = { selectedTab = 1 },
-                        icon = { Icon(Icons.Outlined.StarOutline, contentDescription = "التحديات") },
-                        label = { Text("التحديات", fontWeight = if (selectedTab == 1) FontWeight.Bold else FontWeight.Normal) }
-                    )
-                    NavigationBarItem(
-                        selected = selectedTab == 2,
-                        onClick = { selectedTab = 2 },
-                        icon = { Icon(Icons.Outlined.Mail, contentDescription = "قوالب رسائل") },
-                        label = { Text("قوالب رسائل", fontWeight = if (selectedTab == 2) FontWeight.Bold else FontWeight.Normal) }
-                    )
-                }
-            }
-        ) { paddingValues ->
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues)
-            ) {
-                when (selectedTab) {
-                    0 -> RelativesTabScreen(viewModel = viewModel)
-                    1 -> ChallengesTabScreen(viewModel = viewModel)
-                    2 -> TemplatesTabScreen(viewModel = viewModel)
-                }
-            }
+    // Switch layout direction based on selected language
+    val layoutDirection = if (selectedLanguage == "en") LayoutDirection.Ltr else LayoutDirection.Rtl
+    CompositionLocalProvider(LocalLayoutDirection provides layoutDirection) {
+        Box(
+            modifier = Modifier.fillMaxSize()
+        ) {
+            RelativesTabScreen(viewModel = viewModel)
         }
 
         // --- Dialogs & Bottom Sheets ---
@@ -165,8 +136,10 @@ fun LogsHistoryDialog(
     onDismiss: () -> Unit
 ) {
     val logs by viewModel.logs.collectAsState()
+    val lang by viewModel.selectedLanguage.collectAsState()
     val relativeLogs = logs.filter { it.relativeId == relative.id }.sortedByDescending { it.timestamp }
-    val dateFormat = remember { SimpleDateFormat("yyyy/MM/dd - hh:mm a", Locale("ar")) }
+    val dateLocale = if (lang == "en") Locale.ENGLISH else Locale("ar")
+    val dateFormat = remember(lang) { SimpleDateFormat("yyyy/MM/dd - hh:mm a", dateLocale) }
 
     Dialog(onDismissRequest = onDismiss) {
         Card(
@@ -180,7 +153,8 @@ fun LogsHistoryDialog(
                 modifier = Modifier.padding(24.dp)
             ) {
                 Text(
-                    text = "سجل تواصل ${relative.name} 📜",
+                    text = if (lang == "en") "${relative.name}'s Communication Log 📜"
+                           else "سجل تواصل ${relative.name} 📜",
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.primary
@@ -195,7 +169,8 @@ fun LogsHistoryDialog(
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            "لم يتم تسجيل تواصل مع هذا القريب بعد",
+                            if (lang == "en") "No communication recorded yet"
+                            else "لم يتم تسجيل تواصل مع هذا القريب بعد",
                             fontSize = 13.sp,
                             color = MaterialTheme.colorScheme.secondary
                         )
@@ -253,11 +228,9 @@ fun LogsHistoryDialog(
                     shape = RoundedCornerShape(14.dp),
                     modifier = Modifier.align(Alignment.End)
                 ) {
-                    Text("إغلاق", fontWeight = FontWeight.Bold)
+                    Text(if (lang == "en") "Close" else "إغلاق", fontWeight = FontWeight.Bold)
                 }
             }
         }
     }
-}
-
 }

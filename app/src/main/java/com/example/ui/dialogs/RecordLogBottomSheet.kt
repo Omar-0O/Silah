@@ -33,10 +33,16 @@ fun RecordLogBottomSheet(
 ) {
     val context = LocalContext.current
     val view = LocalView.current
+    val lang by viewModel.selectedLanguage.collectAsState()
     var selectedType by remember { mutableStateOf("مكالمة") }
     var notes by remember { mutableStateOf("") }
 
-    val commTypes = listOf(
+    val commTypes = if (lang == "en") listOf(
+        Triple("مكالمة", "Phone Call 📞", Icons.Default.Call),
+        Triple("زيارة", "Family Visit 🏠", Icons.Default.People),
+        Triple("رسالة", "Message/WhatsApp ✉️", Icons.Default.Chat),
+        Triple("هدية", "Gift/Occasion 🎁", Icons.Default.Star)
+    ) else listOf(
         Triple("مكالمة", "مكالمة هاتفية 📞", Icons.Default.Call),
         Triple("زيارة", "زيارة عائلية 🏠", Icons.Default.People),
         Triple("رسالة", "رسالة نصية/واتساب ✉️", Icons.Default.Chat),
@@ -56,14 +62,16 @@ fun RecordLogBottomSheet(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             Text(
-                text = "تسجيل تواصل مع ${relative.name} 🌸",
+                text = if (lang == "en") "Log Communication with ${relative.name} 🌸"
+                       else "تسجيل تواصل مع ${relative.name} 🌸",
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.primary
             )
 
             Text(
-                text = "اختر طريقة التواصل وسجّلها لتبقى في ميزان حسناتك ومسيرتك 💚",
+                text = if (lang == "en") "Choose the type of contact and record it to keep your journey alive 💚"
+                       else "اختر طريقة التواصل وسجّلها لتبقى في ميزان حسناتك ومسيرتك 💚",
                 fontSize = 12.sp,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -90,7 +98,7 @@ fun RecordLogBottomSheet(
             OutlinedTextField(
                 value = notes,
                 onValueChange = { notes = it },
-                label = { Text("ملاحظات أو انطباعات عن التواصل (اختياري)") },
+                label = { Text(if (lang == "en") "Notes or impressions about this contact (optional)" else "ملاحظات أو انطباعات عن التواصل (اختياري)") },
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
                 maxLines = 3
@@ -99,8 +107,15 @@ fun RecordLogBottomSheet(
             Button(
                 onClick = {
                     view.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
-                    viewModel.recordCommunication(relative.id, selectedType, notes.ifEmpty { "تواصل طيب ومبارك" })
-                    Toast.makeText(context, "تم حفظ تسجيل التواصل بنجاح! ✨", Toast.LENGTH_SHORT).show()
+                    viewModel.recordCommunication(
+                        relative.id, selectedType,
+                        notes.ifEmpty { if (lang == "en") "A blessed connection" else "تواصل طيب ومبارك" }
+                    )
+                    Toast.makeText(
+                        context,
+                        if (lang == "en") "Contact logged successfully! ✨" else "تم حفظ تسجيل التواصل بنجاح! ✨",
+                        Toast.LENGTH_SHORT
+                    ).show()
                     onDismiss()
                 },
                 colors = ButtonDefaults.buttonColors(containerColor = SoftGold, contentColor = Color(0xFF141816)),
@@ -108,7 +123,11 @@ fun RecordLogBottomSheet(
                 modifier = Modifier.fillMaxWidth(),
                 contentPadding = PaddingValues(vertical = 12.dp)
             ) {
-                Text("حفظ وتأكيد التواصل 🌸", fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                Text(
+                    if (lang == "en") "Save & Confirm Contact 🌸" else "حفظ وتأكيد التواصل 🌸",
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold
+                )
             }
         }
     }

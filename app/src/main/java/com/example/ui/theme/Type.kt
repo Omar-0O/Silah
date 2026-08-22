@@ -7,130 +7,155 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.text.googlefonts.GoogleFont
 import androidx.compose.ui.text.googlefonts.Font
+import androidx.compose.ui.unit.em
 import com.example.R
 
-// Set up Google Font Provider
+// ─────────────────────────────────────────────────────────────────────────────
+// Google Font Provider
+// ─────────────────────────────────────────────────────────────────────────────
 val fontProvider = GoogleFont.Provider(
     providerAuthority = "com.google.android.gms.fonts",
-    providerPackage = "com.google.android.gms",
-    certificates = R.array.com_google_android_gms_fonts_certs
+    providerPackage   = "com.google.android.gms",
+    certificates      = R.array.com_google_android_gms_fonts_certs
 )
 
-// Helper to get selected FontFamily dynamically
-fun getFontFamily(fontName: String): FontFamily {
+// ─────────────────────────────────────────────────────────────────────────────
+// Dynamic font family loader
+// ─────────────────────────────────────────────────────────────────────────────
+fun getFontFamily(fontName: String = "Cairo"): FontFamily {
     val googleFontName = when (fontName) {
-        "Cairo" -> "Cairo"
-        "Almarai" -> "Almarai"
-        "Tajawal" -> "Tajawal"
-        "Thamanyah" -> "Readex Pro" // Mimicking Thamanyah OS Font with premium modern Readex Pro
-        else -> "Readex Pro"
+        "Cairo"      -> "Cairo"
+        "Readex Pro" -> "Readex Pro"
+        "Almarai"    -> "Almarai"
+        "Tajawal"    -> "Tajawal"
+        "Lemonada"   -> "Lemonada"
+        else         -> "Cairo"
     }
-
     val font = GoogleFont(googleFontName)
-
     return FontFamily(
+        Font(googleFont = font, fontProvider = fontProvider, weight = FontWeight.Light),
         Font(googleFont = font, fontProvider = fontProvider, weight = FontWeight.Normal),
         Font(googleFont = font, fontProvider = fontProvider, weight = FontWeight.Medium),
         Font(googleFont = font, fontProvider = fontProvider, weight = FontWeight.SemiBold),
-        Font(googleFont = font, fontProvider = fontProvider, weight = FontWeight.Bold)
+        Font(googleFont = font, fontProvider = fontProvider, weight = FontWeight.Bold),
+        Font(googleFont = font, fontProvider = fontProvider, weight = FontWeight.ExtraBold),
     )
 }
 
-// Helper to construct dynamic Material 3 typography with specific font family
+// ─────────────────────────────────────────────────────────────────────────────
+// Typography — tuned for Arabic & English readability
+// Based on Material 3 type scale + micro-adjustments for warmth & elegance
+// ─────────────────────────────────────────────────────────────────────────────
 fun getTypography(fontFamily: FontFamily): Typography {
     return Typography(
+        // Large display — hero text
         displayLarge = TextStyle(
-            fontFamily = fontFamily,
-            fontWeight = FontWeight.Normal,
-            fontSize = 57.sp,
-            lineHeight = 64.sp
+            fontFamily   = fontFamily,
+            fontWeight   = FontWeight.Light,
+            fontSize     = 54.sp,
+            lineHeight   = 66.sp,
+            letterSpacing = (-0.02).em
         ),
         displayMedium = TextStyle(
-            fontFamily = fontFamily,
-            fontWeight = FontWeight.Normal,
-            fontSize = 45.sp,
-            lineHeight = 52.sp
+            fontFamily   = fontFamily,
+            fontWeight   = FontWeight.Light,
+            fontSize     = 42.sp,
+            lineHeight   = 52.sp,
+            letterSpacing = (-0.01).em
         ),
         displaySmall = TextStyle(
-            fontFamily = fontFamily,
-            fontWeight = FontWeight.Normal,
-            fontSize = 36.sp,
-            lineHeight = 44.sp
+            fontFamily   = fontFamily,
+            fontWeight   = FontWeight.Normal,
+            fontSize     = 34.sp,
+            lineHeight   = 44.sp
         ),
+
+        // Headlines — section titles
         headlineLarge = TextStyle(
-            fontFamily = fontFamily,
-            fontWeight = FontWeight.SemiBold,
-            fontSize = 32.sp,
-            lineHeight = 40.sp
+            fontFamily   = fontFamily,
+            fontWeight   = FontWeight.SemiBold,
+            fontSize     = 30.sp,
+            lineHeight   = 38.sp,
+            letterSpacing = (-0.01).em
         ),
         headlineMedium = TextStyle(
-            fontFamily = fontFamily,
-            fontWeight = FontWeight.SemiBold,
-            fontSize = 28.sp,
-            lineHeight = 36.sp
+            fontFamily   = fontFamily,
+            fontWeight   = FontWeight.SemiBold,
+            fontSize     = 26.sp,
+            lineHeight   = 34.sp
         ),
         headlineSmall = TextStyle(
-            fontFamily = fontFamily,
-            fontWeight = FontWeight.SemiBold,
-            fontSize = 24.sp,
-            lineHeight = 32.sp
+            fontFamily   = fontFamily,
+            fontWeight   = FontWeight.SemiBold,
+            fontSize     = 22.sp,
+            lineHeight   = 30.sp
         ),
+
+        // Titles — card headers, dialog titles
         titleLarge = TextStyle(
-            fontFamily = fontFamily,
-            fontWeight = FontWeight.Bold,
-            fontSize = 22.sp,
-            lineHeight = 28.sp
+            fontFamily   = fontFamily,
+            fontWeight   = FontWeight.Bold,
+            fontSize     = 20.sp,
+            lineHeight   = 28.sp,
+            letterSpacing = (-0.005).em
         ),
         titleMedium = TextStyle(
-            fontFamily = fontFamily,
-            fontWeight = FontWeight.Medium,
-            fontSize = 16.sp,
-            lineHeight = 24.sp
+            fontFamily   = fontFamily,
+            fontWeight   = FontWeight.SemiBold,
+            fontSize     = 16.sp,
+            lineHeight   = 24.sp
         ),
         titleSmall = TextStyle(
-            fontFamily = fontFamily,
-            fontWeight = FontWeight.Medium,
-            fontSize = 14.sp,
-            lineHeight = 20.sp
+            fontFamily   = fontFamily,
+            fontWeight   = FontWeight.Medium,
+            fontSize     = 14.sp,
+            lineHeight   = 20.sp
         ),
+
+        // Body — readable, comfortable line-height
         bodyLarge = TextStyle(
-            fontFamily = fontFamily,
-            fontWeight = FontWeight.Normal,
-            fontSize = 16.sp,
-            lineHeight = 24.sp
+            fontFamily   = fontFamily,
+            fontWeight   = FontWeight.Normal,
+            fontSize     = 16.sp,
+            lineHeight   = 26.sp    // ← extra breathing room
         ),
         bodyMedium = TextStyle(
-            fontFamily = fontFamily,
-            fontWeight = FontWeight.Normal,
-            fontSize = 14.sp,
-            lineHeight = 20.sp
+            fontFamily   = fontFamily,
+            fontWeight   = FontWeight.Normal,
+            fontSize     = 14.sp,
+            lineHeight   = 22.sp
         ),
         bodySmall = TextStyle(
-            fontFamily = fontFamily,
-            fontWeight = FontWeight.Normal,
-            fontSize = 12.sp,
-            lineHeight = 16.sp
+            fontFamily   = fontFamily,
+            fontWeight   = FontWeight.Normal,
+            fontSize     = 12.sp,
+            lineHeight   = 18.sp
         ),
+
+        // Labels — chips, badges, captions
         labelLarge = TextStyle(
-            fontFamily = fontFamily,
-            fontWeight = FontWeight.Medium,
-            fontSize = 14.sp,
-            lineHeight = 20.sp
+            fontFamily   = fontFamily,
+            fontWeight   = FontWeight.SemiBold,
+            fontSize     = 14.sp,
+            lineHeight   = 20.sp,
+            letterSpacing = 0.003.em
         ),
         labelMedium = TextStyle(
-            fontFamily = fontFamily,
-            fontWeight = FontWeight.Medium,
-            fontSize = 12.sp,
-            lineHeight = 16.sp
+            fontFamily   = fontFamily,
+            fontWeight   = FontWeight.Medium,
+            fontSize     = 12.sp,
+            lineHeight   = 16.sp,
+            letterSpacing = 0.005.em
         ),
         labelSmall = TextStyle(
-            fontFamily = fontFamily,
-            fontWeight = FontWeight.Medium,
-            fontSize = 11.sp,
-            lineHeight = 16.sp
-        )
+            fontFamily   = fontFamily,
+            fontWeight   = FontWeight.Medium,
+            fontSize     = 11.sp,
+            lineHeight   = 15.sp,
+            letterSpacing = 0.005.em
+        ),
     )
 }
 
-// Default fallback typography
-val Typography = getTypography(getFontFamily("Thamanyah"))
+// Default fallback
+val Typography = getTypography(getFontFamily("Cairo"))

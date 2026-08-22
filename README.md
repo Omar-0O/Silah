@@ -91,12 +91,10 @@ com.example/
 │   │   ├── RecordLogBottomSheet.kt # Quick manual log entry bottom sheet
 │   │   └── SettingsDialog.kt     # App settings & Backup/Restore controls
 │   ├── screens/
-│   │   ├── ChallengesTabScreen.kt# Kinship challenges & badges
 │   │   ├── MainDashboard.kt      # Main Navigation Host & history logs
 │   │   ├── OnboardingScreen.kt   # 3-step animated intro screen
 │   │   ├── RelativesTabScreen.kt # Relatives list, category filters & search
-│   │   ├── SplashScreen.kt       # Spiritual splash screen with Hadith
-│   │   └── TemplatesTabScreen.kt # Quick messaging templates
+│   │   └── SplashScreen.kt       # Spiritual splash screen with Hadith
 │   └── theme/
 │       ├── Color.kt              # Soft-UI palette (PrimaryGreen, SoftGold, etc.)
 │       └── Theme.kt              # Material 3 Theme Configuration

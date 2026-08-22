@@ -1,3 +1,15 @@
 <resources>
     <string name="app_name">صِلَةِ</string>
+    <string name="relatives_tab">الأقارب</string>
+    <string name="challenges_tab">التحديات</string>
+    <string name="settings_title">إعدادات تطبيق صِلَةِ</string>
+    <string name="dark_mode">الوضع الداكن (Dark Mode)</string>
+    <string name="dark_mode_desc">واجهة مريحة للعين في الإضاءة الخافتة</string>
+    <string name="app_language">لغة التطبيق (Language)</string>
+    <string name="arabic">العربية (Arabic)</string>
+    <string name="english">English (الإنجليزية)</string>
+    <string name="backup_restore">النسخ الاحتياطي والاستعادة</string>
+    <string name="export_backup">تصدير نسخة احتياطية 📤</string>
+    <string name="import_backup">استعادة من نسخة احتياطية 📥</string>
+    <string name="close">إغلاق</string>
 </resources>

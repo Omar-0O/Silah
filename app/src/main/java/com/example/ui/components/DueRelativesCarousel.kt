@@ -1,6 +1,5 @@
 package com.example.ui.components
 
-import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import androidx.compose.foundation.BorderStroke
@@ -13,8 +12,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.Chat
 import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.outlined.Chat
 import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -27,7 +26,15 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.data.Relative
+import com.example.ui.theme.PrimaryGreen
+import com.example.ui.theme.SecondaryGreyGreen
+import com.example.ui.theme.SoftGold
 import com.example.utils.DateUtils
+import com.example.viewmodel.RelativeViewModel
+
+import androidx.core.graphics.toColorInt
+import androidx.core.net.toUri
 
 @Composable
 fun DueRelativesCarousel(
@@ -108,8 +115,8 @@ fun DueRelativesCarousel(
             ) {
                 items(dueRelatives) { relative ->
                     val status = viewModel.getRelativeStatus(relative)
-                    val statusBgColor = Color(android.graphics.Color.parseColor("#15" + status.colorHex))
-                    val statusTextColor = Color(android.graphics.Color.parseColor("#FF" + status.colorHex))
+                    val statusBgColor = Color("#15${status.colorHex}".toColorInt())
+                    val statusTextColor = Color("#FF${status.colorHex}".toColorInt())
 
                     Card(
                         modifier = Modifier
@@ -171,14 +178,14 @@ fun DueRelativesCarousel(
                                     // WhatsApp Action
                                     IconButton(
                                         onClick = {
-                                            var cleanPhone = relative.phone.replace("\\s|-|\\(|\\)".toRegex(), "")
+                                            var cleanPhone = relative.phone.replace("""[\s\-\(\)]""".toRegex(), "")
                                             if (!cleanPhone.startsWith("+") && !cleanPhone.startsWith("00")) {
                                                 if (cleanPhone.startsWith("0")) {
                                                     cleanPhone = "966" + cleanPhone.substring(1)
                                                 }
                                             }
                                             val intent = Intent(Intent.ACTION_VIEW).apply {
-                                                data = Uri.parse("https://api.whatsapp.com/send?phone=$cleanPhone")
+                                                data = "https://api.whatsapp.com/send?phone=$cleanPhone".toUri()
                                             }
                                             context.startActivity(intent)
                                             viewModel.recordCommunication(relative.id, "رسالة", "تواصل سريع ومباشر عبر الواتساب")
@@ -188,7 +195,7 @@ fun DueRelativesCarousel(
                                             .background(Color(0xFFE8F5E9), CircleShape)
                                     ) {
                                         Icon(
-                                            imageVector = Icons.Outlined.Chat,
+                                            imageVector = Icons.AutoMirrored.Outlined.Chat,
                                             contentDescription = "واتساب",
                                             tint = Color(0xFF2E7D32),
                                             modifier = Modifier.size(16.dp)

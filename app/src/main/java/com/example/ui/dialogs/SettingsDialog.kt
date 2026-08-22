@@ -28,15 +28,13 @@ fun SettingsDialog(
     onDismiss: () -> Unit
 ) {
     val isDarkMode by viewModel.isDarkMode.collectAsState()
-    val selectedFont by viewModel.selectedFont.collectAsState()
+    val selectedLanguage by viewModel.selectedLanguage.collectAsState()
     val relatives by viewModel.relatives.collectAsState()
     var showImportConfirm by remember { mutableStateOf(false) }
 
-    val fonts = listOf(
-        Pair("Thamanyah", "🌟 خط ثمانية (Thamanyah OS)"),
-        Pair("Cairo", "🖋️ خط القاهرة (Cairo)"),
-        Pair("Almarai", "🍃 خط المراعي (Almarai)"),
-        Pair("Tajawal", "📐 خط تجوال (Tajawal)")
+    val languages = listOf(
+        Pair("ar", "🇸🇦 العربية (Arabic)"),
+        Pair("en", "🇬🇧 English (الإنجليزية)")
     )
 
     Dialog(onDismissRequest = onDismiss) {
@@ -52,7 +50,7 @@ fun SettingsDialog(
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 Text(
-                    text = "إعدادات تطبيق صِلَةِ ⚙️",
+                    text = if (selectedLanguage == "en") "Silah Settings ⚙️" else "إعدادات تطبيق صِلَةِ ⚙️",
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.primary
@@ -65,8 +63,16 @@ fun SettingsDialog(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Column {
-                        Text("الوضع الداكن (Dark Mode)", fontSize = 14.sp, fontWeight = FontWeight.Bold)
-                        Text("واجهة مريحة للعين في الإضاءة الخافتة", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(
+                            if (selectedLanguage == "en") "Dark Mode" else "الوضع الداكن (Dark Mode)",
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            if (selectedLanguage == "en") "Eye-friendly interface in low light" else "واجهة مريحة للعين في الإضاءة الخافتة",
+                            fontSize = 11.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     }
                     Switch(
                         checked = isDarkMode,
@@ -76,20 +82,24 @@ fun SettingsDialog(
 
                 HorizontalDivider()
 
-                // ── Font Selection ──────────────────────────────────────────
-                Text("تخصيص الخط العربي:", fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                // ── Language Selection ──────────────────────────────────────
+                Text(
+                    if (selectedLanguage == "en") "App Language:" else "لغة التطبيق (Language):",
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold
+                )
                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    fonts.forEach { (fontKey, fontNameLabel) ->
+                    languages.forEach { (langCode, langLabel) ->
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             RadioButton(
-                                selected = selectedFont == fontKey,
-                                onClick = { viewModel.selectFont(fontKey) }
+                                selected = selectedLanguage == langCode,
+                                onClick = { viewModel.selectLanguage(langCode) }
                             )
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text(fontNameLabel, fontSize = 13.sp)
+                            Text(langLabel, fontSize = 13.sp, fontWeight = FontWeight.Medium)
                         }
                     }
                 }
@@ -103,7 +113,7 @@ fun SettingsDialog(
                         horizontalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
                         Text(
-                            text = "النسخ الاحتياطي والاستعادة",
+                            text = if (selectedLanguage == "en") "Backup & Restore" else "النسخ الاحتياطي والاستعادة",
                             fontSize = 14.sp,
                             fontWeight = FontWeight.Bold
                         )
@@ -122,7 +132,10 @@ fun SettingsDialog(
                         border = BorderStroke(1.dp, MaterialTheme.colorScheme.secondary.copy(alpha = 0.3f))
                     ) {
                         Text(
-                            text = "يمكنك تصدير قائمة أقاربك كملف JSON وحفظه في Google Drive أو أي مكان آخر، ثم استعادتها لاحقاً حتى لو غيّرت هاتفك أو أعدت تثبيت التطبيق.",
+                            text = if (selectedLanguage == "en")
+                                "You can export your relatives list as a JSON file and save it to Google Drive or anywhere else, then restore it later even if you change your phone or reinstall the app."
+                            else
+                                "يمكنك تصدير قائمة أقاربك كملف JSON وحفظه في Google Drive أو أي مكان آخر، ثم استعادتها لاحقاً حتى لو غيّرت هاتفك أو أعدت تثبيت التطبيق.",
                             fontSize = 11.sp,
                             color = MaterialTheme.colorScheme.onSecondaryContainer,
                             lineHeight = 17.sp,
@@ -145,12 +158,13 @@ fun SettingsDialog(
                         Spacer(modifier = Modifier.width(8.dp))
                         Column {
                             Text(
-                                "تصدير نسخة احتياطية 📤",
+                                if (selectedLanguage == "en") "Export Backup 📤" else "تصدير نسخة احتياطية 📤",
                                 fontSize = 13.sp,
                                 fontWeight = FontWeight.Bold
                             )
                             Text(
-                                "${relatives.size} قريب — سيُحفظ كملف JSON",
+                                if (selectedLanguage == "en") "${relatives.size} relatives — will be saved as JSON"
+                                else "${relatives.size} قريب — سيُحفظ كملف JSON",
                                 fontSize = 10.sp,
                                 color = MaterialTheme.colorScheme.secondary
                             )
@@ -169,12 +183,13 @@ fun SettingsDialog(
                         Spacer(modifier = Modifier.width(8.dp))
                         Column {
                             Text(
-                                "استعادة من نسخة احتياطية 📥",
+                                if (selectedLanguage == "en") "Restore from Backup 📥" else "استعادة من نسخة احتياطية 📥",
                                 fontSize = 13.sp,
                                 fontWeight = FontWeight.Bold
                             )
                             Text(
-                                "ستُضاف الأرقام الجديدة فقط (دون تكرار)",
+                                if (selectedLanguage == "en") "Only new entries will be added (no duplicates)"
+                                else "ستُضاف الأرقام الجديدة فقط (دون تكرار)",
                                 fontSize = 10.sp,
                                 color = Color(0xFFB45309)
                             )
@@ -195,7 +210,7 @@ fun SettingsDialog(
                         ),
                         shape = RoundedCornerShape(14.dp)
                     ) {
-                        Text("إغلاق", fontWeight = FontWeight.Bold)
+                        Text(if (selectedLanguage == "en") "Close" else "إغلاق", fontWeight = FontWeight.Bold)
                     }
                 }
             }
@@ -206,10 +221,18 @@ fun SettingsDialog(
     if (showImportConfirm) {
         AlertDialog(
             onDismissRequest = { showImportConfirm = false },
-            title = { Text("استعادة من نسخة احتياطية", fontWeight = FontWeight.Bold) },
+            title = {
+                Text(
+                    if (selectedLanguage == "en") "Restore from Backup" else "استعادة من نسخة احتياطية",
+                    fontWeight = FontWeight.Bold
+                )
+            },
             text = {
                 Text(
-                    "سيتم إضافة الأقارب الجدد من ملف النسخة الاحتياطية. الأقارب الذين لديهم نفس رقم الهاتف لن يتكرروا.\n\nهل تريد المتابعة؟",
+                    if (selectedLanguage == "en")
+                        "New relatives from the backup file will be added. Relatives with the same phone number will not be duplicated.\n\nDo you want to continue?"
+                    else
+                        "سيتم إضافة الأقارب الجدد من ملف النسخة الاحتياطية. الأقارب الذين لديهم نفس رقم الهاتف لن يتكرروا.\n\nهل تريد المتابعة؟",
                     lineHeight = 20.sp
                 )
             },
@@ -222,12 +245,15 @@ fun SettingsDialog(
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = SoftGold, contentColor = Color(0xFF141816))
                 ) {
-                    Text("نعم، اختر الملف", fontWeight = FontWeight.Bold)
+                    Text(
+                        if (selectedLanguage == "en") "Yes, Choose File" else "نعم، اختر الملف",
+                        fontWeight = FontWeight.Bold
+                    )
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showImportConfirm = false }) {
-                    Text("إلغاء")
+                    Text(if (selectedLanguage == "en") "Cancel" else "إلغاء")
                 }
             },
             shape = RoundedCornerShape(20.dp)

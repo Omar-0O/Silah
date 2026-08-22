@@ -31,10 +31,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.ui.components.CommitmentHeaderCard
-import com.example.ui.components.DueRelativesCarousel
 import com.example.ui.components.KinshipKnotIcon
 import com.example.ui.components.RelativeCard
 import com.example.ui.components.SilaEmptyStateView
+import androidx.compose.foundation.border
+import com.example.ui.theme.PrimaryGreen
 import com.example.ui.theme.SoftGold
 import com.example.viewmodel.RelativeStatus
 import com.example.viewmodel.RelativeViewModel
@@ -51,23 +52,35 @@ fun RelativesTabScreen(
     val searchQuery by viewModel.searchQuery.collectAsState()
     val selectedCategory by viewModel.selectedCategory.collectAsState()
     val isSyncingCallLogs by viewModel.isSyncingCallLogs.collectAsState()
+    val lang by viewModel.selectedLanguage.collectAsState()
 
+    val allLogs by viewModel.logs.collectAsState()
     val memoriesList by viewModel.memories.collectAsState()
     val surpriseMemory = remember(memoriesList) { memoriesList.randomOrNull() }
 
-    // Dynamic commitment statistics
-    val totalRelativesCount = allRelatives.size
-    val contactedThisMonthCount = allRelatives.count { relative ->
-        relative.lastContactDate > 0L && (System.currentTimeMillis() - relative.lastContactDate) <= (1000L * 60 * 60 * 24 * 30)
+    // Kin-tie stats derived from communication logs
+    val totalLogsCount = allLogs.size
+    val uniqueDaysCount = remember(allLogs) {
+        allLogs
+            .map { log ->
+                val cal = java.util.Calendar.getInstance()
+                cal.timeInMillis = log.timestamp
+                // Key = year + dayOfYear, to get unique calendar days
+                "${cal.get(java.util.Calendar.YEAR)}-${cal.get(java.util.Calendar.DAY_OF_YEAR)}"
+            }
+            .toSet()
+            .size
     }
-    val commitmentPercentage = if (totalRelativesCount > 0) {
-        ((contactedThisMonthCount.toFloat() / totalRelativesCount.toFloat()) * 100).toInt()
-    } else 0
+    val uniqueRelativesContacted = remember(allLogs) {
+        allLogs.map { it.relativeId }.toSet().size
+    }
 
-    // Relatives due for contact
+    // Relatives due for contact (still used for status logic)
     val dueRelatives = allRelatives.filter { relative ->
         viewModel.getRelativeStatus(relative) != RelativeStatus.CONNECTED
     }
+
+    val userName by viewModel.userName.collectAsState()
 
     // Permission launcher for Contacts
     val contactsPermissionLauncher = rememberLauncherForActivityResult(
@@ -77,7 +90,12 @@ fun RelativesTabScreen(
             viewModel.fetchDeviceContacts(context)
             viewModel.showImportContactsDialog.value = true
         } else {
-            Toast.makeText(context, "صلاحية قراءة جهات الاتصال مطلوبة لاستيراد الأقارب", Toast.LENGTH_LONG).show()
+            Toast.makeText(
+                context,
+                if (lang == "en") "Contacts permission is required to import relatives"
+                else "صلاحية قراءة جهات الاتصال مطلوبة لاستيراد الأقارب",
+                Toast.LENGTH_LONG
+            ).show()
         }
     }
 
@@ -87,10 +105,20 @@ fun RelativesTabScreen(
     ) { isGranted ->
         if (isGranted) {
             viewModel.syncCallLogsWithRelatives(context) { synced ->
-                Toast.makeText(context, "تمت مزامنة $synced اتصالات جديدة تلقائياً! 📞", Toast.LENGTH_SHORT).show()
+                Toast.makeText(
+                    context,
+                    if (lang == "en") "Synced $synced new calls automatically! 📞"
+                    else "تمت مزامنة $synced اتصالات جديدة تلقائياً! 📞",
+                    Toast.LENGTH_SHORT
+                ).show()
             }
         } else {
-            Toast.makeText(context, "صلاحية سجل المكالمات مطلوبة للتعرف التلقائي على الاتصالات الواردة والصادرة", Toast.LENGTH_LONG).show()
+            Toast.makeText(
+                context,
+                if (lang == "en") "Call log permission is required to track incoming and outgoing calls automatically"
+                else "صلاحية سجل المكالمات مطلوبة للتعرف التلقائي على الاتصالات الواردة والصادرة",
+                Toast.LENGTH_LONG
+            ).show()
         }
     }
 
@@ -99,10 +127,13 @@ fun RelativesTabScreen(
         contract = ActivityResultContracts.RequestPermission()
     ) { /* نتيجة طلب الصلاحية — لا نحتاج action خاص */ }
 
-    // اطلب صلاحية الإشعارات عند أول تشغيل (Android 13+ فقط)
+    // اطلب صلاحية الإشعارات ومزامنة سجل المكالمات تلقائياً في الخلفية
     LaunchedEffect(Unit) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+        }
+        if (androidx.core.content.ContextCompat.checkSelfPermission(context, Manifest.permission.READ_CALL_LOG) == android.content.pm.PackageManager.PERMISSION_GRANTED) {
+            viewModel.syncCallLogsWithRelatives(context)
         }
         // إذا كانت قائمة الأقارب فارغة لأول مرة، افتح واجهة استيراد جهات الاتصال مباشرة
         if (allRelatives.isEmpty()) {
@@ -110,26 +141,50 @@ fun RelativesTabScreen(
         }
     }
 
+    val userGender by viewModel.userGender.collectAsState()
+    var showProfileDialog by remember { mutableStateOf(false) }
+
+    // Internal values stay Arabic (used for filtering stored data)
     val categories = listOf("الكل", "والدان", "أشقاء", "أعمام/أخوال", "أقارب آخرون")
+    val categoryLabels = if (lang == "en")
+        listOf("All", "Parents", "Siblings", "Uncles/Aunts", "Other Relatives")
+    else
+        categories
+
+    if (showProfileDialog) {
+        com.example.ui.dialogs.UserProfileDialog(
+            viewModel = viewModel,
+            onDismiss = { showProfileDialog = false }
+        )
+    }
+
+    val userAvatarId by viewModel.userAvatarId.collectAsState()
 
     Scaffold(
         topBar = {
             TopAppBar(
                 title = {
+                    // Top-Right Header User Profile & Avatar
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                        modifier = Modifier
+                            .padding(start = 4.dp)
+                            .clip(RoundedCornerShape(20.dp))
+                            .clickable { showProfileDialog = true }
+                            .padding(4.dp)
                     ) {
-                        KinshipKnotIcon(
-                            color = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(28.dp)
+                        com.example.ui.components.SilaUserAvatar(
+                            avatarId = userAvatarId,
+                            size = 42.dp,
+                            showBorder = true
                         )
+
                         Text(
-                            "صِلَةِ",
-                            fontWeight = FontWeight.Black,
-                            color = MaterialTheme.colorScheme.primary,
-                            fontSize = 24.sp,
-                            letterSpacing = 1.sp
+                            text = if (userName.isNotBlank()) userName else if (lang == "en") "there" else "عمر",
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onBackground,
+                            fontSize = 20.sp
                         )
                     }
                 },
@@ -160,9 +215,9 @@ fun RelativesTabScreen(
                         shape = RoundedCornerShape(20.dp),
                         contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp)
                     ) {
-                        Icon(Icons.Default.ContactPhone, contentDescription = "استيراد", modifier = Modifier.size(16.dp))
+                        Icon(Icons.Default.ContactPhone, contentDescription = if (lang == "en") "Import" else "استيراد", modifier = Modifier.size(16.dp))
                         Spacer(modifier = Modifier.width(6.dp))
-                        Text("استيراد", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                        Text(if (lang == "en") "Import" else "استيراد", fontSize = 12.sp, fontWeight = FontWeight.Bold)
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
@@ -192,26 +247,17 @@ fun RelativesTabScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp),
             contentPadding = PaddingValues(bottom = 80.dp)
         ) {
-            // 1. Commitment Header Card with Call Log Auto Sync
+            // 1. Commitment Header Card
             item {
                 CommitmentHeaderCard(
-                    commitmentPercentage = commitmentPercentage,
-                    isSyncingCallLogs = isSyncingCallLogs,
-                    onSyncCallLogsClick = {
-                        callLogPermissionLauncher.launch(Manifest.permission.READ_CALL_LOG)
-                    }
+                    totalLogsCount = totalLogsCount,
+                    uniqueDaysCount = uniqueDaysCount,
+                    uniqueRelativesContacted = uniqueRelativesContacted,
+                    lang = lang
                 )
             }
 
-            // 2. Carousel: Relatives due for contact
-            item {
-                DueRelativesCarousel(
-                    dueRelatives = dueRelatives,
-                    viewModel = viewModel
-                )
-            }
-
-            // 3. Family Time Capsule Memory Card
+            // 2. Family Time Capsule Memory Card
             if (surpriseMemory != null) {
                 item {
                     Card(
@@ -282,55 +328,32 @@ fun RelativesTabScreen(
                 }
             }
 
-            // 4. Search Bar & Filter Chips
+            // 4. Search Bar
             item {
-                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    OutlinedTextField(
-                        value = searchQuery,
-                        onValueChange = { viewModel.searchQuery.value = it },
-                        placeholder = { Text("ابحث عن قريب بالاسم أو رقم الهاتف...") },
-                        leadingIcon = { Icon(Icons.Outlined.Search, contentDescription = "بحث") },
-                        trailingIcon = {
-                            if (searchQuery.isNotEmpty()) {
-                                IconButton(onClick = { viewModel.searchQuery.value = "" }) {
-                                    Icon(Icons.Default.Clear, contentDescription = "مسح")
-                                }
+                OutlinedTextField(
+                    value = searchQuery,
+                    onValueChange = { viewModel.searchQuery.value = it },
+                    placeholder = { Text(if (lang == "en") "Search by name or phone number..." else "ابحث عن قريب بالاسم أو رقم الهاتف...") },
+                    leadingIcon = { Icon(Icons.Outlined.Search, contentDescription = if (lang == "en") "Search" else "بحث") },
+                    trailingIcon = {
+                        if (searchQuery.isNotEmpty()) {
+                            IconButton(onClick = { viewModel.searchQuery.value = "" }) {
+                                Icon(Icons.Default.Clear, contentDescription = "مسح")
                             }
-                        },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .shadow(4.dp, RoundedCornerShape(20.dp), ambientColor = Color.Black.copy(alpha = 0.03f)),
-                        shape = RoundedCornerShape(20.dp),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            unfocusedContainerColor = MaterialTheme.colorScheme.surface,
-                            focusedContainerColor = MaterialTheme.colorScheme.surface,
-                            unfocusedBorderColor = SoftGold.copy(alpha = 0.3f),
-                            focusedBorderColor = MaterialTheme.colorScheme.primary
-                        ),
-                        singleLine = true
-                    )
-
-                    LazyRow(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        items(categories) { category ->
-                            val isSelected = selectedCategory == category
-                            FilterChip(
-                                selected = isSelected,
-                                onClick = { viewModel.selectedCategory.value = category },
-                                label = { Text(category, fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal) },
-                                shape = RoundedCornerShape(16.dp),
-                                colors = FilterChipDefaults.filterChipColors(
-                                    selectedContainerColor = MaterialTheme.colorScheme.primary,
-                                    selectedLabelColor = Color.White,
-                                    containerColor = MaterialTheme.colorScheme.surface,
-                                    labelColor = MaterialTheme.colorScheme.onSurface
-                                )
-                            )
                         }
-                    }
-                }
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .shadow(4.dp, RoundedCornerShape(20.dp), ambientColor = Color.Black.copy(alpha = 0.03f)),
+                    shape = RoundedCornerShape(20.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+                        focusedContainerColor = MaterialTheme.colorScheme.surface,
+                        unfocusedBorderColor = SoftGold.copy(alpha = 0.3f),
+                        focusedBorderColor = MaterialTheme.colorScheme.primary
+                    ),
+                    singleLine = true
+                )
             }
 
             // 5. Relatives List
@@ -338,11 +361,14 @@ fun RelativesTabScreen(
                 item {
                     if (searchQuery.isNotEmpty()) {
                         SilaEmptyStateView(
-                            title = "لا توجد نتائج مطابقة لـ \"$searchQuery\"",
-                            subtitle = "جرّب البحث باسم مختلف أو رقم الهاتف"
+                            title = if (lang == "en") "No results matching \"$searchQuery\""
+                                    else "لا توجد نتائج مطابقة لـ \"$searchQuery\"",
+                            subtitle = if (lang == "en") "Try searching with a different name or phone number"
+                                       else "جرّب البحث باسم مختلف أو رقم الهاتف"
                         )
                     } else {
                         SilaEmptyStateView(
+                            lang = lang,
                             onImportContactsClick = {
                                 contactsPermissionLauncher.launch(Manifest.permission.READ_CONTACTS)
                             },

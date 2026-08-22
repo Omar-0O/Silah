@@ -4,10 +4,10 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CallMade
-import androidx.compose.material.icons.filled.CallReceived
-import androidx.compose.material.icons.filled.PhoneCallback
-import androidx.compose.material.icons.filled.PhoneMissed
+import androidx.compose.material.icons.automirrored.filled.CallMade
+import androidx.compose.material.icons.automirrored.filled.CallReceived
+import androidx.compose.material.icons.automirrored.filled.PhoneCallback
+import androidx.compose.material.icons.automirrored.filled.PhoneMissed
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -36,25 +36,25 @@ fun CallLogBadge(
             CallIncomingColor.copy(alpha = 0.12f),
             CallIncomingColor,
             "مكالمة واردة 📲",
-            Icons.Default.CallReceived
+            Icons.AutoMirrored.Filled.CallReceived
         )
         isOutgoing -> Quadruple(
             CallOutgoingColor.copy(alpha = 0.12f),
             CallOutgoingColor,
             "مكالمة صادرة 📞",
-            Icons.Default.CallMade
+            Icons.AutoMirrored.Filled.CallMade
         )
         isMissed -> Quadruple(
             CallMissedColor.copy(alpha = 0.12f),
             CallMissedColor,
             "مكالمة مفقودة ❌",
-            Icons.Default.PhoneMissed
+            Icons.AutoMirrored.Filled.PhoneMissed
         )
         else -> Quadruple(
             Color(0xFFE9CE79).copy(alpha = 0.2f),
             Color(0xFF8B6B00),
             logType,
-            Icons.Default.PhoneCallback
+            Icons.AutoMirrored.Filled.PhoneCallback
         )
     }
 

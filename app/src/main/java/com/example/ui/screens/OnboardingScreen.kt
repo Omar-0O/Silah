@@ -1,191 +1,421 @@
 package com.example.ui.screens
 
-import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.togetherWith
+import androidx.compose.animation.*
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.ui.components.KinshipKnotIcon
-import com.example.ui.theme.SoftGold
+import com.example.R
+import com.example.viewmodel.RelativeViewModel
 
-data class OnboardingPage(
-    val emoji: String,
-    val title: String,
-    val subtitle: String,
-    val highlightText: String
+data class OnboardingItem(
+    val titleAr: String,
+    val titleEn: String,
+    val subtitleAr: String,
+    val subtitleEn: String
 )
 
 @Composable
-fun OnboardingScreen(onFinished: () -> Unit) {
-    val pages = listOf(
-        OnboardingPage(
-            emoji = "🌿",
-            title = "صِلَةِ",
-            subtitle = "رَبِّ أرحامَكَ بخطوة واحدة يسيرة",
-            highlightText = "«مَنْ سَرَّهُ أَنْ يُبْسَطَ لَهُ فِي رِزْقِهِ فَلْيَصِلْ رَحِمَهُ»"
+fun OnboardingScreen(
+    viewModel: RelativeViewModel,
+    onFinished: () -> Unit
+) {
+    val selectedLanguage by viewModel.selectedLanguage.collectAsState()
+    val savedName by viewModel.userName.collectAsState()
+    val savedGender by viewModel.userGender.collectAsState()
+
+    var nameInput by remember { mutableStateOf(savedName) }
+    var genderInput by remember { mutableStateOf(savedGender) }
+    var currentPage by remember { mutableIntStateOf(0) }
+
+    val onboardingItems = listOf(
+        // Page 0: Language Selection
+        OnboardingItem(
+            titleAr = "صِلَةِ أَوْ لاَ",
+            titleEn = "Silah App",
+            subtitleAr = "رفيقك الذكي لمتابعة تواصلك اليومي\nمع أرحامك وأقاربك بسهولة ويسر",
+            subtitleEn = "Your smart companion to track your daily connection with your relatives effortlessly"
         ),
-        OnboardingPage(
-            emoji = "📞",
-            title = "مزامنة تلقائية",
-            subtitle = "يرصد التطبيق مكالماتك تلقائياً ويعرفك لو تواصلت مع قريب أو اتصل بك",
-            highlightText = "لا تحتاج لتسجيل كل مكالمة يدوياً — صِلَةِ يتابع بدلاً عنك"
+        // Page 1: Name & Gender Input (Matching User Screenshot)
+        OnboardingItem(
+            titleAr = "ادخل اسمك",
+            titleEn = "Enter Your Name",
+            subtitleAr = "لتتمكن من تخصيص تجربتك",
+            subtitleEn = "To personalize your app experience"
         ),
-        OnboardingPage(
-            emoji = "🔔",
-            title = "تذكيرات دورية",
-            subtitle = "ضع كل قريب في قائمتك واضبط موعد تذكيرك بالاطمئنان عليه",
-            highlightText = "نسخة احتياطية دائمة — بياناتك محفوظة على هاتفك وتقدر ترفعها على Drive"
+        // Page 2: Auto Call Tracking
+        OnboardingItem(
+            titleAr = "مزامنة المكالمات تلقائياً",
+            titleEn = "Auto Call Tracking",
+            subtitleAr = "رصد وتحديث مواعيد الاتصال بالأقارب تلقائياً\nدون الحاجة للتسجيل اليدوي",
+            subtitleEn = "Automatically logs call times with relatives without manual input"
+        ),
+        // Page 3: Smart Reminders
+        OnboardingItem(
+            titleAr = "تذكيرات وإشعارات ذكية",
+            titleEn = "Smart Reminders",
+            subtitleAr = "تنبيهات دورية تناسب درجة القربة\nلتبقى دائماً على تواصل دائم",
+            subtitleEn = "Periodic smart notifications tailored to kinship degrees"
         )
     )
 
-    var currentPage by remember { mutableIntStateOf(0) }
-
-    Box(
+    Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(
-                Brush.verticalGradient(
-                    listOf(Color(0xFF0F3620), Color(0xFF1E5A35), Color(0xFF143B23))
-                )
-            )
+            .background(Color.White)
     ) {
-        Column(
+        // ── Top Half: Teal Gradient Header matching user screenshot ──────────────
+        Box(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(28.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+                .fillMaxWidth()
+                .weight(1.2f)
+                .background(
+                    Brush.verticalGradient(
+                        colors = listOf(
+                            Color(0xFF0E7075),
+                            Color(0xFF0D6367),
+                            Color(0xFF094E51)
+                        )
+                    )
+                ),
+            contentAlignment = Alignment.Center
         ) {
-            Spacer(modifier = Modifier.height(48.dp))
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center,
+                modifier = Modifier
+                    .padding(24.dp)
+                    .fillMaxSize()
+            ) {
+                Spacer(modifier = Modifier.height(16.dp))
 
-            // Page Content
-            AnimatedContent(
-                targetState = currentPage,
-                transitionSpec = {
-                    fadeIn(tween(400)) togetherWith fadeOut(tween(400))
-                },
-                label = "page_transition",
-                modifier = Modifier.weight(1f)
-            ) { page ->
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center,
-                    modifier = Modifier.fillMaxSize()
+                // Circular Illustration Badge Container
+                Box(
+                    contentAlignment = Alignment.Center,
+                    modifier = Modifier
+                        .size(140.dp)
+                        .shadow(12.dp, CircleShape, ambientColor = Color.Black.copy(alpha = 0.2f))
+                        .clip(CircleShape)
+                        .background(Color.White)
+                        .padding(10.dp)
                 ) {
-                    // Emoji icon
-                    Box(
-                        contentAlignment = Alignment.Center,
+                    Image(
+                        painter = painterResource(id = R.drawable.app_logo),
+                        contentDescription = "شعار التطبيق",
                         modifier = Modifier
-                            .size(110.dp)
+                            .fillMaxSize()
                             .clip(CircleShape)
-                            .background(Color(0x18FFFFFF))
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(20.dp))
+
+                // Title
+                Text(
+                    text = if (selectedLanguage == "en") onboardingItems[currentPage].titleEn else onboardingItems[currentPage].titleAr,
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.Black,
+                    color = Color.White,
+                    textAlign = TextAlign.Center
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Subtitle
+                Text(
+                    text = if (selectedLanguage == "en") onboardingItems[currentPage].subtitleEn else onboardingItems[currentPage].subtitleAr,
+                    fontSize = 14.sp,
+                    color = Color(0xFFCBE5E7),
+                    textAlign = TextAlign.Center,
+                    lineHeight = 22.sp,
+                    fontWeight = FontWeight.Normal
+                )
+            }
+        }
+
+        // ── Bottom Half: Content based on Page ─────────────────────────────────
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.SpaceBetween,
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f)
+                .background(Color.White)
+                .padding(horizontal = 28.dp, vertical = 20.dp)
+        ) {
+            when (currentPage) {
+                // ── Page 0: Language Selector ─────────────────────────────────
+                0 -> {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 16.dp),
+                        horizontalArrangement = Arrangement.SpaceEvenly,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        if (page == 0) {
-                            KinshipKnotIcon(color = SoftGold, modifier = Modifier.size(56.dp))
-                        } else {
-                            Text(pages[page].emoji, fontSize = 52.sp)
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.clickable { viewModel.selectLanguage("ar") }
+                        ) {
+                            Text("العربية", fontSize = 17.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1E293B))
+                            Spacer(modifier = Modifier.width(8.dp))
+                            RadioButton(
+                                selected = selectedLanguage == "ar",
+                                onClick = { viewModel.selectLanguage("ar") },
+                                colors = RadioButtonDefaults.colors(selectedColor = Color(0xFFD97706), unselectedColor = Color(0xFF94A3B8))
+                            )
+                        }
+
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.clickable { viewModel.selectLanguage("en") }
+                        ) {
+                            Text("English", fontSize = 17.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1E293B))
+                            Spacer(modifier = Modifier.width(8.dp))
+                            RadioButton(
+                                selected = selectedLanguage == "en",
+                                onClick = { viewModel.selectLanguage("en") },
+                                colors = RadioButtonDefaults.colors(selectedColor = Color(0xFFD97706), unselectedColor = Color(0xFF94A3B8))
+                            )
                         }
                     }
+                }
 
-                    Spacer(modifier = Modifier.height(32.dp))
-
-                    Text(
-                        text = pages[page].title,
-                        fontSize = if (page == 0) 38.sp else 26.sp,
-                        fontWeight = FontWeight.Black,
-                        color = Color.White,
-                        textAlign = TextAlign.Center
-                    )
-
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    Text(
-                        text = pages[page].subtitle,
-                        fontSize = 15.sp,
-                        color = Color(0xFFBCCEC3),
-                        textAlign = TextAlign.Center,
-                        lineHeight = 24.sp
-                    )
-
-                    Spacer(modifier = Modifier.height(24.dp))
-
-                    Card(
-                        colors = CardDefaults.cardColors(containerColor = Color(0x1AFFFFFF)),
-                        shape = RoundedCornerShape(18.dp),
+                // ── Page 1: Name & Gender Entry (User Screenshot Match) ───────
+                1 -> {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(16.dp),
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Text(
-                            text = pages[page].highlightText,
-                            fontSize = 13.sp,
-                            color = SoftGold,
-                            textAlign = TextAlign.Center,
-                            fontWeight = FontWeight.Medium,
-                            lineHeight = 22.sp,
-                            modifier = Modifier.padding(16.dp)
+                        // Outlined Name Field
+                        OutlinedTextField(
+                            value = nameInput,
+                            onValueChange = { nameInput = it },
+                            placeholder = {
+                                Text(
+                                    if (selectedLanguage == "en") "Name" else "الأسم",
+                                    color = Color(0xFF94A3B8),
+                                    fontSize = 15.sp
+                                )
+                            },
+                            singleLine = true,
+                            shape = RoundedCornerShape(14.dp),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = Color(0xFF0E7075),
+                                unfocusedBorderColor = Color(0xFFCBD5E1),
+                                focusedContainerColor = Color(0xFFF8FAFC),
+                                unfocusedContainerColor = Color(0xFFF8FAFC)
+                            ),
+                            modifier = Modifier.fillMaxWidth()
                         )
+
+                        // Gender Selection Cards with Character Avatar Preview
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(16.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            // Male Card (ولد)
+                            Card(
+                                onClick = { genderInput = "male" },
+                                shape = RoundedCornerShape(16.dp),
+                                colors = CardDefaults.cardColors(
+                                    containerColor = if (genderInput == "male") Color(0xFFE0F2F1) else Color(0xFFF8FAFC)
+                                ),
+                                border = androidx.compose.foundation.BorderStroke(
+                                    2.dp,
+                                    if (genderInput == "male") Color(0xFF0E7075) else Color(0xFFE2E8F0)
+                                ),
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .padding(vertical = 4.dp)
+                            ) {
+                                Column(
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    modifier = Modifier.padding(12.dp)
+                                ) {
+                                    com.example.ui.components.UserAvatarCharacter(
+                                        gender = "male",
+                                        size = 50.dp,
+                                        showBorder = genderInput == "male"
+                                    )
+                                    Spacer(modifier = Modifier.height(6.dp))
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        RadioButton(
+                                            selected = genderInput == "male",
+                                            onClick = { genderInput = "male" },
+                                            colors = RadioButtonDefaults.colors(selectedColor = Color(0xFF0E7075))
+                                        )
+                                        Spacer(modifier = Modifier.width(4.dp))
+                                        Text(
+                                            text = if (selectedLanguage == "en") "Boy" else "ولد (ذكر)",
+                                            fontSize = 14.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = Color(0xFF1E293B)
+                                        )
+                                    }
+                                }
+                            }
+
+                            // Female Card (بنت)
+                            Card(
+                                onClick = { genderInput = "female" },
+                                shape = RoundedCornerShape(16.dp),
+                                colors = CardDefaults.cardColors(
+                                    containerColor = if (genderInput == "female") Color(0xFFFCE4EC) else Color(0xFFF8FAFC)
+                                ),
+                                border = androidx.compose.foundation.BorderStroke(
+                                    2.dp,
+                                    if (genderInput == "female") Color(0xFFE91E63) else Color(0xFFE2E8F0)
+                                ),
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .padding(vertical = 4.dp)
+                            ) {
+                                Column(
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    modifier = Modifier.padding(12.dp)
+                                ) {
+                                    com.example.ui.components.UserAvatarCharacter(
+                                        gender = "female",
+                                        size = 50.dp,
+                                        showBorder = genderInput == "female"
+                                    )
+                                    Spacer(modifier = Modifier.height(6.dp))
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        RadioButton(
+                                            selected = genderInput == "female",
+                                            onClick = { genderInput = "female" },
+                                            colors = RadioButtonDefaults.colors(selectedColor = Color(0xFFE91E63))
+                                        )
+                                        Spacer(modifier = Modifier.width(4.dp))
+                                        Text(
+                                            text = if (selectedLanguage == "en") "Girl" else "بنت (أنثى)",
+                                            fontSize = 14.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = Color(0xFF1E293B)
+                                        )
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
-            }
 
-            // Page Indicators
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                modifier = Modifier.padding(bottom = 24.dp)
-            ) {
-                pages.indices.forEach { index ->
-                    Box(
-                        modifier = Modifier
-                            .clip(CircleShape)
-                            .background(if (index == currentPage) SoftGold else Color.White.copy(alpha = 0.3f))
-                            .size(if (index == currentPage) 24.dp else 8.dp, 8.dp)
+                // ── Pages 2 & 3: Feature Info Cards ───────────────────────────
+                else -> {
+                    Text(
+                        text = if (selectedLanguage == "en") {
+                            "Welcome to Silah! We're happy to help you stay closely connected with your family."
+                        } else {
+                            "أهلاً بك في صِلَةِ! يسعدنا مساعدتك لتبقى دائماً أقرب لأقاربك وأرحامك."
+                        },
+                        fontSize = 14.sp,
+                        color = Color(0xFF475569),
+                        textAlign = TextAlign.Center,
+                        lineHeight = 22.sp,
+                        modifier = Modifier.padding(top = 8.dp)
                     )
                 }
             }
 
-            // Navigation Buttons
-            if (currentPage < pages.size - 1) {
-                Button(
-                    onClick = { currentPage++ },
-                    colors = ButtonDefaults.buttonColors(containerColor = SoftGold, contentColor = Color(0xFF141816)),
-                    shape = RoundedCornerShape(18.dp),
-                    modifier = Modifier.fillMaxWidth(),
-                    contentPadding = PaddingValues(vertical = 14.dp)
-                ) {
-                    Text("التالي ←", fontSize = 15.sp, fontWeight = FontWeight.Bold)
+            // ── Navigation Action Row ──────────────────────────────────────────
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                // Show Back Button if on Page > 0
+                if (currentPage > 0) {
+                    Surface(
+                        onClick = { currentPage-- },
+                        shape = CircleShape,
+                        color = Color(0xFFE2E8F0),
+                        modifier = Modifier.size(46.dp)
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(
+                                imageVector = if (selectedLanguage == "en") Icons.AutoMirrored.Filled.ArrowBack else Icons.AutoMirrored.Filled.ArrowForward,
+                                contentDescription = "السابق",
+                                tint = Color(0xFF475569),
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+                    }
+                    Spacer(modifier = Modifier.width(16.dp))
                 }
 
-                Spacer(modifier = Modifier.height(12.dp))
-
-                TextButton(onClick = onFinished) {
-                    Text("تخطّ", color = Color.White.copy(alpha = 0.6f), fontSize = 13.sp)
-                }
-            } else {
+                // Wide Next Pill Button
                 Button(
-                    onClick = onFinished,
-                    colors = ButtonDefaults.buttonColors(containerColor = SoftGold, contentColor = Color(0xFF141816)),
-                    shape = RoundedCornerShape(18.dp),
-                    modifier = Modifier.fillMaxWidth(),
-                    contentPadding = PaddingValues(vertical = 14.dp)
+                    onClick = {
+                        if (currentPage == 1) {
+                            // Save profile name & gender
+                            viewModel.saveUserProfile(nameInput, genderInput)
+                        }
+                        if (currentPage < onboardingItems.size - 1) {
+                            currentPage++
+                        } else {
+                            onFinished()
+                        }
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFF0E7075),
+                        contentColor = Color.White
+                    ),
+                    shape = RoundedCornerShape(28.dp),
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(50.dp)
                 ) {
-                    Text("ابدأ مسيرة صِلَةِ الآن 🌸", fontSize = 15.sp, fontWeight = FontWeight.Bold)
+                    Text(
+                        text = if (currentPage < onboardingItems.size - 1) {
+                            if (selectedLanguage == "en") "Next" else "التالي"
+                        } else {
+                            if (selectedLanguage == "en") "Start Now" else "ابدأ الآن 🌸"
+                        },
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold
+                    )
                 }
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
+            // ── 4-Dot Page Indicator matching user screenshot ──────────────────
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.padding(bottom = 8.dp)
+            ) {
+                onboardingItems.indices.forEach { index ->
+                    val isActive = index == currentPage
+                    Box(
+                        modifier = Modifier
+                            .size(if (isActive) 10.dp else 8.dp)
+                            .clip(CircleShape)
+                            .background(
+                                if (isActive) Color(0xFFD97706) else Color(0xFFCBD5E1)
+                            )
+                    )
+                }
+            }
         }
     }
 }

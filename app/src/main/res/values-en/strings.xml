@@ -1,0 +1,15 @@
+<resources>
+    <string name="app_name">Silah</string>
+    <string name="relatives_tab">Relatives</string>
+    <string name="challenges_tab">Challenges</string>
+    <string name="settings_title">Silah Settings</string>
+    <string name="dark_mode">Dark Mode</string>
+    <string name="dark_mode_desc">Eye-friendly interface in low light</string>
+    <string name="app_language">App Language</string>
+    <string name="arabic">العربية (Arabic)</string>
+    <string name="english">English</string>
+    <string name="backup_restore">Backup &amp; Restore</string>
+    <string name="export_backup">Export Backup 📤</string>
+    <string name="import_backup">Restore Backup 📥</string>
+    <string name="close">Close</string>
+</resources>

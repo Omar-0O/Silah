@@ -28,7 +28,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             val isDarkMode by viewModel.isDarkMode.collectAsState()
-            val selectedFont by viewModel.selectedFont.collectAsState()
+            val selectedLanguage by viewModel.selectedLanguage.collectAsState()
             val backupResult by viewModel.backupResult.collectAsState()
 
             // ── Export: Opens Save-File dialog (SAF) ──────────────────────
@@ -45,8 +45,24 @@ class MainActivity : ComponentActivity() {
                 uri?.let { viewModel.importBackup(applicationContext, it) }
             }
 
-            // Connect launchers to ViewModel triggers
+            // ── Immediate Permissions Launcher (Contacts + Call Log) ──────
+            val permissionLauncher = rememberLauncherForActivityResult(
+                contract = ActivityResultContracts.RequestMultiplePermissions()
+            ) { permissions ->
+                val callLogGranted = permissions[android.Manifest.permission.READ_CALL_LOG] ?: false
+                if (callLogGranted) {
+                    viewModel.syncCallLogsWithRelatives(applicationContext)
+                }
+            }
+
+            // Connect launchers and request startup permissions
             LaunchedEffect(Unit) {
+                permissionLauncher.launch(
+                    arrayOf(
+                        android.Manifest.permission.READ_CONTACTS,
+                        android.Manifest.permission.READ_CALL_LOG
+                    )
+                )
                 viewModel.setExportLauncher {
                     exportLauncher.launch(viewModel.suggestedBackupName())
                 }
@@ -63,7 +79,7 @@ class MainActivity : ComponentActivity() {
                 }
             }
 
-            MyApplicationTheme(darkTheme = isDarkMode, fontName = selectedFont) {
+            MyApplicationTheme(darkTheme = isDarkMode, fontName = "Cairo") {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
