@@ -89,23 +89,13 @@ fun RelativeCard(
                 horizontalArrangement = Arrangement.spacedBy(14.dp)
             ) {
 
-                // Avatar circle with gradient + initials
-                Box(
-                    contentAlignment = Alignment.Center,
-                    modifier = Modifier
-                        .size(52.dp)
-                        .clip(CircleShape)
-                        .background(
-                            Brush.linearGradient(listOf(avatarFrom, avatarTo))
-                        )
-                ) {
-                    Text(
-                        text = relative.name.take(1),
-                        fontSize = 22.sp,
-                        fontWeight = FontWeight.ExtraBold,
-                        color = Color.White
-                    )
-                }
+                // Avatar circle
+                RelativeAvatar(
+                    name = relative.name,
+                    photoUri = relative.photoUri,
+                    size = 52.dp,
+                    fontSize = 22.sp
+                )
 
                 // Name + degree + status row
                 Column(

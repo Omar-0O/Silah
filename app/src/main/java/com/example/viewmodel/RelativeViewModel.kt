@@ -242,35 +242,45 @@ class RelativeViewModel(application: Application) : AndroidViewModel(application
         }
     }
 
+data class DeviceContact(
+    val name: String,
+    val phone: String,
+    val isGoogle: Boolean = false,
+    val photoUri: String? = null
+)
+
     // Contact importing state
-    val deviceContacts = MutableStateFlow<List<Triple<String, String, Boolean>>>(emptyList())
+    val deviceContacts = MutableStateFlow<List<DeviceContact>>(emptyList())
     val isLoadingContacts = MutableStateFlow(false)
 
     // Load actual device contacts using ContentResolver
     fun fetchDeviceContacts(context: Context) {
         viewModelScope.launch(Dispatchers.IO) {
             isLoadingContacts.value = true
-            val contactsList = mutableListOf<Triple<String, String, Boolean>>()
+            val contactsList = mutableListOf<DeviceContact>()
             try {
                 val contentResolver = context.contentResolver
                 val uri = android.provider.ContactsContract.CommonDataKinds.Phone.CONTENT_URI
                 val projection = arrayOf(
                     android.provider.ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME,
                     android.provider.ContactsContract.CommonDataKinds.Phone.NUMBER,
+                    android.provider.ContactsContract.CommonDataKinds.Phone.PHOTO_URI,
                     "account_type"
                 )
                 contentResolver.query(uri, projection, null, null, null)?.use { cursor ->
                     val nameIndex = cursor.getColumnIndex(android.provider.ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME)
                     val numberIndex = cursor.getColumnIndex(android.provider.ContactsContract.CommonDataKinds.Phone.NUMBER)
+                    val photoUriIndex = cursor.getColumnIndex(android.provider.ContactsContract.CommonDataKinds.Phone.PHOTO_URI)
                     val accountTypeIndex = cursor.getColumnIndex("account_type")
                     while (cursor.moveToNext()) {
                         if (nameIndex != -1 && numberIndex != -1) {
                             val name = cursor.getString(nameIndex) ?: ""
                             val number = cursor.getString(numberIndex) ?: ""
+                            val photoUri = if (photoUriIndex != -1) cursor.getString(photoUriIndex) else null
                             val accountType = if (accountTypeIndex != -1) cursor.getString(accountTypeIndex) else null
                             val isGoogle = accountType?.contains("google", ignoreCase = true) == true
                             if (name.isNotEmpty() && number.isNotEmpty()) {
-                                contactsList.add(Triple(name, number, isGoogle))
+                                contactsList.add(DeviceContact(name, number, isGoogle, photoUri))
                             }
                         }
                     }
@@ -280,21 +290,29 @@ class RelativeViewModel(application: Application) : AndroidViewModel(application
             }
             // Sort, remove duplicates, and update state
             deviceContacts.value = contactsList
-                .distinctBy { it.second.replace("\\s|-|\\(|\\)".toRegex(), "") }
-                .sortedBy { it.first }
+                .distinctBy { it.phone.replace("\\s|-|\\(|\\)".toRegex(), "") }
+                .sortedBy { it.name }
             isLoadingContacts.value = false
         }
     }
 
     // Insert functions
-    fun addRelative(name: String, phone: String, relationshipDegree: String, intervalDays: Int, notes: String) {
+    fun addRelative(
+        name: String,
+        phone: String,
+        relationshipDegree: String,
+        intervalDays: Int,
+        notes: String,
+        photoUri: String? = null
+    ) {
         viewModelScope.launch(Dispatchers.IO) {
             val relative = Relative(
                 name = name,
                 phone = phone,
                 relationshipDegree = relationshipDegree,
                 contactIntervalDays = intervalDays,
-                notes = notes
+                notes = notes,
+                photoUri = photoUri
             )
             val id = repository.insertRelative(relative)
             scheduleReminderForRelative(relative.copy(id = id.toInt()))

@@ -158,20 +158,12 @@ fun RelativeDetailScreen(
                             }
 
                             // Avatar circle
-                            Box(
-                                contentAlignment = Alignment.Center,
-                                modifier = Modifier
-                                    .size(88.dp)
-                                    .clip(CircleShape)
-                                    .background(Brush.linearGradient(listOf(avatarFrom, avatarTo)))
-                            ) {
-                                Text(
-                                    text = relative.name.take(1),
-                                    fontSize = 32.sp,
-                                    fontWeight = FontWeight.Black,
-                                    color = Color.White
-                                )
-                            }
+                            com.example.ui.components.RelativeAvatar(
+                                name = relative.name,
+                                photoUri = relative.photoUri,
+                                size = 88.dp,
+                                fontSize = 32.sp
+                            )
                         }
 
                         Spacer(modifier = Modifier.height(16.dp))

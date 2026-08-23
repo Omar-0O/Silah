@@ -162,14 +162,25 @@ fun DueRelativesCarousel(
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Text(
-                                    text = relative.name,
-                                    fontSize = 17.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.primary,
+                                Row(
                                     modifier = Modifier.weight(1f),
-                                    maxLines = 1
-                                )
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    RelativeAvatar(
+                                        name = relative.name,
+                                        photoUri = relative.photoUri,
+                                        size = 36.dp,
+                                        fontSize = 15.sp
+                                    )
+                                    Text(
+                                        text = relative.name,
+                                        fontSize = 16.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.primary,
+                                        maxLines = 1
+                                    )
+                                }
 
                                 Row(
                                     horizontalArrangement = Arrangement.spacedBy(8.dp),

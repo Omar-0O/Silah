@@ -2,11 +2,12 @@ package com.example.ui.theme
 
 import androidx.compose.material3.Typography
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.Font as ResourceFont
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.text.googlefonts.GoogleFont
-import androidx.compose.ui.text.googlefonts.Font
+import androidx.compose.ui.text.googlefonts.Font as GoogleFont
 import androidx.compose.ui.unit.em
 import com.example.R
 
@@ -19,26 +20,39 @@ val fontProvider = GoogleFont.Provider(
     certificates      = R.array.com_google_android_gms_fonts_certs
 )
 
+val AlmaraiFontFamily = FontFamily(
+    ResourceFont(R.font.almarai_light, weight = FontWeight.Light),
+    ResourceFont(R.font.almarai_regular, weight = FontWeight.Normal),
+    ResourceFont(R.font.almarai_regular, weight = FontWeight.Medium),
+    ResourceFont(R.font.almarai_bold, weight = FontWeight.SemiBold),
+    ResourceFont(R.font.almarai_bold, weight = FontWeight.Bold),
+    ResourceFont(R.font.almarai_extrabold, weight = FontWeight.ExtraBold),
+)
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Dynamic font family loader
 // ─────────────────────────────────────────────────────────────────────────────
-fun getFontFamily(fontName: String = "Cairo"): FontFamily {
+fun getFontFamily(fontName: String = "Almarai"): FontFamily {
+    if (fontName.equals("Almarai", ignoreCase = true)) {
+        return AlmaraiFontFamily
+    }
     val googleFontName = when (fontName) {
         "Cairo"      -> "Cairo"
         "Readex Pro" -> "Readex Pro"
-        "Almarai"    -> "Almarai"
         "Tajawal"    -> "Tajawal"
         "Lemonada"   -> "Lemonada"
-        else         -> "Cairo"
+        else         -> "Almarai"
     }
+    if (googleFontName == "Almarai") return AlmaraiFontFamily
+
     val font = GoogleFont(googleFontName)
     return FontFamily(
-        Font(googleFont = font, fontProvider = fontProvider, weight = FontWeight.Light),
-        Font(googleFont = font, fontProvider = fontProvider, weight = FontWeight.Normal),
-        Font(googleFont = font, fontProvider = fontProvider, weight = FontWeight.Medium),
-        Font(googleFont = font, fontProvider = fontProvider, weight = FontWeight.SemiBold),
-        Font(googleFont = font, fontProvider = fontProvider, weight = FontWeight.Bold),
-        Font(googleFont = font, fontProvider = fontProvider, weight = FontWeight.ExtraBold),
+        GoogleFont(googleFont = font, fontProvider = fontProvider, weight = FontWeight.Light),
+        GoogleFont(googleFont = font, fontProvider = fontProvider, weight = FontWeight.Normal),
+        GoogleFont(googleFont = font, fontProvider = fontProvider, weight = FontWeight.Medium),
+        GoogleFont(googleFont = font, fontProvider = fontProvider, weight = FontWeight.SemiBold),
+        GoogleFont(googleFont = font, fontProvider = fontProvider, weight = FontWeight.Bold),
+        GoogleFont(googleFont = font, fontProvider = fontProvider, weight = FontWeight.ExtraBold),
     )
 }
 
@@ -158,4 +172,4 @@ fun getTypography(fontFamily: FontFamily): Typography {
 }
 
 // Default fallback
-val Typography = getTypography(getFontFamily("Cairo"))
+val Typography = getTypography(getFontFamily("Almarai"))

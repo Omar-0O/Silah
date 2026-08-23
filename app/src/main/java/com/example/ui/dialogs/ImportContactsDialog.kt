@@ -53,8 +53,8 @@ fun ImportContactsDialog(
 
     val filteredContacts = remember(contacts, searchQuery) {
         if (searchQuery.isBlank()) contacts
-        else contacts.filter { (name, phone, _) ->
-            name.contains(searchQuery, ignoreCase = true) || phone.contains(searchQuery)
+        else contacts.filter { contact ->
+            contact.name.contains(searchQuery, ignoreCase = true) || contact.phone.contains(searchQuery)
         }
     }
 
@@ -145,7 +145,10 @@ fun ImportContactsDialog(
                         modifier = Modifier.weight(1f),
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        items(filteredContacts) { (name, phone, _) ->
+                        items(filteredContacts) { contact ->
+                            val name = contact.name
+                            val phone = contact.phone
+                            val photoUri = contact.photoUri
                             val normalized = CallLogManager.normalizePhoneNumber(phone)
                             val isAlreadyAdded = existingNormalizedPhones.contains(normalized)
                             val isExpanded = selectedContactPhone == phone
@@ -176,23 +179,12 @@ fun ImportContactsDialog(
                                             verticalAlignment = Alignment.CenterVertically,
                                             horizontalArrangement = Arrangement.spacedBy(10.dp)
                                         ) {
-                                            Box(
-                                                contentAlignment = Alignment.Center,
-                                                modifier = Modifier
-                                                    .size(38.dp)
-                                                    .clip(CircleShape)
-                                                    .background(
-                                                        if (isAlreadyAdded) Color(0xFFE8F5E9)
-                                                        else MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
-                                                    )
-                                            ) {
-                                                Text(
-                                                    text = name.take(1),
-                                                    fontWeight = FontWeight.Bold,
-                                                    color = if (isAlreadyAdded) Color(0xFF2E7D32) else MaterialTheme.colorScheme.primary,
-                                                    fontSize = 15.sp
-                                                )
-                                            }
+                                            com.example.ui.components.RelativeAvatar(
+                                                name = name,
+                                                photoUri = photoUri,
+                                                size = 38.dp,
+                                                fontSize = 15.sp
+                                            )
 
                                             Column {
                                                 Text(
@@ -238,7 +230,14 @@ fun ImportContactsDialog(
                                             viewModel = viewModel,
                                             onSave = { degree, interval ->
                                                 view.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
-                                                viewModel.addRelative(name, phone, degree, interval, "تم استيراده من جهات الاتصال")
+                                                viewModel.addRelative(
+                                                    name = name,
+                                                    phone = phone,
+                                                    relationshipDegree = degree,
+                                                    intervalDays = interval,
+                                                    notes = "تم استيراده من جهات الاتصال",
+                                                    photoUri = photoUri
+                                                )
                                                 Toast.makeText(context, "تمت إضافة $name بنجاح في صِلَةِ! ✨", Toast.LENGTH_SHORT).show()
                                                 selectedContactPhone = null
                                             }

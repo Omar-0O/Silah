@@ -91,29 +91,19 @@ fun HomeTabScreen(viewModel: RelativeViewModel) {
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
-                        com.example.ui.components.KinshipKnotIcon(
-                            size = 38.dp
-                        )
                         com.example.ui.components.SilaUserAvatar(
                             avatarId = userAvatarId,
-                            size = 38.dp,
+                            size = 42.dp,
                             showBorder = true,
                             modifier = Modifier.clickableNoRipple { showProfileDialog = true }
                         )
-                        Column {
-                            Text(
-                                text = if (lang == "en") "Welcome back" else "أهلاً بك",
-                                fontSize = 11.sp,
-                                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.55f)
-                            )
-                            Text(
-                                text = if (userName.isNotBlank()) userName
-                                       else if (lang == "en") "Family Keeper" else "حافظ الأرحام",
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onBackground,
-                                fontSize = 16.sp
-                            )
-                        }
+                        Text(
+                            text = if (userName.isNotBlank()) userName
+                                   else if (lang == "en") "Family Keeper" else "حافظ الأرحام",
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onBackground,
+                            fontSize = 17.sp
+                        )
                     }
                 },
                 actions = {
@@ -280,23 +270,23 @@ private fun StreakCard(
             val dayOfWeek = cal.get(Calendar.DAY_OF_WEEK)
             if (lang == "en") {
                 when (dayOfWeek) {
-                    Calendar.SUNDAY -> "Su"
-                    Calendar.MONDAY -> "Mo"
-                    Calendar.TUESDAY -> "Tu"
-                    Calendar.WEDNESDAY -> "We"
-                    Calendar.THURSDAY -> "Th"
-                    Calendar.FRIDAY -> "Fr"
-                    else -> "Sa"
+                    Calendar.SUNDAY -> "Sun"
+                    Calendar.MONDAY -> "Mon"
+                    Calendar.TUESDAY -> "Tue"
+                    Calendar.WEDNESDAY -> "Wed"
+                    Calendar.THURSDAY -> "Thu"
+                    Calendar.FRIDAY -> "Fri"
+                    else -> "Sat"
                 }
             } else {
                 when (dayOfWeek) {
-                    Calendar.SUNDAY -> "ح"
-                    Calendar.MONDAY -> "ن"
-                    Calendar.TUESDAY -> "ث"
-                    Calendar.WEDNESDAY -> "ر"
-                    Calendar.THURSDAY -> "خ"
-                    Calendar.FRIDAY -> "ج"
-                    else -> "س"
+                    Calendar.SUNDAY -> "أحد"
+                    Calendar.MONDAY -> "إثنين"
+                    Calendar.TUESDAY -> "ثلاثاء"
+                    Calendar.WEDNESDAY -> "أربعاء"
+                    Calendar.THURSDAY -> "خميس"
+                    Calendar.FRIDAY -> "جمعة"
+                    else -> "سبت"
                 }
             }
         }
@@ -358,47 +348,51 @@ private fun StreakCard(
                 }
             }
 
-            // 7 Days Visual Row
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
+            // 7 Days Visual Row (RTL - starting from Right)
+            CompositionLocalProvider(
+                androidx.compose.ui.platform.LocalLayoutDirection provides androidx.compose.ui.unit.LayoutDirection.Rtl
             ) {
-                last7DaysActivity.forEachIndexed { index, isActive ->
-                    val dayLabel = dayLabels.getOrElse(index) { "" }
-                    val isToday = (index == last7DaysActivity.lastIndex)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    last7DaysActivity.forEachIndexed { index, isActive ->
+                        val dayLabel = dayLabels.getOrElse(index) { "" }
+                        val isToday = (index == last7DaysActivity.lastIndex)
 
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(6.dp)
-                    ) {
-                        Text(
-                            text = dayLabel,
-                            fontSize = 10.sp,
-                            fontWeight = if (isToday) FontWeight.Bold else FontWeight.Normal,
-                            color = if (isToday) MaterialTheme.colorScheme.primary
-                                    else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
-                        )
-
-                        Box(
-                            modifier = Modifier
-                                .size(32.dp)
-                                .background(
-                                    color = if (isActive) Color(0xFFFF6D00).copy(alpha = 0.18f)
-                                            else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.06f),
-                                    shape = CircleShape
-                                )
-                                .border(
-                                    width = if (isToday) 1.5.dp else 0.dp,
-                                    color = if (isToday) Color(0xFFFF6D00) else Color.Transparent,
-                                    shape = CircleShape
-                                ),
-                            contentAlignment = Alignment.Center
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(6.dp)
                         ) {
                             Text(
-                                text = if (isActive) "🔥" else "•",
-                                fontSize = if (isActive) 13.sp else 16.sp,
-                                color = if (isActive) Color.Unspecified else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
+                                text = dayLabel,
+                                fontSize = 10.sp,
+                                fontWeight = if (isToday) FontWeight.Bold else FontWeight.Normal,
+                                color = if (isToday) MaterialTheme.colorScheme.primary
+                                        else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.65f)
                             )
+
+                            Box(
+                                modifier = Modifier
+                                    .size(32.dp)
+                                    .background(
+                                        color = if (isActive) Color(0xFFFF6D00).copy(alpha = 0.18f)
+                                                else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.06f),
+                                        shape = CircleShape
+                                    )
+                                    .border(
+                                        width = if (isToday) 1.5.dp else 0.dp,
+                                        color = if (isToday) Color(0xFFFF6D00) else Color.Transparent,
+                                        shape = CircleShape
+                                    ),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = if (isActive) "🔥" else "•",
+                                    fontSize = if (isActive) 13.sp else 16.sp,
+                                    color = if (isActive) Color.Unspecified else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
+                                )
+                            }
                         }
                     }
                 }

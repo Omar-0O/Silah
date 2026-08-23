@@ -24,6 +24,11 @@ import com.example.ui.theme.SoftGold
 import java.text.SimpleDateFormat
 import java.util.*
 
+private data class QuranVerse(
+    val verseText: String,
+    val surahInfo: String
+)
+
 /**
  * Commitment Header Card (Stitch-style)
  * Features:
@@ -75,17 +80,32 @@ fun CommitmentHeaderCard(
         if (name.isNotBlank()) "$timeGreeting، $name 🌿" else "$timeGreeting 🌿"
     }
 
-    // Motivational subtitle based on commitment
-    val subtitle = if (lang == "en") when {
-        commitmentPct >= 0.9f -> "Excellent! Your kin ties are blooming 💚"
-        commitmentPct >= 0.6f -> "Great progress! Keep nurturing your family bonds"
-        commitmentPct >= 0.3f -> "You're on track — keep going!"
-        else                  -> "Start your kin-tie journey today 🌱"
-    } else when {
-        commitmentPct >= 0.9f -> "رائع! صلتك بأرحامك في أوجها 💚"
-        commitmentPct >= 0.6f -> "ممتاز! واصل رعاية أواصر الأسرة"
-        commitmentPct >= 0.3f -> "أنت على الطريق الصحيح — استمر!"
-        else                  -> "ابدأ مسيرة صلة الرحم اليوم 🌱"
+    // Daily Quran Verse Rotator
+    val todayVerse = remember {
+        val dayOfYear = Calendar.getInstance().get(Calendar.DAY_OF_YEAR)
+        val quranVerses = listOf(
+            QuranVerse(
+                verseText = "﴿وَاتَّقُوا اللَّهَ الَّذِي تَسَاءَلُونَ بِهِ وَالْأَرْحَامَ ۚ إِنَّ اللَّهَ كَانَ عَلَيْكُمْ رَقِيبًا﴾",
+                surahInfo = "سورة النساء – آية ١"
+            ),
+            QuranVerse(
+                verseText = "﴿وَالَّذِينَ يَصِلُونَ مَا أَمَرَ اللَّهُ بِهِ أَن يُوصَلَ وَيَخْشَوْنَ رَبَّهُمْ وَيَخَافُونَ سُوءَ الْحِسَابِ﴾",
+                surahInfo = "سورة الرعد – آية ٢١"
+            ),
+            QuranVerse(
+                verseText = "﴿الَّذِينَ يَنقُضُونَ عَهْدَ اللَّهِ مِن بَعْدِ مِيثَاقِهِ وَيَقْطَعُونَ مَا أَمَرَ اللَّهُ بِهِ أَن يُوصَلَ وَيُفْسِدُونَ فِي الْأَرْضِ ۚ أُولَٰئِكَ هُمُ الْخَاسِرُونَ﴾",
+                surahInfo = "سورة البقرة – آية ٢٧"
+            ),
+            QuranVerse(
+                verseText = "﴿فَهَلْ عَسَيْتُمْ إِن تَوَلَّيْتُمْ أَن تُفْسِدُوا فِي الْأَرْضِ وَتُقَطِّعُوا أَرْحَامَكُمْ ۝ أُولَٰئِكَ الَّذِينَ لَعَنَهُمُ اللَّهُ فَأَصَمَّهُمْ وَأَعْمَىٰ أَبْصَارَهُمْ﴾",
+                surahInfo = "سورة محمد – آية ٢٢-٢٣"
+            ),
+            QuranVerse(
+                verseText = "﴿وَالَّذِينَ يَنقُضُونَ عَهْدَ اللَّهِ مِن بَعْدِ مِيثَاقِهِ وَيَقْطَعُونَ مَا أَمَرَ اللَّهُ بِهِ أَن يُوصَلَ وَيُفْسِدُونَ فِي الْأَرْضِ ۙ أُولَٰئِكَ لَهُمُ اللَّعْنَةُ وَلَهُمْ سُوءُ الدَّارِ﴾",
+                surahInfo = "سورة الرعد – آية ٢٥"
+            )
+        )
+        quranVerses[(dayOfYear - 1) % quranVerses.size]
     }
 
     Card(
@@ -114,7 +134,7 @@ fun CommitmentHeaderCard(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.Top
             ) {
-                // Greeting + date
+                // Greeting + date + Daily Verse
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = greeting,
@@ -130,13 +150,32 @@ fun CommitmentHeaderCard(
                         fontWeight = FontWeight.Normal
                     )
                     Spacer(modifier = Modifier.height(10.dp))
-                    Text(
-                        text = subtitle,
-                        fontSize = 13.sp,
-                        color = Color.White.copy(alpha = 0.85f),
-                        lineHeight = 18.sp,
-                        fontWeight = FontWeight.Medium
-                    )
+
+                    // Daily Verse Container
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(end = 12.dp)
+                            .background(Color.White.copy(alpha = 0.08f), RoundedCornerShape(12.dp))
+                            .padding(horizontal = 10.dp, vertical = 8.dp)
+                    ) {
+                        Column {
+                            Text(
+                                text = todayVerse.verseText,
+                                fontSize = 12.sp,
+                                color = Color.White.copy(alpha = 0.95f),
+                                lineHeight = 18.sp,
+                                fontWeight = FontWeight.Medium
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = todayVerse.surahInfo,
+                                fontSize = 10.sp,
+                                color = SoftGold,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
                 }
 
                 // Circular commitment arc

@@ -30,6 +30,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import java.util.Calendar
+import androidx.compose.ui.draw.alpha
 import com.example.data.Relative
 import com.example.ui.components.AvatarPickerSheet
 import com.example.ui.components.SilaUserAvatar
@@ -48,8 +50,41 @@ fun UserProfileDialog(
     val userAvatarId: String by viewModel.userAvatarId.collectAsState(initial = "avatar_01")
     val lang: String by viewModel.selectedLanguage.collectAsState(initial = "ar")
     val relativesList: List<Relative> by viewModel.relatives.collectAsState(initial = emptyList())
+    val logsList: List<com.example.data.CommunicationLog> by viewModel.logs.collectAsState(initial = emptyList())
 
     var showAvatarPicker by remember { mutableStateOf(false) }
+
+    val currentCal = Calendar.getInstance()
+    val todayDayOfMonth = currentCal.get(Calendar.DAY_OF_MONTH)
+    val maxDaysInMonth = currentCal.getActualMaximum(Calendar.DAY_OF_MONTH)
+    val currentMonth = currentCal.get(Calendar.MONTH)
+    val currentYear = currentCal.get(Calendar.YEAR)
+
+    val firstDayOfMonthCal = Calendar.getInstance().apply {
+        set(Calendar.DAY_OF_MONTH, 1)
+    }
+    val startDayOfWeek = firstDayOfMonthCal.get(Calendar.DAY_OF_WEEK)
+    val startOffset = startDayOfWeek - 1
+
+    val connectedDaysThisMonth = remember(logsList, relativesList) {
+        val set = mutableSetOf<Int>()
+        val tempCal = Calendar.getInstance()
+        logsList.forEach { log ->
+            tempCal.timeInMillis = log.timestamp
+            if (tempCal.get(Calendar.MONTH) == currentMonth && tempCal.get(Calendar.YEAR) == currentYear) {
+                set.add(tempCal.get(Calendar.DAY_OF_MONTH))
+            }
+        }
+        relativesList.forEach { relative ->
+            relative.lastContactDate?.let { timestamp ->
+                tempCal.timeInMillis = timestamp
+                if (tempCal.get(Calendar.MONTH) == currentMonth && tempCal.get(Calendar.YEAR) == currentYear) {
+                    set.add(tempCal.get(Calendar.DAY_OF_MONTH))
+                }
+            }
+        }
+        set
+    }
 
     val connectedCount = relativesList.count { relative -> viewModel.getRelativeStatus(relative) == RelativeStatus.CONNECTED }
     val moderateCount = relativesList.count { relative -> viewModel.getRelativeStatus(relative) == RelativeStatus.OK_SOON || viewModel.getRelativeStatus(relative) == RelativeStatus.NEEDS_CONTACT }
@@ -115,19 +150,12 @@ fun UserProfileDialog(
                             }
                         }
 
-                        Column {
-                            Text(
-                                text = displayName,
-                                fontSize = 22.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onBackground
-                            )
-                            Text(
-                                text = if (lang == "en") "Tap avatar to change" else "اضغط الصورة للتغيير",
-                                fontSize = 10.sp,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
-                            )
-                        }
+                        Text(
+                            text = displayName,
+                            fontSize = 22.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onBackground
+                        )
                     }
 
                     // Left side: Settings & Close Buttons
@@ -339,8 +367,9 @@ fun UserProfileDialog(
                                 Spacer(modifier = Modifier.height(16.dp))
 
                                 // Month Calendar Header (Matching user screenshot)
+                                // Month Calendar Header
                                 Text(
-                                    text = "سجل التواصل الشهر الحالي 🌸",
+                                    text = if (lang == "en") "Current Month Log 🌸" else "سجل التواصل الشهر الحالي 🌸",
                                     fontSize = 14.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = Color(0xFF0E7075)
@@ -348,46 +377,81 @@ fun UserProfileDialog(
 
                                 Spacer(modifier = Modifier.height(12.dp))
 
-                                // Days Header Row
+                                // Days Header Row (Arabic / RTL order)
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
                                     horizontalArrangement = Arrangement.SpaceAround
                                 ) {
-                                    listOf("أحد", "اثنين", "ثلاثاء", "اربعاء", "خميس", "جمعة", "سبت").forEach { day ->
+                                    val headers = if (lang == "en") {
+                                        listOf("Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat")
+                                    } else {
+                                        listOf("أحد", "إثنين", "ثلاثاء", "أربعاء", "خميس", "جمعة", "سبت")
+                                    }
+                                    headers.forEach { day ->
                                         Text(day, fontSize = 10.sp, color = Color(0xFF94A3B8), fontWeight = FontWeight.Bold)
                                     }
                                 }
 
                                 Spacer(modifier = Modifier.height(8.dp))
 
-                                // Days Grid Sample
+                                // Dynamic Days Grid
+                                val totalSlots = startOffset + maxDaysInMonth
+                                val totalWeeks = (totalSlots + 6) / 7
+
                                 Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                                    for (week in 0..3) {
+                                    for (weekIndex in 0 until totalWeeks) {
                                         Row(
                                             modifier = Modifier.fillMaxWidth(),
                                             horizontalArrangement = Arrangement.SpaceAround
                                         ) {
-                                            for (dayInWeek in 1..7) {
-                                                val dayNum = week * 7 + dayInWeek
-                                                val isConnectedDay = dayNum in listOf(2, 4, 7, 10, 14, 18, 21)
-                                                Box(
-                                                    contentAlignment = Alignment.Center,
-                                                    modifier = Modifier
-                                                        .size(32.dp)
-                                                        .clip(CircleShape)
-                                                        .background(if (isConnectedDay) Color(0xFFE0F2F1) else Color(0xFFF8FAFC))
-                                                        .border(
-                                                            1.dp,
-                                                            if (isConnectedDay) Color(0xFF0E7075) else Color(0xFFE2E8F0),
-                                                            CircleShape
+                                            for (dayInWeek in 0 until 7) {
+                                                val slotIndex = weekIndex * 7 + dayInWeek
+                                                val dayNum = slotIndex - startOffset + 1
+
+                                                if (dayNum in 1..maxDaysInMonth) {
+                                                    val isConnectedDay = dayNum in connectedDaysThisMonth
+                                                    val isFutureDay = dayNum > todayDayOfMonth
+                                                    val isToday = dayNum == todayDayOfMonth
+
+                                                    val bgColor = when {
+                                                        isFutureDay -> Color(0xFFF1F5F9).copy(alpha = 0.5f)
+                                                        isConnectedDay -> Color(0xFFE0F2F1)
+                                                        else -> Color(0xFFF8FAFC)
+                                                    }
+                                                    val borderColor = when {
+                                                        isFutureDay -> Color(0xFFE2E8F0).copy(alpha = 0.4f)
+                                                        isToday -> Color(0xFFFF6D00)
+                                                        isConnectedDay -> Color(0xFF0E7075)
+                                                        else -> Color(0xFFE2E8F0)
+                                                    }
+                                                    val textColor = when {
+                                                        isFutureDay -> Color(0xFFCBD5E1)
+                                                        isConnectedDay -> Color(0xFF0E7075)
+                                                        isToday -> Color(0xFFFF6D00)
+                                                        else -> Color(0xFF64748B)
+                                                    }
+
+                                                    Box(
+                                                        contentAlignment = Alignment.Center,
+                                                        modifier = Modifier
+                                                            .size(32.dp)
+                                                            .clip(CircleShape)
+                                                            .background(bgColor)
+                                                            .border(
+                                                                width = if (isToday || isConnectedDay) 1.5.dp else 1.dp,
+                                                                color = borderColor,
+                                                                shape = CircleShape
+                                                            )
+                                                    ) {
+                                                        Text(
+                                                            text = "$dayNum",
+                                                            fontSize = 11.sp,
+                                                            fontWeight = if (isConnectedDay || isToday) FontWeight.Bold else FontWeight.Normal,
+                                                            color = textColor
                                                         )
-                                                ) {
-                                                    Text(
-                                                        text = "$dayNum",
-                                                        fontSize = 11.sp,
-                                                        fontWeight = if (isConnectedDay) FontWeight.Bold else FontWeight.Normal,
-                                                        color = if (isConnectedDay) Color(0xFF0E7075) else Color(0xFF64748B)
-                                                    )
+                                                    }
+                                                } else {
+                                                    Box(modifier = Modifier.size(32.dp))
                                                 }
                                             }
                                         }

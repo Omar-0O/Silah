@@ -84,7 +84,7 @@ private val LightColorScheme = lightColorScheme(
 fun MyApplicationTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     dynamicColor: Boolean = false,
-    fontName: String = "Cairo",
+    fontName: String = "Almarai",
     content: @Composable () -> Unit,
 ) {
     val colorScheme = when {

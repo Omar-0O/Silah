@@ -11,7 +11,8 @@ data class Relative(
     val relationshipDegree: String, // e.g., "والدان", "أشقاء", "أعمام/أخوال", "أقارب آخرون"
     val lastContactDate: Long = 0, // Timestamp in milliseconds
     val contactIntervalDays: Int = 14, // Reminder every X days
-    val notes: String = ""
+    val notes: String = "",
+    val photoUri: String? = null
 )
 
 @Entity(tableName = "communication_logs")

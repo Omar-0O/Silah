@@ -82,7 +82,7 @@ class MainActivity : ComponentActivity() {
                 }
             }
 
-            MyApplicationTheme(darkTheme = isDarkMode, fontName = "Cairo") {
+            MyApplicationTheme(darkTheme = isDarkMode, fontName = "Almarai") {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
