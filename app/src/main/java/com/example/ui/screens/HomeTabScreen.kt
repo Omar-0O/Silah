@@ -224,24 +224,25 @@ private fun MiniStatCard(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = 14.dp, horizontal = 8.dp),
+                .padding(vertical = 12.dp, horizontal = 6.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
             Box(
                 modifier = Modifier
-                    .size(44.dp)
+                    .size(42.dp)
                     .background(color.copy(alpha = 0.14f), androidx.compose.foundation.shape.CircleShape),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
                     text = emoji,
-                    fontSize = 20.sp
+                    fontSize = 22.sp
                 )
             }
+            Spacer(modifier = Modifier.height(2.dp))
             Text(
                 text = value,
-                fontSize = 22.sp,
+                fontSize = 20.sp,
                 fontWeight = FontWeight.Black,
                 color = color
             )
@@ -250,7 +251,8 @@ private fun MiniStatCard(
                 fontSize = 11.sp,
                 color = color.copy(alpha = 0.85f),
                 fontWeight = FontWeight.Bold,
-                maxLines = 1
+                maxLines = 1,
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center
             )
         }
     }
