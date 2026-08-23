@@ -72,7 +72,7 @@ class ReminderWorker(
         val title = if (lang == "en") "Sila — Kin Tie Reminder 🌸" else "صِلَةِ — تذكير بصلة الرحم 🌸"
 
         val notification = NotificationCompat.Builder(applicationContext, channelId)
-            .setSmallIcon(com.example.R.drawable.app_logo)
+            .setSmallIcon(com.example.R.drawable.ic_notification_sila)
             .setContentTitle(title)
             .setContentText(messageText)
             .setStyle(NotificationCompat.BigTextStyle().bigText(messageText))

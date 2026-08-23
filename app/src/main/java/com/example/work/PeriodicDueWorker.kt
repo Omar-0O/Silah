@@ -116,7 +116,7 @@ class PeriodicDueWorker(
         val title = if (lang == "en") "Sila — Contact Due Today! 🔔" else "صِلَةِ — موعد التواصل اليوم 🔔"
 
         val notification = NotificationCompat.Builder(applicationContext, channelId)
-            .setSmallIcon(com.example.R.drawable.app_logo)
+            .setSmallIcon(com.example.R.drawable.ic_notification_sila)
             .setContentTitle(title)
             .setContentText(messageText)
             .setStyle(NotificationCompat.BigTextStyle().bigText(messageText))
