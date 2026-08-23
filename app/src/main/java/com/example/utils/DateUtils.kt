@@ -145,4 +145,18 @@ object DateUtils {
             activeDays.contains(today - offset)
         }
     }
+
+    /**
+     * Translates relationship degrees to English when needed.
+     */
+    fun translateDegree(degree: String, lang: String): String {
+        if (lang != "en") return degree
+        return when (degree.trim()) {
+            "والدان" -> "Parents"
+            "أشقاء" -> "Siblings"
+            "أعمام/أخوال" -> "Uncles/Aunts"
+            "أقارب آخرون" -> "Other Relatives"
+            else -> degree
+        }
+    }
 }

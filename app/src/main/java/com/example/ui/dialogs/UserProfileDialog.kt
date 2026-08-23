@@ -169,14 +169,14 @@ fun UserProfileDialog(
                         IconButton(onClick = { viewModel.showSettingsDialog.value = true }) {
                             Icon(
                                 imageVector = Icons.Default.Settings,
-                                contentDescription = "الإعدادات",
+                                contentDescription = if (lang == "en") "Settings" else "الإعدادات",
                                 tint = MaterialTheme.colorScheme.onBackground
                             )
                         }
                         IconButton(onClick = onDismiss) {
                             Icon(
                                 imageVector = Icons.Default.Close,
-                                contentDescription = "إغلاق",
+                                contentDescription = if (lang == "en") "Close" else "إغلاق",
                                 tint = MaterialTheme.colorScheme.onBackground
                             )
                         }
@@ -206,7 +206,7 @@ fun UserProfileDialog(
                         ) {
                             Column(modifier = Modifier.padding(18.dp)) {
                                 Text(
-                                    text = "التقييم العام",
+                                    text = if (lang == "en") "General Evaluation" else "التقييم العام",
                                     fontSize = 15.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = Color.White
@@ -221,9 +221,9 @@ fun UserProfileDialog(
                                 ) {
                                     // Metric 1: Connects last 7 days
                                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                        Text("التواصل (آخر 7 أيام)", fontSize = 11.sp, color = Color(0xFFB2DFDB))
+                                        Text(if (lang == "en") "Contact (Last 7 Days)" else "التواصل (آخر 7 أيام)", fontSize = 11.sp, color = Color(0xFFB2DFDB))
                                         Spacer(modifier = Modifier.height(4.dp))
-                                        Text("${totalRelativesCount * 2} اتصالات", fontSize = 15.sp, fontWeight = FontWeight.Bold, color = SoftGold)
+                                        Text(if (lang == "en") "${totalRelativesCount * 2} contacts" else "${totalRelativesCount * 2} اتصالات", fontSize = 15.sp, fontWeight = FontWeight.Bold, color = SoftGold)
                                     }
 
                                     Box(
@@ -235,9 +235,9 @@ fun UserProfileDialog(
 
                                     // Metric 2: Connected Relatives
                                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                        Text("المتصل بهم", fontSize = 11.sp, color = Color(0xFFB2DFDB))
+                                        Text(if (lang == "en") "Connected" else "المتصل بهم", fontSize = 11.sp, color = Color(0xFFB2DFDB))
                                         Spacer(modifier = Modifier.height(4.dp))
-                                        Text("$connectedCount من $totalRelativesCount", fontSize = 15.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                                        Text(if (lang == "en") "$connectedCount of $totalRelativesCount" else "$connectedCount من $totalRelativesCount", fontSize = 15.sp, fontWeight = FontWeight.Bold, color = Color.White)
                                     }
 
                                     Box(
@@ -249,7 +249,7 @@ fun UserProfileDialog(
 
                                     // Metric 3: Overall Commitment Percentage
                                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                        Text("نسبة الالتزام", fontSize = 11.sp, color = Color(0xFFB2DFDB))
+                                        Text(if (lang == "en") "Commitment Rate" else "نسبة الالتزام", fontSize = 11.sp, color = Color(0xFFB2DFDB))
                                         Spacer(modifier = Modifier.height(4.dp))
                                         Text("$commitmentPercentage%", fontSize = 16.sp, fontWeight = FontWeight.Black, color = SoftGold)
                                     }
@@ -278,20 +278,20 @@ fun UserProfileDialog(
                                 ) {
                                     Icon(
                                         imageVector = Icons.Outlined.CloudUpload,
-                                        contentDescription = "سحابي",
+                                        contentDescription = if (lang == "en") "Cloud" else "سحابي",
                                         tint = Color(0xFF0E7075),
                                         modifier = Modifier.size(28.dp)
                                     )
                                     Spacer(modifier = Modifier.width(10.dp))
                                     Column {
                                         Text(
-                                            text = "أحفظ تقدمك وشارك إنجازك",
+                                            text = if (lang == "en") "Save Progress & Share Achievements" else "أحفظ تقدمك وشارك إنجازك",
                                             fontSize = 14.sp,
                                             fontWeight = FontWeight.Bold,
                                             color = Color(0xFF004D40)
                                         )
                                         Text(
-                                            text = "إنشاء الحساب ومزامنة الأصدقاء قريباً",
+                                            text = if (lang == "en") "Account creation & sync coming soon" else "إنشاء الحساب ومزامنة الأصدقاء قريباً",
                                             fontSize = 11.sp,
                                             color = Color(0xFF00695C)
                                         )
@@ -303,7 +303,7 @@ fun UserProfileDialog(
                                     shape = RoundedCornerShape(12.dp)
                                 ) {
                                     Text(
-                                        text = "قريباً",
+                                        text = if (lang == "en") "Soon" else "قريباً",
                                         fontSize = 11.sp,
                                         fontWeight = FontWeight.Bold,
                                         color = Color.White,
@@ -328,7 +328,7 @@ fun UserProfileDialog(
                                 horizontalAlignment = Alignment.CenterHorizontally
                             ) {
                                 Text(
-                                    text = "إحصائيات صلة الرحم",
+                                    text = if (lang == "en") "Kinship Statistics" else "إحصائيات صلة الرحم",
                                     fontSize = 16.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = MaterialTheme.colorScheme.onSurface
@@ -362,8 +362,8 @@ fun UserProfileDialog(
                                                 )
                                             }
                                             Spacer(modifier = Modifier.height(4.dp))
-                                            Text(category, fontSize = 11.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
-                                            Text("$count أفراد", fontSize = 10.sp, color = Color(0xFF64748B))
+                                            Text(com.example.utils.DateUtils.translateDegree(category, lang), fontSize = 11.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+                                            Text(if (lang == "en") "$count members" else "$count أفراد", fontSize = 10.sp, color = Color(0xFF64748B))
                                         }
                                     }
                                 }
@@ -481,8 +481,8 @@ fun UserProfileDialog(
                                                 .background(Color(0xFF10B981))
                                         )
                                         Spacer(modifier = Modifier.height(4.dp))
-                                        Text("متصل", fontSize = 11.sp, fontWeight = FontWeight.Bold)
-                                        Text("$connectedCount أقارب", fontSize = 10.sp, color = Color(0xFF64748B))
+                                        Text(if (lang == "en") "Connected" else "متصل", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                        Text(if (lang == "en") "$connectedCount relatives" else "$connectedCount أقارب", fontSize = 10.sp, color = Color(0xFF64748B))
                                     }
 
                                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -493,8 +493,8 @@ fun UserProfileDialog(
                                                 .background(Color(0xFFF59E0B))
                                         )
                                         Spacer(modifier = Modifier.height(4.dp))
-                                        Text("معتدل", fontSize = 11.sp, fontWeight = FontWeight.Bold)
-                                        Text("$moderateCount أقارب", fontSize = 10.sp, color = Color(0xFF64748B))
+                                        Text(if (lang == "en") "Moderate" else "معتدل", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                        Text(if (lang == "en") "$moderateCount relatives" else "$moderateCount أقارب", fontSize = 10.sp, color = Color(0xFF64748B))
                                     }
 
                                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -505,8 +505,8 @@ fun UserProfileDialog(
                                                 .background(Color(0xFFEF4444))
                                         )
                                         Spacer(modifier = Modifier.height(4.dp))
-                                        Text("تواصل عاجل", fontSize = 11.sp, fontWeight = FontWeight.Bold)
-                                        Text("$overdueCount أقارب", fontSize = 10.sp, color = Color(0xFF64748B))
+                                        Text(if (lang == "en") "Urgent" else "تواصل عاجل", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                        Text(if (lang == "en") "$overdueCount relatives" else "$overdueCount أقارب", fontSize = 10.sp, color = Color(0xFF64748B))
                                     }
                                 }
                             }
@@ -515,7 +515,6 @@ fun UserProfileDialog(
                 }
             }
         }
-    }
     }
 
     // ── Avatar Picker Sheet ───────────────────────────────────────────────────
@@ -529,4 +528,5 @@ fun UserProfileDialog(
             onDismiss = { showAvatarPicker = false }
         )
     }
+}
 }

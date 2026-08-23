@@ -194,7 +194,7 @@ private fun QuickStatsRow(
         MiniStatCard(
             emoji = "🔔",
             value = dueCount.toString(),
-            label = if (lang == "en") "Due Now" else "بانتظارك",
+            label = if (lang == "en") "Due Today" else "بانتظارك",
             color = if (dueCount > 0) Color(0xFFE53935) else PrimaryGreen,
             modifier = Modifier.weight(1f)
         )
@@ -217,39 +217,40 @@ private fun MiniStatCard(
     modifier: Modifier = Modifier
 ) {
     Card(
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(18.dp),
         colors = CardDefaults.cardColors(containerColor = color.copy(alpha = 0.08f)),
-        modifier = modifier.shadow(2.dp, RoundedCornerShape(16.dp))
+        modifier = modifier.shadow(2.dp, RoundedCornerShape(18.dp))
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = 12.dp, horizontal = 6.dp),
+                .padding(vertical = 14.dp, horizontal = 8.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(6.dp)
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Box(
                 modifier = Modifier
-                    .size(38.dp)
+                    .size(44.dp)
                     .background(color.copy(alpha = 0.14f), androidx.compose.foundation.shape.CircleShape),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
                     text = emoji,
-                    fontSize = 18.sp
+                    fontSize = 20.sp
                 )
             }
             Text(
                 text = value,
-                fontSize = 20.sp,
+                fontSize = 22.sp,
                 fontWeight = FontWeight.Black,
                 color = color
             )
             Text(
                 text = label,
-                fontSize = 10.sp,
-                color = color.copy(alpha = 0.75f),
-                fontWeight = FontWeight.Bold
+                fontSize = 11.sp,
+                color = color.copy(alpha = 0.85f),
+                fontWeight = FontWeight.Bold,
+                maxLines = 1
             )
         }
     }

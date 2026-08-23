@@ -77,13 +77,13 @@ fun ImportContactsDialog(
             ) {
                 // Header Title
                 Text(
-                    text = "استيراد الأقارب من الهاتف 📲",
+                    text = if (selectedLanguage == "en") "Import Relatives from Phone 📲" else "استيراد الأقارب من الهاتف 📲",
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.primary
                 )
                 Text(
-                    text = "حدد أرحامك واضبط تكرار التذكير لكل قريب بسهولة",
+                    text = if (selectedLanguage == "en") "Select your relatives and set reminder intervals easily" else "حدد أرحامك واضبط تكرار التذكير لكل قريب بسهولة",
                     fontSize = 11.sp,
                     color = MaterialTheme.colorScheme.secondary
                 )
@@ -97,7 +97,8 @@ fun ImportContactsDialog(
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text(
-                        text = "💡 يكتشف التطبيق مكالماتك تلقائياً مع أقاربك عبر سجل الهاتف، ويمكنك أيضاً تسجيل التواصل يدوياً في أي وقت.",
+                        text = if (selectedLanguage == "en") "💡 The app automatically detects calls with your relatives via phone log, and you can also record contact manually anytime."
+                               else "💡 يكتشف التطبيق مكالماتك تلقائياً مع أقاربك عبر سجل الهاتف، ويمكنك أيضاً تسجيل التواصل يدوياً في أي وقت.",
                         fontSize = 11.sp,
                         color = MaterialTheme.colorScheme.primary,
                         lineHeight = 17.sp,
@@ -111,7 +112,7 @@ fun ImportContactsDialog(
                 OutlinedTextField(
                     value = searchQuery,
                     onValueChange = { searchQuery = it },
-                    placeholder = { Text("ابحث بالاسم أو رقم الهاتف...", fontSize = 12.sp) },
+                    placeholder = { Text(if (selectedLanguage == "en") "Search name or phone number..." else "ابحث بالاسم أو رقم الهاتف...", fontSize = 12.sp) },
                     leadingIcon = { Icon(Icons.Outlined.Search, contentDescription = null, modifier = Modifier.size(18.dp)) },
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(14.dp),
@@ -130,7 +131,7 @@ fun ImportContactsDialog(
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
                             Spacer(modifier = Modifier.height(8.dp))
-                            Text("جاري قراءة جهات الاتصال...", fontSize = 12.sp, color = MaterialTheme.colorScheme.secondary)
+                            Text(if (selectedLanguage == "en") "Loading contacts..." else "جاري قراءة جهات الاتصال...", fontSize = 12.sp, color = MaterialTheme.colorScheme.secondary)
                         }
                     }
                 } else if (filteredContacts.isEmpty()) {
@@ -141,7 +142,10 @@ fun ImportContactsDialog(
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = if (searchQuery.isNotEmpty()) "لا يوجد جهات اتصال مطابقة للبحث" else "لم يتم العثور على جهات اتصال في الهاتف",
+                            text = if (searchQuery.isNotEmpty())
+                                (if (selectedLanguage == "en") "No matching contacts found" else "لا يوجد جهات اتصال مطابقة للبحث")
+                            else
+                                (if (selectedLanguage == "en") "No contacts found on device" else "لم يتم العثور على جهات اتصال في الهاتف"),
                             fontSize = 13.sp,
                             color = MaterialTheme.colorScheme.secondary
                         )
@@ -216,11 +220,11 @@ fun ImportContactsDialog(
                                                     modifier = Modifier.size(16.dp)
                                                 )
                                                 Spacer(modifier = Modifier.width(4.dp))
-                                                Text("مضاف 🟢", fontSize = 11.sp, color = Color(0xFF2E7D32), fontWeight = FontWeight.Bold)
+                                                Text(if (selectedLanguage == "en") "Added 🟢" else "مضاف 🟢", fontSize = 11.sp, color = Color(0xFF2E7D32), fontWeight = FontWeight.Bold)
                                             }
                                         } else {
                                             Text(
-                                                text = if (isExpanded) "إغلاق ▲" else "تحديد التذكير ＋",
+                                                text = if (isExpanded) (if (selectedLanguage == "en") "Close ▲" else "إغلاق ▲") else (if (selectedLanguage == "en") "Set Reminder ＋" else "تحديد التذكير ＋"),
                                                 color = MaterialTheme.colorScheme.primary,
                                                 fontSize = 12.sp,
                                                 fontWeight = FontWeight.Bold
@@ -234,6 +238,7 @@ fun ImportContactsDialog(
                                             initialName = name,
                                             initialPhone = phone,
                                             viewModel = viewModel,
+                                            lang = selectedLanguage,
                                             onSave = { degree, interval ->
                                                 view.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
                                                 viewModel.addRelative(
@@ -241,10 +246,11 @@ fun ImportContactsDialog(
                                                     phone = phone,
                                                     relationshipDegree = degree,
                                                     intervalDays = interval,
-                                                    notes = "تم استيراده من جهات الاتصال",
+                                                    notes = if (selectedLanguage == "en") "Imported from contacts" else "تم استيراده من جهات الاتصال",
                                                     photoUri = photoUri
                                                 )
-                                                Toast.makeText(context, "تمت إضافة $name بنجاح في صِلَةِ! ✨", Toast.LENGTH_SHORT).show()
+                                                val toastMsg = if (selectedLanguage == "en") "$name successfully added to Silah! ✨" else "تمت إضافة $name بنجاح في صِلَةِ! ✨"
+                                                Toast.makeText(context, toastMsg, Toast.LENGTH_SHORT).show()
                                                 selectedContactPhone = null
                                             }
                                         )
@@ -264,7 +270,7 @@ fun ImportContactsDialog(
                     shape = RoundedCornerShape(14.dp),
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text("تم والعودة للقائمة 🌸", fontWeight = FontWeight.Bold)
+                    Text(if (selectedLanguage == "en") "Done & Return to List 🌸" else "تم والعودة للقائمة 🌸", fontWeight = FontWeight.Bold)
                 }
             }
         }
@@ -277,13 +283,22 @@ private fun ContactSetupInlineForm(
     initialName: String,
     initialPhone: String,
     viewModel: RelativeViewModel,
+    lang: String = "ar",
     onSave: (degree: String, intervalDays: Int) -> Unit
 ) {
     var relationshipDegree by remember { mutableStateOf(viewModel.suggestRelationshipDegree(initialName)) }
     var intervalDays by remember { mutableIntStateOf(7) }
 
     val degrees = listOf("والدان", "أشقاء", "أعمام/أخوال", "أقارب آخرون")
-    val intervals = listOf(
+    val degreeLabels = if (lang == "en") listOf("Parents", "Siblings", "Uncles/Aunts", "Other Relatives") else degrees
+
+    val intervals = if (lang == "en") listOf(
+        Pair(1, "Daily"),
+        Pair(3, "Every 3 days"),
+        Pair(7, "Weekly"),
+        Pair(14, "Every 2 weeks"),
+        Pair(30, "Monthly")
+    ) else listOf(
         Pair(1, "يومياً"),
         Pair(3, "كل 3 أيام"),
         Pair(7, "كل أسبوع"),
@@ -299,19 +314,19 @@ private fun ContactSetupInlineForm(
             .padding(12.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        Text("درجة القرابة:", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+        Text(if (lang == "en") "Relationship:" else "درجة القرابة:", fontSize = 11.sp, fontWeight = FontWeight.Bold)
         LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            items(degrees) { degree ->
+            items(degrees.zip(degreeLabels)) { (degree, label) ->
                 FilterChip(
                     selected = relationshipDegree == degree,
                     onClick = { relationshipDegree = degree },
-                    label = { Text(degree, fontSize = 10.sp) },
+                    label = { Text(label, fontSize = 10.sp) },
                     shape = RoundedCornerShape(10.dp)
                 )
             }
         }
 
-        Text("موعد التذكير الدوري:", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+        Text(if (lang == "en") "Reminder Interval:" else "موعد التذكير الدوري:", fontSize = 11.sp, fontWeight = FontWeight.Bold)
         LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             items(intervals) { (days, label) ->
                 FilterChip(
@@ -329,7 +344,7 @@ private fun ContactSetupInlineForm(
             shape = RoundedCornerShape(12.dp),
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text("حفظ وتفعيل التذكير ✨", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+            Text(if (lang == "en") "Save & Enable Reminder ✨" else "حفظ وتفعيل التذكير ✨", fontSize = 12.sp, fontWeight = FontWeight.Bold)
         }
     }
 }

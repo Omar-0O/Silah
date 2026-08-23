@@ -111,7 +111,7 @@ fun RelativeCard(
                         overflow = TextOverflow.Ellipsis
                     )
                     Text(
-                        text = relative.relationshipDegree,
+                        text = com.example.utils.DateUtils.translateDegree(relative.relationshipDegree, lang),
                         fontSize = 12.sp,
                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75f),
                         fontWeight = FontWeight.Medium

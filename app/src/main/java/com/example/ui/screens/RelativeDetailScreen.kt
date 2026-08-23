@@ -175,7 +175,7 @@ fun RelativeDetailScreen(
                             color = Color.White
                         )
                         Text(
-                            text = relative.relationshipDegree,
+                            text = DateUtils.translateDegree(relative.relationshipDegree, lang),
                             fontSize = 13.sp,
                             color = Color.White.copy(alpha = 0.7f),
                             fontWeight = FontWeight.Medium

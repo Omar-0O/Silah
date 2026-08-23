@@ -17,6 +17,8 @@ import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -43,6 +45,7 @@ fun DueRelativesCarousel(
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
+    val lang by viewModel.selectedLanguage.collectAsState()
 
     Column(modifier = modifier.fillMaxWidth()) {
         Row(
@@ -57,7 +60,7 @@ fun DueRelativesCarousel(
                     .background(if (dueRelatives.isNotEmpty()) Color(0xFFE57373) else Color(0xFF81C784))
             )
             Text(
-                text = "حان وقتُ وَصْلِهِم ✨",
+                text = if (lang == "en") "Due to Connect ✨" else "حان وقتُ وَصْلِهِم ✨",
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onBackground
@@ -94,13 +97,13 @@ fun DueRelativesCarousel(
                     )
                     Column {
                         Text(
-                            "جميع أرحامكِ موصولون بالكامل! 🎉",
+                            text = if (lang == "en") "All relatives are connected! 🎉" else "جميع أرحامكِ موصولون بالكامل! 🎉",
                             fontSize = 14.sp,
                             fontWeight = FontWeight.Bold,
                             color = PrimaryGreen
                         )
                         Text(
-                            "ما شاء الله، التزامكِ رائع ويقرب المسافات. طابت أيامكِ ببركة الود والرحمة.",
+                            text = if (lang == "en") "Great job staying in touch with your family!" else "ما شاء الله، التزامكِ رائع ويقرب المسافات. طابت أيامكِ ببركة الود والرحمة.",
                             fontSize = 12.sp,
                             color = SecondaryGreyGreen
                         )
@@ -140,7 +143,7 @@ fun DueRelativesCarousel(
                                         .padding(horizontal = 8.dp, vertical = 4.dp)
                                 ) {
                                     Text(
-                                        text = status.label,
+                                        text = if (lang == "en") status.labelEn else status.label,
                                         color = statusTextColor,
                                         fontSize = 10.sp,
                                         fontWeight = FontWeight.Bold
@@ -148,7 +151,7 @@ fun DueRelativesCarousel(
                                 }
 
                                 Text(
-                                    text = relative.relationshipDegree,
+                                    text = DateUtils.translateDegree(relative.relationshipDegree, lang),
                                     fontSize = 10.sp,
                                     color = MaterialTheme.colorScheme.secondary,
                                     fontWeight = FontWeight.Bold
@@ -199,7 +202,9 @@ fun DueRelativesCarousel(
                                                 data = "https://api.whatsapp.com/send?phone=$cleanPhone".toUri()
                                             }
                                             context.startActivity(intent)
-                                            viewModel.recordCommunication(relative.id, "رسالة", "تواصل سريع ومباشر عبر الواتساب")
+                                            val commType = if (lang == "en") "Message" else "رسالة"
+                                            val note = if (lang == "en") "Quick WhatsApp message" else "تواصل سريع ومباشر عبر الواتساب"
+                                            viewModel.recordCommunication(relative.id, commType, note)
                                         },
                                         modifier = Modifier
                                             .size(34.dp)
@@ -207,7 +212,7 @@ fun DueRelativesCarousel(
                                     ) {
                                         Icon(
                                             imageVector = Icons.AutoMirrored.Outlined.Chat,
-                                            contentDescription = "واتساب",
+                                            contentDescription = if (lang == "en") "WhatsApp" else "واتساب",
                                             tint = Color(0xFF2E7D32),
                                             modifier = Modifier.size(16.dp)
                                         )
@@ -222,7 +227,7 @@ fun DueRelativesCarousel(
                                     ) {
                                         Icon(
                                             imageVector = Icons.Outlined.CheckCircle,
-                                            contentDescription = "سجل",
+                                            contentDescription = if (lang == "en") "Log" else "سجل",
                                             tint = MaterialTheme.colorScheme.primary,
                                             modifier = Modifier.size(16.dp)
                                         )
@@ -233,7 +238,10 @@ fun DueRelativesCarousel(
                             Spacer(modifier = Modifier.height(10.dp))
 
                             Text(
-                                text = "آخر تواصل: ${DateUtils.formatRelativeTimeExact(relative.lastContactDate)}",
+                                text = if (lang == "en")
+                                    "Last: ${DateUtils.formatRelativeTimeExact(relative.lastContactDate, lang)}"
+                                else
+                                    "آخر تواصل: ${DateUtils.formatRelativeTimeExact(relative.lastContactDate, lang)}",
                                 fontSize = 11.sp,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
                             )

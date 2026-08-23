@@ -74,7 +74,7 @@ class RelativeViewModel(application: Application) : AndroidViewModel(application
     val searchQuery = MutableStateFlow("")
     val selectedCategory = MutableStateFlow("الكل") // "الكل", "والدان", "أشقاء", "أعمام/أخوال", "أقارب آخرون"
 
-    // Filtered Relatives Flow
+    // Filtered & Sorted Relatives Flow (Sorted by nearest contact due date / highest urgency)
     val filteredRelatives: StateFlow<List<Relative>> = combine(
         relatives,
         searchQuery,
@@ -85,7 +85,19 @@ class RelativeViewModel(application: Application) : AndroidViewModel(application
                                 relative.phone.contains(query)
             val matchesCategory = category == "الكل" || relative.relationshipDegree == category
             matchesSearch && matchesCategory
-        }
+        }.sortedWith(
+            compareBy<Relative> { relative ->
+                if (relative.lastContactDate == 0L) 0L
+                else relative.lastContactDate + (relative.contactIntervalDays * 86_400_000L)
+            }.thenBy { relative ->
+                when (relative.relationshipDegree) {
+                    "والدان" -> 1
+                    "أشقاء" -> 2
+                    "أعمام/أخوال" -> 3
+                    else -> 4
+                }
+            }.thenBy { it.name }
+        )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     // UI triggers/States for Dialogs and Forms
