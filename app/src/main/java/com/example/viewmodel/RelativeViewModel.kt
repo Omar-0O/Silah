@@ -31,6 +31,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
@@ -147,14 +149,15 @@ class RelativeViewModel(application: Application) : AndroidViewModel(application
         prefs.edit().putBoolean("pref_notify_monthly", enabled).apply()
     }
 
-    // Days using Sila
-    val appUsageDays: StateFlow<Int> = MutableStateFlow(
-        run {
-            val firstLaunch = prefs.getLong("app_first_launch_time", System.currentTimeMillis())
-            val diffMs = System.currentTimeMillis() - firstLaunch
-            ((diffMs / (1000 * 60 * 60 * 24)) + 1).toInt()
-        }
-    )
+    // Days using Sila — computed fresh from prefs (not cached in a StateFlow)
+    fun getAppUsageDays(): Int {
+        val firstLaunch = prefs.getLong("app_first_launch_time", System.currentTimeMillis())
+        val diffMs = System.currentTimeMillis() - firstLaunch
+        return ((diffMs / (1000 * 60 * 60 * 24)) + 1).toInt()
+    }
+
+    // Expose as StateFlow for Compose to observe
+    val appUsageDays: StateFlow<Int> = MutableStateFlow(getAppUsageDays())
 
     fun openSupportSilaDialog() { showSupportSilaDialog.value = true }
     fun closeSupportSilaDialog() { showSupportSilaDialog.value = false }
@@ -167,14 +170,22 @@ class RelativeViewModel(application: Application) : AndroidViewModel(application
 
     private fun observeMilestones() {
         viewModelScope.launch {
-            relatives.collect { rels ->
-                checkMilestones(rels)
-            }
+            // distinctUntilChanged on contactedCount avoids re-triggering on unrelated DB emits
+            relatives
+                .map { list -> list.count { it.lastContactDate > 0L } }
+                .distinctUntilChanged()
+                .collect { contactedCount ->
+                    checkMilestonesByCount(contactedCount)
+                }
         }
     }
 
+    // Public for testing only — internal logic uses checkMilestonesByCount
     fun checkMilestones(currentRelatives: List<Relative>) {
-        val contactedCount = currentRelatives.count { it.lastContactDate > 0L }
+        checkMilestonesByCount(currentRelatives.count { it.lastContactDate > 0L })
+    }
+
+    private fun checkMilestonesByCount(contactedCount: Int) {
         if (contactedCount < 5) return
 
         val achievedSet = prefs.getStringSet("achieved_milestones", emptySet()) ?: emptySet()
@@ -182,34 +193,38 @@ class RelativeViewModel(application: Application) : AndroidViewModel(application
         val now = System.currentTimeMillis()
         val isCooldownActive = lastPromptTime > 0L && (now - lastPromptTime < 30 * 86_400_000L)
 
+        // Find which milestone to show — check from highest to lowest
+        // Key fix: only markMilestoneAchieved when we actually show it (or for milestone 5)
         when {
             contactedCount >= 100 && !achievedSet.contains("milestone_100") -> {
                 if (!isCooldownActive) {
-                    activeMilestone.value = com.example.ui.dialogs.MilestoneType.Milestone100
                     markMilestoneAchieved("milestone_100")
+                    activeMilestone.value = com.example.ui.dialogs.MilestoneType.Milestone100
                 }
+                // If cooldown is active, we leave it un-marked so it shows after cooldown
             }
             contactedCount >= 50 && !achievedSet.contains("milestone_50") -> {
                 if (!isCooldownActive) {
-                    activeMilestone.value = com.example.ui.dialogs.MilestoneType.Milestone50
                     markMilestoneAchieved("milestone_50")
+                    activeMilestone.value = com.example.ui.dialogs.MilestoneType.Milestone50
                 }
             }
             contactedCount >= 25 && !achievedSet.contains("milestone_25") -> {
                 if (!isCooldownActive) {
-                    activeMilestone.value = com.example.ui.dialogs.MilestoneType.Milestone25
                     markMilestoneAchieved("milestone_25")
+                    activeMilestone.value = com.example.ui.dialogs.MilestoneType.Milestone25
                 }
             }
             contactedCount >= 10 && !achievedSet.contains("milestone_10") -> {
                 if (!isCooldownActive) {
-                    activeMilestone.value = com.example.ui.dialogs.MilestoneType.Milestone10
                     markMilestoneAchieved("milestone_10")
+                    activeMilestone.value = com.example.ui.dialogs.MilestoneType.Milestone10
                 }
             }
             contactedCount >= 5 && !achievedSet.contains("milestone_5") -> {
-                activeMilestone.value = com.example.ui.dialogs.MilestoneType.Milestone5
+                // Milestone 5 is celebration-only, no cooldown needed
                 markMilestoneAchieved("milestone_5")
+                activeMilestone.value = com.example.ui.dialogs.MilestoneType.Milestone5
             }
         }
     }

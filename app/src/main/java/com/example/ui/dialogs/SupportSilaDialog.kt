@@ -50,7 +50,8 @@ fun SupportSilaDialog(
     val selectedLanguage by viewModel.selectedLanguage.collectAsState()
     val relatives by viewModel.relatives.collectAsState()
     val logs by viewModel.logs.collectAsState()
-    val usageDays by viewModel.appUsageDays.collectAsState()
+    // getAppUsageDays() is called fresh each time the dialog opens
+    val usageDays = remember { viewModel.getAppUsageDays() }
 
     val layoutDirection = if (selectedLanguage == "en") LayoutDirection.Ltr else LayoutDirection.Rtl
     val context = LocalContext.current
@@ -443,8 +444,11 @@ private fun InstaPaySupportModal(
     var customAmount by remember { mutableStateOf("") }
     val layoutDirection = if (lang == "en") LayoutDirection.Ltr else LayoutDirection.Rtl
 
-    val qrBitmap = remember(config.paymentLink) {
-        QRCodeUtils.generateQRCodeBitmap(config.paymentLink)
+    var qrBitmap by remember { mutableStateOf<androidx.compose.ui.graphics.ImageBitmap?>(null) }
+    LaunchedEffect(config.paymentLink) {
+        kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) {
+            qrBitmap = QRCodeUtils.generateQRCodeBitmap(config.paymentLink)
+        }
     }
 
     Dialog(onDismissRequest = onDismiss) {
@@ -558,14 +562,14 @@ private fun InstaPaySupportModal(
                     }
 
                     // QR Code
-                    if (qrBitmap != null) {
+                    qrBitmap?.let { bmp ->
                         Text(
                             text = if (lang == "en") "Scan QR Code with InstaPay app" else "امسح الـ QR Code من تطبيق InstaPay",
                             fontSize = 11.sp,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         Image(
-                            bitmap = qrBitmap,
+                            bitmap = bmp,
                             contentDescription = "InstaPay QR Code",
                             modifier = Modifier
                                 .size(140.dp)
@@ -596,8 +600,11 @@ private fun WalletSupportModal(
     var customAmount by remember { mutableStateOf("") }
     val layoutDirection = if (lang == "en") LayoutDirection.Ltr else LayoutDirection.Rtl
 
-    val qrBitmap = remember(wallet.phoneNumber) {
-        QRCodeUtils.generateQRCodeBitmap(wallet.phoneNumber)
+    var qrBitmap by remember { mutableStateOf<androidx.compose.ui.graphics.ImageBitmap?>(null) }
+    LaunchedEffect(wallet.phoneNumber) {
+        kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) {
+            qrBitmap = QRCodeUtils.generateQRCodeBitmap(wallet.phoneNumber)
+        }
     }
 
     Dialog(onDismissRequest = onDismiss) {
@@ -697,14 +704,14 @@ private fun WalletSupportModal(
                     }
 
                     // QR Code
-                    if (qrBitmap != null) {
+                    qrBitmap?.let { bmp ->
                         Text(
                             text = if (lang == "en") "Scan QR Code for wallet transfer" else "امسح الـ QR Code للتحويل للمحفظة",
                             fontSize = 11.sp,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         Image(
-                            bitmap = qrBitmap,
+                            bitmap = bmp,
                             contentDescription = "Wallet QR Code",
                             modifier = Modifier
                                 .size(140.dp)
