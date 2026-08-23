@@ -19,7 +19,7 @@ import coil.request.CachePolicy
 import coil.request.ImageRequest
 
 /**
- * Renders the user's chosen DiceBear Lorelei SVG avatar.
+ * Renders the user's chosen DiceBear Critters SVG avatar.
  * Falls back gracefully to UserAvatarCharacter if loading or offline.
  */
 @Composable
