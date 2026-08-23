@@ -57,12 +57,15 @@ class MainActivity : ComponentActivity() {
 
             // Connect launchers and request startup permissions
             LaunchedEffect(Unit) {
-                permissionLauncher.launch(
-                    arrayOf(
-                        android.Manifest.permission.READ_CONTACTS,
-                        android.Manifest.permission.READ_CALL_LOG
-                    )
+                val permissionsList = mutableListOf(
+                    android.Manifest.permission.READ_CONTACTS,
+                    android.Manifest.permission.READ_CALL_LOG
                 )
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+                    permissionsList.add(android.Manifest.permission.POST_NOTIFICATIONS)
+                }
+                permissionLauncher.launch(permissionsList.toTypedArray())
+
                 viewModel.setExportLauncher {
                     exportLauncher.launch(viewModel.suggestedBackupName())
                 }

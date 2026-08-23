@@ -10,10 +10,14 @@ import com.example.data.Relative
 import com.example.data.RelativeRepository
 import com.example.data.QuickTemplate
 import com.example.data.FamilyMemory
+import android.app.NotificationManager
 import androidx.work.Data
 import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.ExistingWorkPolicy
+import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
+import com.example.work.PeriodicDueWorker
 import com.example.work.ReminderWorker
 import java.util.concurrent.TimeUnit
 import android.net.Uri
@@ -38,6 +42,10 @@ class RelativeViewModel(application: Application) : AndroidViewModel(application
         db.quickTemplateDao(),
         db.familyMemoryDao()
     )
+
+    init {
+        setupDueNotificationsWorker()
+    }
 
     // Raw database state flows
     val relatives: StateFlow<List<Relative>> = repository.allRelatives
@@ -330,6 +338,34 @@ class RelativeViewModel(application: Application) : AndroidViewModel(application
         }
     }
 
+    fun setupDueNotificationsWorker() {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val workManager = WorkManager.getInstance(getApplication())
+
+                // 1. Periodic worker: Runs every 2 hours to check for due relatives
+                val periodicWork = PeriodicWorkRequestBuilder<PeriodicDueWorker>(2, TimeUnit.HOURS)
+                    .build()
+
+                workManager.enqueueUniquePeriodicWork(
+                    "sila_periodic_due_check",
+                    ExistingPeriodicWorkPolicy.UPDATE,
+                    periodicWork
+                )
+
+                // 2. Immediate worker: Runs right now to trigger immediate notification for due relatives today
+                val immediateWork = OneTimeWorkRequestBuilder<PeriodicDueWorker>().build()
+                workManager.enqueueUniqueWork(
+                    "sila_immediate_due_check",
+                    ExistingWorkPolicy.REPLACE,
+                    immediateWork
+                )
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
     fun recordCommunication(relativeId: Int, type: String, notes: String) {
         viewModelScope.launch(Dispatchers.IO) {
             val log = CommunicationLog(
@@ -339,6 +375,14 @@ class RelativeViewModel(application: Application) : AndroidViewModel(application
                 timestamp = System.currentTimeMillis()
             )
             repository.insertLog(log)
+
+            // Cancel any active due notification for this relative
+            val notificationManager = getApplication<Application>().getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            notificationManager.cancel(relativeId + 10000)
+
+            // Re-trigger due check
+            setupDueNotificationsWorker()
+
             SilaAppWidgetProvider.triggerWidgetUpdate(getApplication())
         }
     }
