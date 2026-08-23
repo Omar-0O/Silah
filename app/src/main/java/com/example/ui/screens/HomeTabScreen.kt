@@ -4,6 +4,7 @@ import android.content.Intent
 import android.net.Uri
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -36,7 +37,7 @@ import java.util.*
 
 /**
  * HomeTabScreen — الشاشة الرئيسية (Dashboard Tab)
- * تعرض CommitmentHeaderCard + DueRelativesCarousel + إحصائيات سريعة
+ * تعرض CommitmentHeaderCard + StreakCard + DueRelativesCarousel + إحصائيات سريعة
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -46,6 +47,8 @@ fun HomeTabScreen(viewModel: RelativeViewModel) {
     val userAvatarId by viewModel.userAvatarId.collectAsState()
     val relatives by viewModel.relatives.collectAsState()
     val logs by viewModel.logs.collectAsState()
+    val streakDays by viewModel.streakDays.collectAsState()
+    val last7DaysActivity by viewModel.last7DaysActivity.collectAsState()
     val context = LocalContext.current
 
     // Urgency-sorted due relatives
@@ -108,14 +111,14 @@ fun HomeTabScreen(viewModel: RelativeViewModel) {
                                        else if (lang == "en") "Family Keeper" else "حافظ الأرحام",
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onBackground,
-                                fontSize = 17.sp
+                                fontSize = 16.sp
                             )
                         }
                     }
                 },
                 actions = {
                     // Settings
-                    IconButton(onClick = { viewModel.showSettingsDialog.value = true }) {
+                    IconButton(onClick = { showProfileDialog = true }) {
                         Icon(
                             Icons.Outlined.Settings,
                             contentDescription = "إعدادات",
@@ -149,7 +152,16 @@ fun HomeTabScreen(viewModel: RelativeViewModel) {
                 )
             }
 
-            // 2. Quick Stats Row
+            // 2. Kinship Streak Card
+            item {
+                StreakCard(
+                    streakDays = streakDays,
+                    last7DaysActivity = last7DaysActivity,
+                    lang = lang
+                )
+            }
+
+            // 3. Quick Stats Row
             item {
                 QuickStatsRow(
                     relativesCount = relatives.size,
@@ -159,7 +171,7 @@ fun HomeTabScreen(viewModel: RelativeViewModel) {
                 )
             }
 
-            // 3. Due Relatives Carousel
+            // 4. Due Relatives Carousel
             item {
                 DueRelativesCarousel(
                     dueRelatives = dueRelatives,
@@ -249,6 +261,148 @@ private fun MiniStatCard(
                 color = color.copy(alpha = 0.75f),
                 fontWeight = FontWeight.Bold
             )
+        }
+    }
+}
+
+// ── Kinship Streak Card ────────────────────────────────────────────────────────
+@Composable
+private fun StreakCard(
+    streakDays: Int,
+    last7DaysActivity: List<Boolean>,
+    lang: String
+) {
+    val dayLabels = remember(lang) {
+        (6 downTo 0).map { offset ->
+            val cal = Calendar.getInstance().apply {
+                add(Calendar.DAY_OF_YEAR, -offset)
+            }
+            val dayOfWeek = cal.get(Calendar.DAY_OF_WEEK)
+            if (lang == "en") {
+                when (dayOfWeek) {
+                    Calendar.SUNDAY -> "Su"
+                    Calendar.MONDAY -> "Mo"
+                    Calendar.TUESDAY -> "Tu"
+                    Calendar.WEDNESDAY -> "We"
+                    Calendar.THURSDAY -> "Th"
+                    Calendar.FRIDAY -> "Fr"
+                    else -> "Sa"
+                }
+            } else {
+                when (dayOfWeek) {
+                    Calendar.SUNDAY -> "ح"
+                    Calendar.MONDAY -> "ن"
+                    Calendar.TUESDAY -> "ث"
+                    Calendar.WEDNESDAY -> "ر"
+                    Calendar.THURSDAY -> "خ"
+                    Calendar.FRIDAY -> "ج"
+                    else -> "س"
+                }
+            }
+        }
+    }
+
+    Card(
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        modifier = Modifier
+            .fillMaxWidth()
+            .shadow(3.dp, RoundedCornerShape(20.dp))
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(14.dp)
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(44.dp)
+                        .background(
+                            color = if (streakDays > 0) Color(0xFFFF6D00).copy(alpha = 0.15f)
+                                    else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f),
+                            shape = CircleShape
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = if (streakDays > 0) "🔥" else "🌱",
+                        fontSize = 22.sp
+                    )
+                }
+
+                Column {
+                    Text(
+                        text = if (lang == "en") "$streakDays Day Streak!"
+                               else if (streakDays == 0) "تتابع صلة الرحم 🌸"
+                               else if (streakDays == 1) "يوم واحد متواصل 🔥"
+                               else if (streakDays == 2) "يومان متواصلان 🔥"
+                               else if (streakDays in 3..10) "$streakDays أيام متتالية 🔥"
+                               else "$streakDays يوماً متتالياً 🔥",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Text(
+                        text = if (streakDays == 0) {
+                            if (lang == "en") "Connect today to start your streak!" else "تواصل اليوم لتبدأ سلسلة صلة الرحم! 🌸"
+                        } else {
+                            if (lang == "en") "Keep the flame of family ties glowing!" else "واصل صلة رحمك يومياً لنيل البركة والرضوان ✨"
+                        },
+                        fontSize = 11.sp,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                    )
+                }
+            }
+
+            // 7 Days Visual Row
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                last7DaysActivity.forEachIndexed { index, isActive ->
+                    val dayLabel = dayLabels.getOrElse(index) { "" }
+                    val isToday = (index == last7DaysActivity.lastIndex)
+
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Text(
+                            text = dayLabel,
+                            fontSize = 10.sp,
+                            fontWeight = if (isToday) FontWeight.Bold else FontWeight.Normal,
+                            color = if (isToday) MaterialTheme.colorScheme.primary
+                                    else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                        )
+
+                        Box(
+                            modifier = Modifier
+                                .size(32.dp)
+                                .background(
+                                    color = if (isActive) Color(0xFFFF6D00).copy(alpha = 0.18f)
+                                            else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.06f),
+                                    shape = CircleShape
+                                )
+                                .border(
+                                    width = if (isToday) 1.5.dp else 0.dp,
+                                    color = if (isToday) Color(0xFFFF6D00) else Color.Transparent,
+                                    shape = CircleShape
+                                ),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = if (isActive) "🔥" else "•",
+                                fontSize = if (isActive) 13.sp else 16.sp,
+                                color = if (isActive) Color.Unspecified else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
+                            )
+                        }
+                    }
+                }
+            }
         }
     }
 }

@@ -54,6 +54,16 @@ class RelativeViewModel(application: Application) : AndroidViewModel(application
     val logs: StateFlow<List<CommunicationLog>> = repository.allLogs
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
+    val streakDays: StateFlow<Int> = logs
+        .combine(relatives) { logsList, _ ->
+            com.example.utils.DateUtils.calculateStreak(logsList.map { it.timestamp })
+        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0)
+
+    val last7DaysActivity: StateFlow<List<Boolean>> = logs
+        .combine(relatives) { logsList, _ ->
+            com.example.utils.DateUtils.getLast7DaysActivity(logsList.map { it.timestamp })
+        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), List(7) { false })
+
     val templates: StateFlow<List<QuickTemplate>> = repository.allTemplates
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 

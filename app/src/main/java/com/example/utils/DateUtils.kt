@@ -91,4 +91,58 @@ object DateUtils {
             }
         }
     }
+
+    /**
+     * Calculates consecutive days of kinship connection up to today or yesterday.
+     */
+    fun calculateStreak(logTimestamps: List<Long>): Int {
+        if (logTimestamps.isEmpty()) return 0
+
+        val tz = java.util.TimeZone.getDefault()
+        fun getEpochDay(timestamp: Long): Long {
+            val offset = tz.getOffset(timestamp)
+            return (timestamp + offset) / (24 * 60 * 60 * 1000L)
+        }
+
+        val activeDays = logTimestamps.map { getEpochDay(it) }.toSet()
+        val today = getEpochDay(System.currentTimeMillis())
+
+        var streak = 0
+        var currentDay = today
+
+        if (activeDays.contains(currentDay)) {
+            while (activeDays.contains(currentDay)) {
+                streak++
+                currentDay--
+            }
+        } else {
+            currentDay = today - 1
+            if (activeDays.contains(currentDay)) {
+                while (activeDays.contains(currentDay)) {
+                    streak++
+                    currentDay--
+                }
+            }
+        }
+
+        return streak
+    }
+
+    /**
+     * Returns a list of 7 Booleans indicating activity over the last 7 days (6 days ago -> today).
+     */
+    fun getLast7DaysActivity(logTimestamps: List<Long>): List<Boolean> {
+        val tz = java.util.TimeZone.getDefault()
+        fun getEpochDay(timestamp: Long): Long {
+            val offset = tz.getOffset(timestamp)
+            return (timestamp + offset) / (24 * 60 * 60 * 1000L)
+        }
+
+        val activeDays = logTimestamps.map { getEpochDay(it) }.toSet()
+        val today = getEpochDay(System.currentTimeMillis())
+
+        return (6 downTo 0).map { offset ->
+            activeDays.contains(today - offset)
+        }
+    }
 }
