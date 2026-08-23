@@ -48,7 +48,6 @@ class RelativeViewModel(application: Application) : AndroidViewModel(application
         setupDueNotificationsWorker()
         setupUsageNotificationWorker()
         ensureFirstLaunchRecorded()
-        observeMilestones()
     }
 
     // Raw database state flows
@@ -57,6 +56,9 @@ class RelativeViewModel(application: Application) : AndroidViewModel(application
 
     val logs: StateFlow<List<CommunicationLog>> = repository.allLogs
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    // Milestone observer – declared after `relatives` so it's safe to collect
+    private val milestoneObserver = run { observeMilestones() }
 
     val streakDays: StateFlow<Int> = logs
         .combine(relatives) { logsList, _ ->
