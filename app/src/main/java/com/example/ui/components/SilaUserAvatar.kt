@@ -28,21 +28,11 @@ fun SilaUserAvatar(
     modifier: Modifier = Modifier
 ) {
     val avatar = ALL_AVATARS.find { it.id == avatarId } ?: ALL_AVATARS.first()
-    val emojiSize = (size.value * 0.48f).sp
 
-    Box(
-        contentAlignment = Alignment.Center,
+    UserAvatarCharacter(
+        gender = avatar.gender,
+        size = size,
+        showBorder = showBorder,
         modifier = modifier
-            .size(size)
-            .clip(CircleShape)
-            .background(Brush.linearGradient(listOf(avatar.bgFrom, avatar.bgTo)))
-            .then(
-                if (showBorder)
-                    Modifier.border(2.dp, SoftGold.copy(alpha = 0.7f), CircleShape)
-                else
-                    Modifier
-            )
-    ) {
-        Text(text = avatar.emoji, fontSize = emojiSize)
-    }
+    )
 }

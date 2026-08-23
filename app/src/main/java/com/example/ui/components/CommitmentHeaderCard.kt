@@ -1,15 +1,21 @@
 package com.example.ui.components
 
+import androidx.compose.animation.core.*
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -19,10 +25,12 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 /**
- * Simplified stats card showing:
- * - Total kin-tie contacts (all-time log count)
- * - Unique days where at least one contact was made
- * - Number of distinct relatives contacted
+ * Commitment Header Card (Stitch-style)
+ * Features:
+ * - Deep Olive gradient background (Deep Forest Green → Dark Emerald)
+ * - Animated Circular Progress Arc (SoftGold)
+ * - Personalized greeting
+ * - Kin-tie stats
  */
 @Composable
 fun CommitmentHeaderCard(
@@ -30,34 +38,170 @@ fun CommitmentHeaderCard(
     uniqueDaysCount: Int,
     uniqueRelativesContacted: Int,
     lang: String = "ar",
+    userName: String = "",
+    totalRelativesCount: Int = 0,
     modifier: Modifier = Modifier
 ) {
+    // Commitment score: % of relatives contacted at least once
+    val commitmentPct = if (totalRelativesCount == 0) 0f
+                        else (uniqueRelativesContacted.toFloat() / totalRelativesCount).coerceIn(0f, 1f)
+
+    // Animate the arc
+    val animatedArc by animateFloatAsState(
+        targetValue = commitmentPct,
+        animationSpec = tween(1400, easing = FastOutSlowInEasing),
+        label = "commitment_arc"
+    )
+
+    // Arabic date
+    val dateLocale = if (lang == "en") Locale.ENGLISH else Locale("ar", "SA")
+    val arabicDate = remember {
+        SimpleDateFormat("EEEE، d MMMM yyyy", dateLocale).format(Date())
+    }
+
+    // Time-based greeting
+    val greeting = remember(lang, userName) {
+        val hour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
+        val timeGreeting = if (lang == "en") when {
+            hour < 12 -> "Good morning"
+            hour < 17 -> "Good afternoon"
+            else      -> "Good evening"
+        } else when {
+            hour < 12 -> "صباح الخير"
+            hour < 17 -> "مساء الخير"
+            else      -> "مساء النور"
+        }
+        val name = if (userName.isNotBlank()) userName else if (lang == "en") "" else ""
+        if (name.isNotBlank()) "$timeGreeting، $name 🌿" else "$timeGreeting 🌿"
+    }
+
+    // Motivational subtitle based on commitment
+    val subtitle = if (lang == "en") when {
+        commitmentPct >= 0.9f -> "Excellent! Your kin ties are blooming 💚"
+        commitmentPct >= 0.6f -> "Great progress! Keep nurturing your family bonds"
+        commitmentPct >= 0.3f -> "You're on track — keep going!"
+        else                  -> "Start your kin-tie journey today 🌱"
+    } else when {
+        commitmentPct >= 0.9f -> "رائع! صلتك بأرحامك في أوجها 💚"
+        commitmentPct >= 0.6f -> "ممتاز! واصل رعاية أواصر الأسرة"
+        commitmentPct >= 0.3f -> "أنت على الطريق الصحيح — استمر!"
+        else                  -> "ابدأ مسيرة صلة الرحم اليوم 🌱"
+    }
+
     Card(
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(containerColor = Color.Transparent),
         modifier = modifier
             .fillMaxWidth()
-            .shadow(12.dp, RoundedCornerShape(24.dp), ambientColor = Color(0xFF0E7075).copy(alpha = 0.3f))
+            .shadow(
+                16.dp,
+                RoundedCornerShape(24.dp),
+                ambientColor = Color(0xFF1E5A35).copy(alpha = 0.35f),
+                spotColor = Color(0xFF1E5A35).copy(alpha = 0.25f)
+            )
             .background(
-                Brush.horizontalGradient(
-                    colors = listOf(Color(0xFF0E7075), Color(0xFF0B565A), Color(0xFF084144))
+                Brush.linearGradient(
+                    colors = listOf(Color(0xFF16503A), Color(0xFF0D3324), Color(0xFF082416))
                 ),
                 shape = RoundedCornerShape(24.dp)
             )
     ) {
         Column(modifier = Modifier.padding(20.dp)) {
 
-            // Header title
-            Text(
-                text = if (lang == "en") "Your Kin-Tie Journey 🌿" else "مسيرة صلة الرحم 🌿",
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Bold,
-                color = SoftGold
-            )
+            // ── Top Row: Date + Arc ─────────────────────────────────────────
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.Top
+            ) {
+                // Greeting + date
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = greeting,
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = SoftGold
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = arabicDate,
+                        fontSize = 11.sp,
+                        color = Color.White.copy(alpha = 0.55f),
+                        fontWeight = FontWeight.Normal
+                    )
+                    Spacer(modifier = Modifier.height(10.dp))
+                    Text(
+                        text = subtitle,
+                        fontSize = 13.sp,
+                        color = Color.White.copy(alpha = 0.85f),
+                        lineHeight = 18.sp,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
+
+                // Circular commitment arc
+                Box(
+                    contentAlignment = Alignment.Center,
+                    modifier = Modifier.size(88.dp)
+                ) {
+                    Canvas(modifier = Modifier.fillMaxSize()) {
+                        val strokeW = 7.dp.toPx()
+                        val inset = strokeW / 2
+                        val arcSize = Size(size.width - strokeW, size.height - strokeW)
+                        val arcOffset = Offset(inset, inset)
+
+                        // Track (background arc)
+                        drawArc(
+                            color = Color.White.copy(alpha = 0.12f),
+                            startAngle = 135f,
+                            sweepAngle = 270f,
+                            useCenter = false,
+                            topLeft = arcOffset,
+                            size = arcSize,
+                            style = Stroke(strokeW, cap = StrokeCap.Round)
+                        )
+
+                        // Progress arc (SoftGold)
+                        drawArc(
+                            brush = Brush.sweepGradient(
+                                colors = listOf(
+                                    Color(0xFFE9CE79),
+                                    Color(0xFFF5D278),
+                                    Color(0xFFD4A843)
+                                )
+                            ),
+                            startAngle = 135f,
+                            sweepAngle = animatedArc * 270f,
+                            useCenter = false,
+                            topLeft = arcOffset,
+                            size = arcSize,
+                            style = Stroke(strokeW, cap = StrokeCap.Round)
+                        )
+                    }
+
+                    // Percentage label inside arc
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            text = "${(commitmentPct * 100).toInt()}%",
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Black,
+                            color = SoftGold
+                        )
+                        Text(
+                            text = if (lang == "en") "Tied" else "صلة",
+                            fontSize = 9.sp,
+                            color = Color.White.copy(alpha = 0.6f),
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+                }
+            }
 
             Spacer(modifier = Modifier.height(16.dp))
+            HorizontalDivider(color = Color.White.copy(alpha = 0.1f), thickness = 0.5.dp)
+            Spacer(modifier = Modifier.height(14.dp))
 
-            // Three stat chips in a row
+            // ── Stat Chips Row ─────────────────────────────────────────────
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(10.dp)
@@ -65,13 +209,13 @@ fun CommitmentHeaderCard(
                 StatChip(
                     emoji = "🤝",
                     value = totalLogsCount.toString(),
-                    label = if (lang == "en") "Total Contacts" else "إجمالي الصلات",
+                    label = if (lang == "en") "Total Logs" else "إجمالي الصلات",
                     modifier = Modifier.weight(1f)
                 )
                 StatChip(
                     emoji = "📅",
                     value = uniqueDaysCount.toString(),
-                    label = if (lang == "en") "Days Connected" else "أيام الصلة",
+                    label = if (lang == "en") "Days Active" else "أيام الصلة",
                     modifier = Modifier.weight(1f)
                 )
                 StatChip(
@@ -94,24 +238,24 @@ private fun StatChip(
 ) {
     Column(
         modifier = modifier
-            .background(Color(0x22FFFFFF), RoundedCornerShape(16.dp))
-            .padding(vertical = 12.dp, horizontal = 8.dp),
+            .background(Color(0x20FFFFFF), RoundedCornerShape(14.dp))
+            .padding(vertical = 10.dp, horizontal = 6.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(4.dp)
+        verticalArrangement = Arrangement.spacedBy(3.dp)
     ) {
-        Text(text = emoji, fontSize = 20.sp)
+        Text(text = emoji, fontSize = 18.sp)
         Text(
             text = value,
-            fontSize = 22.sp,
+            fontSize = 20.sp,
             fontWeight = FontWeight.Black,
             color = Color.White
         )
         Text(
             text = label,
-            fontSize = 10.sp,
+            fontSize = 9.sp,
             color = Color(0xFFD0E0D5),
             textAlign = TextAlign.Center,
-            lineHeight = 13.sp
+            lineHeight = 12.sp
         )
     }
 }

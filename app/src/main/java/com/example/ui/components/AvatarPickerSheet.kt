@@ -131,24 +131,19 @@ private fun AvatarGridItem(
     ) {
         Box(
             contentAlignment = Alignment.Center,
-            modifier = Modifier
-                .size(62.dp)
-                .clip(CircleShape)
-                .background(Brush.linearGradient(listOf(avatar.bgFrom, avatar.bgTo)))
-                .then(
-                    if (isSelected)
-                        Modifier.border(3.dp, SoftGold, CircleShape)
-                    else
-                        Modifier.border(1.5.dp, Color.White.copy(alpha = 0.15f), CircleShape)
-                )
+            modifier = Modifier.size(62.dp)
         ) {
-            Text(text = avatar.emoji, fontSize = 28.sp)
+            UserAvatarCharacter(
+                gender = avatar.gender,
+                size = 60.dp,
+                showBorder = isSelected
+            )
 
             // Selected checkmark overlay
             if (isSelected) {
                 Box(
                     modifier = Modifier
-                        .size(62.dp)
+                        .size(60.dp)
                         .clip(CircleShape)
                         .background(Color(0x55000000)),
                     contentAlignment = Alignment.Center

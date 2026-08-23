@@ -50,7 +50,8 @@ private fun avatarColors(name: String): Pair<Color, Color> =
 fun RelativeCard(
     relative: Relative,
     viewModel: RelativeViewModel,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onCardClick: (() -> Unit)? = null
 ) {
     val context = LocalContext.current
     val status = viewModel.getRelativeStatus(relative)
@@ -73,7 +74,7 @@ fun RelativeCard(
                 ambientColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.06f),
                 spotColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.08f)
             )
-            .clickable { viewModel.showLogsHistoryDialog.value = relative },
+            .clickable { onCardClick?.invoke() ?: run { viewModel.showLogsHistoryDialog.value = relative } },
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
     ) {

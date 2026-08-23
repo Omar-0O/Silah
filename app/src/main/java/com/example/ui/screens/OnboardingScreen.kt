@@ -38,6 +38,7 @@ fun OnboardingScreen(
     viewModel: RelativeViewModel,
     onFinished: () -> Unit
 ) {
+    val context = androidx.compose.ui.platform.LocalContext.current
     val selectedLanguage by viewModel.selectedLanguage.collectAsState()
     val savedName by viewModel.userName.collectAsState()
     val savedGender by viewModel.userGender.collectAsState()
@@ -45,11 +46,12 @@ fun OnboardingScreen(
     var nameInput by remember { mutableStateOf(savedName) }
     var genderInput by remember { mutableStateOf(savedGender) }
     var currentPage by remember { mutableIntStateOf(0) }
+    var showNameError by remember { mutableStateOf(false) }
 
     val onboardingItems = listOf(
         // Page 0: Language Selection
         OnboardingItem(
-            titleAr = "صِلَةِ أَوْ لاَ",
+            titleAr = "تطبيق صِلَةِ",
             titleEn = "Silah App",
             subtitleAr = "رفيقك الذكي لمتابعة تواصلك اليومي\nمع أرحامك وأقاربك بسهولة ويسر",
             subtitleEn = "Your smart companion to track your daily connection with your relatives effortlessly"
@@ -209,24 +211,38 @@ fun OnboardingScreen(
                         // Outlined Name Field
                         OutlinedTextField(
                             value = nameInput,
-                            onValueChange = { nameInput = it },
+                            onValueChange = {
+                                nameInput = it
+                                if (it.trim().isNotEmpty()) showNameError = false
+                            },
                             placeholder = {
                                 Text(
-                                    if (selectedLanguage == "en") "Name" else "الأسم",
+                                    if (selectedLanguage == "en") "Enter your name..." else "أدخل اسمك هنا...",
                                     color = Color(0xFF94A3B8),
                                     fontSize = 15.sp
                                 )
                             },
+                            isError = showNameError && nameInput.trim().isEmpty(),
                             singleLine = true,
                             shape = RoundedCornerShape(14.dp),
                             colors = OutlinedTextFieldDefaults.colors(
                                 focusedBorderColor = Color(0xFF0E7075),
                                 unfocusedBorderColor = Color(0xFFCBD5E1),
+                                errorBorderColor = Color(0xFFD32F2F),
                                 focusedContainerColor = Color(0xFFF8FAFC),
                                 unfocusedContainerColor = Color(0xFFF8FAFC)
                             ),
                             modifier = Modifier.fillMaxWidth()
                         )
+                        if (showNameError && nameInput.trim().isEmpty()) {
+                            Text(
+                                text = if (selectedLanguage == "en") "Please enter your name first!" else "يرجى كتابة الاسم أولاً للبدء!",
+                                color = Color(0xFFD32F2F),
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.padding(start = 4.dp)
+                            )
+                        }
 
                         // Gender Selection Cards with Character Avatar Preview
                         Row(
@@ -368,8 +384,18 @@ fun OnboardingScreen(
                 Button(
                     onClick = {
                         if (currentPage == 1) {
+                            if (nameInput.trim().isEmpty()) {
+                                showNameError = true
+                                android.widget.Toast.makeText(
+                                    context,
+                                    if (selectedLanguage == "en") "Please enter your name first!" else "الرجاء كتابة اسمك أولاً للاستمرار!",
+                                    android.widget.Toast.LENGTH_SHORT
+                                ).show()
+                                return@Button
+                            }
+                            showNameError = false
                             // Save profile name & gender
-                            viewModel.saveUserProfile(nameInput, genderInput)
+                            viewModel.saveUserProfile(nameInput.trim(), genderInput)
                         }
                         if (currentPage < onboardingItems.size - 1) {
                             currentPage++

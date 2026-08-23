@@ -6,6 +6,8 @@ import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -30,6 +32,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.data.Relative
 import com.example.ui.components.CommitmentHeaderCard
 import com.example.ui.components.KinshipKnotIcon
 import com.example.ui.components.RelativeCard
@@ -55,8 +58,6 @@ fun RelativesTabScreen(
     val lang by viewModel.selectedLanguage.collectAsState()
 
     val allLogs by viewModel.logs.collectAsState()
-    val memoriesList by viewModel.memories.collectAsState()
-    val surpriseMemory = remember(memoriesList) { memoriesList.randomOrNull() }
 
     // Kin-tie stats derived from communication logs
     val totalLogsCount = allLogs.size
@@ -143,6 +144,7 @@ fun RelativesTabScreen(
 
     val userGender by viewModel.userGender.collectAsState()
     var showProfileDialog by remember { mutableStateOf(false) }
+    var selectedRelativeForDetail by remember { mutableStateOf<com.example.data.Relative?>(null) }
 
     // Internal values stay Arabic (used for filtering stored data)
     val categories = listOf("الكل", "والدان", "أشقاء", "أعمام/أخوال", "أقارب آخرون")
@@ -156,6 +158,16 @@ fun RelativesTabScreen(
             viewModel = viewModel,
             onDismiss = { showProfileDialog = false }
         )
+    }
+
+    // Navigate to detail screen if a relative is selected
+    if (selectedRelativeForDetail != null) {
+        RelativeDetailScreen(
+            relative = selectedRelativeForDetail!!,
+            viewModel = viewModel,
+            onBack = { selectedRelativeForDetail = null }
+        )
+        return
     }
 
     val userAvatarId by viewModel.userAvatarId.collectAsState()
@@ -253,76 +265,44 @@ fun RelativesTabScreen(
                     totalLogsCount = totalLogsCount,
                     uniqueDaysCount = uniqueDaysCount,
                     uniqueRelativesContacted = uniqueRelativesContacted,
-                    lang = lang
+                    lang = lang,
+                    userName = userName,
+                    totalRelativesCount = allRelatives.size
                 )
             }
 
-            // 2. Family Time Capsule Memory Card
-            if (surpriseMemory != null) {
-                item {
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .shadow(8.dp, RoundedCornerShape(24.dp), ambientColor = SoftGold.copy(alpha = 0.2f)),
-                        shape = RoundedCornerShape(24.dp),
-                        colors = CardDefaults.cardColors(containerColor = Color(0xFFFFFDF9)),
-                        border = BorderStroke(1.5.dp, SoftGold.copy(alpha = 0.4f))
-                    ) {
-                        Column(modifier = Modifier.padding(20.dp)) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(6.dp)
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.AutoAwesome,
-                                        contentDescription = null,
-                                        tint = SoftGold,
-                                        modifier = Modifier.size(18.dp)
-                                    )
-                                    Text(
-                                        text = "مِنْ كَبْسولَةِ الزَّمَنِ العَائِلِيَّةِ ⏳",
-                                        fontSize = 12.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        color = Color(0xFFB45309)
-                                    )
-                                }
-                                Box(
-                                    modifier = Modifier
-                                        .clip(RoundedCornerShape(8.dp))
-                                        .background(Color(0xFFFEF3C7))
-                                        .padding(horizontal = 8.dp, vertical = 3.dp)
-                                ) {
-                                    Text(
-                                        text = "ذكرى طيّبة 🤍",
-                                        fontSize = 9.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        color = Color(0xFFB45309)
-                                    )
-                                }
-                            }
-
-                            Spacer(modifier = Modifier.height(12.dp))
-
+            // 3.5 Filter Chips Row
+            item {
+                LazyRow(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    contentPadding = PaddingValues(horizontal = 2.dp)
+                ) {
+                    items(categories.indices.toList()) { i ->
+                        val isSelected = selectedCategory == categories[i]
+                        val chipBg by animateColorAsState(
+                            targetValue = if (isSelected) PrimaryGreen else MaterialTheme.colorScheme.surface,
+                            animationSpec = tween(200),
+                            label = "chip_bg_$i"
+                        )
+                        val chipText by animateColorAsState(
+                            targetValue = if (isSelected) Color.White else MaterialTheme.colorScheme.onSurface,
+                            animationSpec = tween(200),
+                            label = "chip_text_$i"
+                        )
+                        Surface(
+                            onClick = { viewModel.selectedCategory.value = categories[i] },
+                            shape = RoundedCornerShape(50.dp),
+                            color = chipBg,
+                            border = if (!isSelected) BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)) else null,
+                            shadowElevation = if (isSelected) 3.dp else 0.dp
+                        ) {
                             Text(
-                                text = surpriseMemory.title,
-                                fontSize = 15.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.primary
+                                text = categoryLabels[i],
+                                fontSize = 12.sp,
+                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                color = chipText,
+                                modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp)
                             )
-                            if (surpriseMemory.description.isNotEmpty()) {
-                                Spacer(modifier = Modifier.height(4.dp))
-                                Text(
-                                    text = surpriseMemory.description,
-                                    fontSize = 12.sp,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
-                                    lineHeight = 18.sp
-                                )
-                            }
                         }
                     }
                 }
@@ -379,10 +359,11 @@ fun RelativesTabScreen(
                     }
                 }
             } else {
-                items(filteredRelatives) { relative ->
+                items(filteredRelatives, key = { it.id }) { relative ->
                     RelativeCard(
                         relative = relative,
-                        viewModel = viewModel
+                        viewModel = viewModel,
+                        onCardClick = { selectedRelativeForDetail = relative }
                     )
                 }
             }
