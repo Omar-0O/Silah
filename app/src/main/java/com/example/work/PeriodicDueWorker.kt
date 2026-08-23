@@ -84,48 +84,58 @@ class PeriodicDueWorker(
         relativeId: Int,
         lang: String
     ) {
-        val notificationManager = applicationContext.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        val channelId = "silat_rahim_due_today"
+        try {
+            val notificationManager = applicationContext.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            val channelId = "silat_rahim_due_today"
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channelName = if (lang == "en") "Due Reminders Today" else "تذكيرات اليوم المستحقة"
-            val channelDesc = if (lang == "en") "High priority notification channel for relatives due today" else "قناة تنبيهات عاجلة للأقارب المستحق تواصلهم اليوم"
-            val channel = NotificationChannel(
-                channelId,
-                channelName,
-                NotificationManager.IMPORTANCE_HIGH
-            ).apply {
-                description = channelDesc
-                enableVibration(true)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                val channelName = if (lang == "en") "Due Reminders Today" else "تذكيرات اليوم المستحقة"
+                val channelDesc = if (lang == "en") "High priority notification channel for relatives due today" else "قناة تنبيهات عاجلة للأقارب المستحق تواصلهم اليوم"
+                val channel = NotificationChannel(
+                    channelId,
+                    channelName,
+                    NotificationManager.IMPORTANCE_HIGH
+                ).apply {
+                    description = channelDesc
+                    enableVibration(true)
+                }
+                notificationManager.createNotificationChannel(channel)
             }
-            notificationManager.createNotificationChannel(channel)
+
+            val intent = Intent(applicationContext, MainActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                putExtra("relative_id", relativeId)
+            }
+
+            val pendingIntent = PendingIntent.getActivity(
+                applicationContext,
+                relativeId,
+                intent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+
+            val title = if (lang == "en") "Sila — Contact Due Today! 🔔" else "صِلَةِ — موعد التواصل اليوم 🔔"
+
+            val iconRes = try {
+                com.example.R.drawable.ic_notification_sila
+            } catch (e: Exception) {
+                com.example.R.mipmap.ic_launcher
+            }
+
+            val notification = NotificationCompat.Builder(applicationContext, channelId)
+                .setSmallIcon(iconRes)
+                .setContentTitle(title)
+                .setContentText(messageText)
+                .setStyle(NotificationCompat.BigTextStyle().bigText(messageText))
+                .setPriority(NotificationCompat.PRIORITY_HIGH)
+                .setDefaults(NotificationCompat.DEFAULT_ALL)
+                .setAutoCancel(true)
+                .setContentIntent(pendingIntent)
+                .build()
+
+            notificationManager.notify(relativeId + 10000, notification)
+        } catch (e: Exception) {
+            e.printStackTrace()
         }
-
-        val intent = Intent(applicationContext, MainActivity::class.java).apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-            putExtra("relative_id", relativeId)
-        }
-
-        val pendingIntent = PendingIntent.getActivity(
-            applicationContext,
-            relativeId,
-            intent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        )
-
-        val title = if (lang == "en") "Sila — Contact Due Today! 🔔" else "صِلَةِ — موعد التواصل اليوم 🔔"
-
-        val notification = NotificationCompat.Builder(applicationContext, channelId)
-            .setSmallIcon(com.example.R.drawable.ic_notification_sila)
-            .setContentTitle(title)
-            .setContentText(messageText)
-            .setStyle(NotificationCompat.BigTextStyle().bigText(messageText))
-            .setPriority(NotificationCompat.PRIORITY_HIGH)
-            .setDefaults(NotificationCompat.DEFAULT_ALL)
-            .setAutoCancel(true)
-            .setContentIntent(pendingIntent)
-            .build()
-
-        notificationManager.notify(relativeId + 10000, notification)
     }
 }
