@@ -19,6 +19,7 @@ import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import com.example.work.PeriodicDueWorker
 import com.example.work.ReminderWorker
+import com.example.work.UsageNotificationWorker
 import java.util.concurrent.TimeUnit
 import android.net.Uri
 import com.example.data.BackupManager
@@ -45,6 +46,9 @@ class RelativeViewModel(application: Application) : AndroidViewModel(application
 
     init {
         setupDueNotificationsWorker()
+        setupUsageNotificationWorker()
+        ensureFirstLaunchRecorded()
+        observeMilestones()
     }
 
     // Raw database state flows
@@ -109,6 +113,8 @@ class RelativeViewModel(application: Application) : AndroidViewModel(application
     val showLogsHistoryDialog = MutableStateFlow<Relative?>(null)
     val showQuickTemplatesDialog = MutableStateFlow<Relative?>(null)
     val showSetReminderDialog = MutableStateFlow<Relative?>(null)
+    val showSupportSilaDialog = MutableStateFlow(false)
+    val activeMilestone = MutableStateFlow<com.example.ui.dialogs.MilestoneType?>(null)
 
     // Dark mode state persisted in SharedPreferences
     private val prefs = application.getSharedPreferences("app_settings", Context.MODE_PRIVATE)
@@ -117,6 +123,128 @@ class RelativeViewModel(application: Application) : AndroidViewModel(application
     fun toggleDarkMode(enabled: Boolean) {
         isDarkMode.value = enabled
         prefs.edit().putBoolean("dark_mode", enabled).apply()
+    }
+
+    // Notification preferences persisted in SharedPreferences
+    val prefNotifyDueRelatives = MutableStateFlow(prefs.getBoolean("pref_notify_due_relatives", true))
+    val prefNotifyEncouragement = MutableStateFlow(prefs.getBoolean("pref_notify_encouragement", true))
+    val prefNotifyMonthly = MutableStateFlow(prefs.getBoolean("pref_notify_monthly", true))
+
+    fun toggleNotifyDueRelatives(enabled: Boolean) {
+        prefNotifyDueRelatives.value = enabled
+        prefs.edit().putBoolean("pref_notify_due_relatives", enabled).apply()
+    }
+
+    fun toggleNotifyEncouragement(enabled: Boolean) {
+        prefNotifyEncouragement.value = enabled
+        prefs.edit().putBoolean("pref_notify_encouragement", enabled).apply()
+    }
+
+    fun toggleNotifyMonthly(enabled: Boolean) {
+        prefNotifyMonthly.value = enabled
+        prefs.edit().putBoolean("pref_notify_monthly", enabled).apply()
+    }
+
+    // Days using Sila
+    val appUsageDays: StateFlow<Int> = MutableStateFlow(
+        run {
+            val firstLaunch = prefs.getLong("app_first_launch_time", System.currentTimeMillis())
+            val diffMs = System.currentTimeMillis() - firstLaunch
+            ((diffMs / (1000 * 60 * 60 * 24)) + 1).toInt()
+        }
+    )
+
+    fun openSupportSilaDialog() { showSupportSilaDialog.value = true }
+    fun closeSupportSilaDialog() { showSupportSilaDialog.value = false }
+
+    private fun ensureFirstLaunchRecorded() {
+        if (!prefs.contains("app_first_launch_time")) {
+            prefs.edit().putLong("app_first_launch_time", System.currentTimeMillis()).apply()
+        }
+    }
+
+    private fun observeMilestones() {
+        viewModelScope.launch {
+            relatives.collect { rels ->
+                checkMilestones(rels)
+            }
+        }
+    }
+
+    fun checkMilestones(currentRelatives: List<Relative>) {
+        val contactedCount = currentRelatives.count { it.lastContactDate > 0L }
+        if (contactedCount < 5) return
+
+        val achievedSet = prefs.getStringSet("achieved_milestones", emptySet()) ?: emptySet()
+        val lastPromptTime = prefs.getLong("last_support_prompt_time", 0L)
+        val now = System.currentTimeMillis()
+        val isCooldownActive = lastPromptTime > 0L && (now - lastPromptTime < 30 * 86_400_000L)
+
+        when {
+            contactedCount >= 100 && !achievedSet.contains("milestone_100") -> {
+                if (!isCooldownActive) {
+                    activeMilestone.value = com.example.ui.dialogs.MilestoneType.Milestone100
+                    markMilestoneAchieved("milestone_100")
+                }
+            }
+            contactedCount >= 50 && !achievedSet.contains("milestone_50") -> {
+                if (!isCooldownActive) {
+                    activeMilestone.value = com.example.ui.dialogs.MilestoneType.Milestone50
+                    markMilestoneAchieved("milestone_50")
+                }
+            }
+            contactedCount >= 25 && !achievedSet.contains("milestone_25") -> {
+                if (!isCooldownActive) {
+                    activeMilestone.value = com.example.ui.dialogs.MilestoneType.Milestone25
+                    markMilestoneAchieved("milestone_25")
+                }
+            }
+            contactedCount >= 10 && !achievedSet.contains("milestone_10") -> {
+                if (!isCooldownActive) {
+                    activeMilestone.value = com.example.ui.dialogs.MilestoneType.Milestone10
+                    markMilestoneAchieved("milestone_10")
+                }
+            }
+            contactedCount >= 5 && !achievedSet.contains("milestone_5") -> {
+                activeMilestone.value = com.example.ui.dialogs.MilestoneType.Milestone5
+                markMilestoneAchieved("milestone_5")
+            }
+        }
+    }
+
+    private fun markMilestoneAchieved(milestoneId: String) {
+        val currentSet = prefs.getStringSet("achieved_milestones", emptySet()) ?: emptySet()
+        val updated = currentSet.toMutableSet().apply { add(milestoneId) }
+        prefs.edit().putStringSet("achieved_milestones", updated).apply()
+    }
+
+    fun onMilestoneNotNow() {
+        activeMilestone.value = null
+        prefs.edit().putLong("last_support_prompt_time", System.currentTimeMillis()).apply()
+    }
+
+    fun onMilestoneSupportClick() {
+        activeMilestone.value = null
+        prefs.edit().putLong("last_support_prompt_time", System.currentTimeMillis()).apply()
+        showSupportSilaDialog.value = true
+    }
+
+    fun setupUsageNotificationWorker() {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val workManager = WorkManager.getInstance(getApplication())
+                val usageWork = PeriodicWorkRequestBuilder<UsageNotificationWorker>(24, TimeUnit.HOURS)
+                    .build()
+
+                workManager.enqueueUniquePeriodicWork(
+                    "sila_periodic_usage_check",
+                    ExistingPeriodicWorkPolicy.KEEP,
+                    usageWork
+                )
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
     }
 
     // App language state persisted in SharedPreferences ("ar" or "en")

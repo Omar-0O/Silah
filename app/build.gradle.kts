@@ -76,6 +76,7 @@ dependencies {
   implementation(libs.kotlinx.coroutines.core)
   implementation("io.coil-kt:coil-compose:2.7.0")
   implementation("io.coil-kt:coil-svg:2.7.0")
+  implementation("com.google.zxing:core:3.5.3")
   testImplementation(libs.androidx.compose.ui.test.junit4)
   testImplementation(libs.androidx.core)
   testImplementation(libs.androidx.junit)

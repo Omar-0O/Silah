@@ -88,26 +88,141 @@ fun SettingsDialog(
 
                     HorizontalDivider()
 
-                    // ── Language Selection ──────────────────────────────────────
+                    // ── Support Sila Section ────────────────────────────────────
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(16.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f)
+                        ),
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.3f))
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(14.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = if (selectedLanguage == "en") "🤍 Support Sila" else "🤍 ادعم صِلَةِ",
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                                Text(
+                                    text = if (selectedLanguage == "en")
+                                        "Help developer keep Sila free & ad-free"
+                                    else
+                                        "ساعد المطور في بقاء صِلَة مجاني وبدون إعلانات",
+                                    fontSize = 11.sp,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                            Button(
+                                onClick = {
+                                    onDismiss()
+                                    viewModel.openSupportSilaDialog()
+                                },
+                                shape = RoundedCornerShape(12.dp),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = com.example.ui.theme.SoftGold,
+                                    contentColor = Color(0xFF141816)
+                                )
+                            ) {
+                                Text(
+                                    if (selectedLanguage == "en") "Support" else "ادعم",
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                        }
+                    }
+
+                    HorizontalDivider()
+
+                    // ── Notifications Preferences Section ────────────────────────
                     Text(
-                        if (selectedLanguage == "en") "App Language:" else "لغة التطبيق (Language):",
+                        if (selectedLanguage == "en") "Notifications Settings 🔔" else "إعدادات التنبيهات 🔔",
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Bold
                     )
-                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                        languages.forEach { (langCode, langLabel) ->
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                modifier = Modifier.fillMaxWidth()
-                            ) {
-                                RadioButton(
-                                    selected = selectedLanguage == langCode,
-                                    onClick = { viewModel.selectLanguage(langCode) }
-                                )
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text(langLabel, fontSize = 13.sp, fontWeight = FontWeight.Medium)
-                            }
+
+                    val prefDue by viewModel.prefNotifyDueRelatives.collectAsState()
+                    val prefEncouragement by viewModel.prefNotifyEncouragement.collectAsState()
+                    val prefMonthly by viewModel.prefNotifyMonthly.collectAsState()
+
+                    // Toggle 1: Due Relatives Reminder
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                if (selectedLanguage == "en") "Kin Tie Reminders" else "تذكير صلة الرحم",
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                            Text(
+                                if (selectedLanguage == "en") "Notify when relatives are due for contact" else "التنبيه عند حلول موعد التواصل مع الأقارب",
+                                fontSize = 10.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
                         }
+                        Switch(
+                            checked = prefDue,
+                            onCheckedChange = { viewModel.toggleNotifyDueRelatives(it) }
+                        )
+                    }
+
+                    // Toggle 2: Encouragement Messages
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                if (selectedLanguage == "en") "Encouragement Messages" else "رسائل التشجيع",
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                            Text(
+                                if (selectedLanguage == "en") "Weekly and milestone celebration messages" else "رسائل الإنجازات والتأملات الأسبوعية",
+                                fontSize = 10.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        Switch(
+                            checked = prefEncouragement,
+                            onCheckedChange = { viewModel.toggleNotifyEncouragement(it) }
+                        )
+                    }
+
+                    // Toggle 3: Monthly Reminders
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                if (selectedLanguage == "en") "Monthly Reminders" else "التذكيرات الشهرية",
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                            Text(
+                                if (selectedLanguage == "en") "Periodic monthly inspiration reminders" else "تذكيرات إلهامية للتواصل بشكل دوري كل شهر",
+                                fontSize = 10.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        Switch(
+                            checked = prefMonthly,
+                            onCheckedChange = { viewModel.toggleNotifyMonthly(it) }
+                        )
                     }
 
                     HorizontalDivider()

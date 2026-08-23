@@ -33,8 +33,10 @@ import com.example.data.Relative
 import com.example.ui.components.CallLogBadge
 import com.example.ui.dialogs.AddEditRelativeDialog
 import com.example.ui.dialogs.ImportContactsDialog
+import com.example.ui.dialogs.MilestoneDialog
 import com.example.ui.dialogs.RecordLogBottomSheet
 import com.example.ui.dialogs.SettingsDialog
+import com.example.ui.dialogs.SupportSilaDialog
 import com.example.ui.theme.PrimaryGreen
 import com.example.ui.theme.SoftGold
 import com.example.utils.DateUtils
@@ -203,6 +205,26 @@ fun MainDashboardScreen(viewModel: RelativeViewModel) {
                 ImportContactsDialog(
                     viewModel = viewModel,
                     onDismiss = { viewModel.showImportContactsDialog.value = false }
+                )
+            }
+
+            val showSupportSilaDialog by viewModel.showSupportSilaDialog.collectAsState()
+            val activeMilestone by viewModel.activeMilestone.collectAsState()
+
+            if (showSupportSilaDialog) {
+                SupportSilaDialog(
+                    viewModel = viewModel,
+                    onDismiss = { viewModel.closeSupportSilaDialog() }
+                )
+            }
+
+            if (activeMilestone != null) {
+                MilestoneDialog(
+                    milestone = activeMilestone!!,
+                    lang = selectedLanguage,
+                    onSupportClick = { viewModel.onMilestoneSupportClick() },
+                    onNotNowClick = { viewModel.onMilestoneNotNow() },
+                    onDismiss = { viewModel.activeMilestone.value = null }
                 )
             }
         }
