@@ -40,6 +40,10 @@ import com.example.ui.theme.SoftGold
 import com.example.viewmodel.RelativeStatus
 import com.example.viewmodel.RelativeViewModel
 
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.unit.LayoutDirection
+
 @Composable
 fun UserProfileDialog(
     viewModel: RelativeViewModel,
@@ -49,6 +53,7 @@ fun UserProfileDialog(
     val userGender: String by viewModel.userGender.collectAsState(initial = "male")
     val userAvatarId: String by viewModel.userAvatarId.collectAsState(initial = "avatar_01")
     val lang: String by viewModel.selectedLanguage.collectAsState(initial = "ar")
+    val layoutDirection = if (lang == "en") LayoutDirection.Ltr else LayoutDirection.Rtl
     val relativesList: List<Relative> by viewModel.relatives.collectAsState(initial = emptyList())
     val logsList: List<com.example.data.CommunicationLog> by viewModel.logs.collectAsState(initial = emptyList())
 
@@ -98,12 +103,13 @@ fun UserProfileDialog(
         onDismissRequest = onDismiss,
         properties = DialogProperties(usePlatformDefaultWidth = false)
     ) {
-        Surface(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background),
-            color = MaterialTheme.colorScheme.background
-        ) {
+        CompositionLocalProvider(LocalLayoutDirection provides layoutDirection) {
+            Surface(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(MaterialTheme.colorScheme.background),
+                color = MaterialTheme.colorScheme.background
+            ) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -509,6 +515,7 @@ fun UserProfileDialog(
                 }
             }
         }
+    }
     }
 
     // ── Avatar Picker Sheet ───────────────────────────────────────────────────

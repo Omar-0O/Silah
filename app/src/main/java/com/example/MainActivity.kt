@@ -12,6 +12,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -30,6 +33,7 @@ class MainActivity : ComponentActivity() {
             val isDarkMode by viewModel.isDarkMode.collectAsState()
             val selectedLanguage by viewModel.selectedLanguage.collectAsState()
             val backupResult by viewModel.backupResult.collectAsState()
+            val layoutDirection = if (selectedLanguage == "en") LayoutDirection.Ltr else LayoutDirection.Rtl
 
             // ── Export: Opens Save-File dialog (SAF) ──────────────────────
             val exportLauncher = rememberLauncherForActivityResult(
@@ -82,12 +86,14 @@ class MainActivity : ComponentActivity() {
                 }
             }
 
-            MyApplicationTheme(darkTheme = isDarkMode, fontName = "Almarai") {
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background
-                ) {
-                    AppNavigation(viewModel = viewModel)
+            CompositionLocalProvider(LocalLayoutDirection provides layoutDirection) {
+                MyApplicationTheme(darkTheme = isDarkMode, fontName = "Almarai") {
+                    Surface(
+                        modifier = Modifier.fillMaxSize(),
+                        color = MaterialTheme.colorScheme.background
+                    ) {
+                        AppNavigation(viewModel = viewModel)
+                    }
                 }
             }
         }

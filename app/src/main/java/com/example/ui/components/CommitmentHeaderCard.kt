@@ -235,66 +235,6 @@ fun CommitmentHeaderCard(
                     }
                 }
             }
-
-            Spacer(modifier = Modifier.height(16.dp))
-            HorizontalDivider(color = Color.White.copy(alpha = 0.1f), thickness = 0.5.dp)
-            Spacer(modifier = Modifier.height(14.dp))
-
-            // ── Stat Chips Row ─────────────────────────────────────────────
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
-                StatChip(
-                    emoji = "🤝",
-                    value = totalLogsCount.toString(),
-                    label = if (lang == "en") "Total Logs" else "إجمالي الصلات",
-                    modifier = Modifier.weight(1f)
-                )
-                StatChip(
-                    emoji = "📅",
-                    value = uniqueDaysCount.toString(),
-                    label = if (lang == "en") "Days Active" else "أيام الصلة",
-                    modifier = Modifier.weight(1f)
-                )
-                StatChip(
-                    emoji = "👥",
-                    value = uniqueRelativesContacted.toString(),
-                    label = if (lang == "en") "Relatives" else "أقارب",
-                    modifier = Modifier.weight(1f)
-                )
-            }
         }
-    }
-}
-
-@Composable
-private fun StatChip(
-    emoji: String,
-    value: String,
-    label: String,
-    modifier: Modifier = Modifier
-) {
-    Column(
-        modifier = modifier
-            .background(Color(0x20FFFFFF), RoundedCornerShape(14.dp))
-            .padding(vertical = 10.dp, horizontal = 6.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(3.dp)
-    ) {
-        Text(text = emoji, fontSize = 18.sp)
-        Text(
-            text = value,
-            fontSize = 20.sp,
-            fontWeight = FontWeight.Black,
-            color = Color.White
-        )
-        Text(
-            text = label,
-            fontSize = 9.sp,
-            color = Color(0xFFD0E0D5),
-            textAlign = TextAlign.Center,
-            lineHeight = 12.sp
-        )
     }
 }

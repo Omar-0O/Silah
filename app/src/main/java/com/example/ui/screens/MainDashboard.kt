@@ -15,6 +15,7 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -367,18 +368,20 @@ fun LogsHistoryDialog(
 ) {
     val logs by viewModel.logs.collectAsState()
     val lang by viewModel.selectedLanguage.collectAsState()
+    val layoutDirection = if (lang == "en") LayoutDirection.Ltr else LayoutDirection.Rtl
     val relativeLogs = logs.filter { it.relativeId == relative.id }.sortedByDescending { it.timestamp }
     val dateLocale = if (lang == "en") Locale.ENGLISH else Locale("ar")
     val dateFormat = remember(lang) { SimpleDateFormat("yyyy/MM/dd - hh:mm a", dateLocale) }
 
     Dialog(onDismissRequest = onDismiss) {
-        Card(
-            shape = RoundedCornerShape(24.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-            modifier = Modifier
-                .fillMaxWidth()
-                .fillMaxHeight(0.7f)
-        ) {
+        CompositionLocalProvider(LocalLayoutDirection provides layoutDirection) {
+            Card(
+                shape = RoundedCornerShape(24.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .fillMaxHeight(0.7f)
+            ) {
             Column(modifier = Modifier.padding(24.dp)) {
                 Text(
                     text = if (lang == "en") "${relative.name}'s Communication Log 📜"
@@ -464,4 +467,5 @@ fun LogsHistoryDialog(
             }
         }
     }
+}
 }

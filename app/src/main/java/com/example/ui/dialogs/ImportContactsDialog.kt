@@ -29,6 +29,9 @@ import androidx.compose.ui.window.Dialog
 import com.example.data.CallLogManager
 import com.example.ui.theme.SoftGold
 import com.example.viewmodel.RelativeViewModel
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.unit.LayoutDirection
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -42,6 +45,8 @@ fun ImportContactsDialog(
     val contacts by viewModel.deviceContacts.collectAsState()
     val isLoading by viewModel.isLoadingContacts.collectAsState()
     val existingRelatives by viewModel.relatives.collectAsState()
+    val selectedLanguage by viewModel.selectedLanguage.collectAsState()
+    val layoutDirection = if (selectedLanguage == "en") LayoutDirection.Ltr else LayoutDirection.Rtl
 
     var searchQuery by remember { mutableStateOf("") }
     var selectedContactPhone by remember { mutableStateOf<String?>(null) }
@@ -59,13 +64,14 @@ fun ImportContactsDialog(
     }
 
     Dialog(onDismissRequest = onDismiss) {
-        Card(
-            shape = RoundedCornerShape(24.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-            modifier = Modifier
-                .fillMaxWidth()
-                .fillMaxHeight(0.85f)
-        ) {
+        CompositionLocalProvider(LocalLayoutDirection provides layoutDirection) {
+            Card(
+                shape = RoundedCornerShape(24.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .fillMaxHeight(0.85f)
+            ) {
             Column(
                 modifier = Modifier.padding(20.dp)
             ) {
@@ -263,6 +269,7 @@ fun ImportContactsDialog(
             }
         }
     }
+}
 }
 
 @Composable
