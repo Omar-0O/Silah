@@ -133,8 +133,8 @@ private fun AvatarGridItem(
             contentAlignment = Alignment.Center,
             modifier = Modifier.size(62.dp)
         ) {
-            UserAvatarCharacter(
-                gender = avatar.gender,
+            SilaUserAvatar(
+                avatarId = avatar.id,
                 size = 60.dp,
                 showBorder = isSelected
             )

@@ -269,8 +269,8 @@ fun OnboardingScreen(
                                     horizontalAlignment = Alignment.CenterHorizontally,
                                     modifier = Modifier.padding(12.dp)
                                 ) {
-                                    com.example.ui.components.UserAvatarCharacter(
-                                        gender = "male",
+                                    com.example.ui.components.SilaUserAvatar(
+                                        avatarId = "avatar_01",
                                         size = 50.dp,
                                         showBorder = genderInput == "male"
                                     )
@@ -311,8 +311,8 @@ fun OnboardingScreen(
                                     horizontalAlignment = Alignment.CenterHorizontally,
                                     modifier = Modifier.padding(12.dp)
                                 ) {
-                                    com.example.ui.components.UserAvatarCharacter(
-                                        gender = "female",
+                                    com.example.ui.components.SilaUserAvatar(
+                                        avatarId = "avatar_02",
                                         size = 50.dp,
                                         showBorder = genderInput == "female"
                                     )
