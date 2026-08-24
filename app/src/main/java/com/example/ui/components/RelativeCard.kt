@@ -202,81 +202,88 @@ fun RelativeCard(
                 color = MaterialTheme.colorScheme.outline.copy(alpha = 0.35f)
             )
 
-            // ── Action Bar (All 5 buttons perfectly aligned on the exact same horizontal line) ──
+            // ── Action Bar (Separated groups with zero overlapping) ───────────────────
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 10.dp, vertical = 10.dp),
-                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                    .padding(horizontal = 12.dp, vertical = 10.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // 1. Call
-                UniformActionButton(
-                    icon = Icons.Outlined.Call,
-                    label = if (lang == "en") "Call" else "اتصال",
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    contentColor = Color.White,
-                    modifier = Modifier.weight(1.1f),
-                    onClick = {
-                        context.startActivity(Intent(Intent.ACTION_DIAL).apply {
-                            data = Uri.parse("tel:${relative.phone}")
-                        })
-                    }
-                )
-
-                // 2. WhatsApp
-                UniformActionButton(
-                    icon = Icons.AutoMirrored.Outlined.Chat,
-                    label = if (lang == "en") "WA" else "واتس",
-                    containerColor = Color(0xFF1B8A4A),
-                    contentColor = Color.White,
-                    modifier = Modifier.weight(1.1f),
-                    onClick = {
-                        var cleanPhone = relative.phone.replace("""[\s\-\(\)]""".toRegex(), "")
-                        val formattedPhone = when {
-                            cleanPhone.startsWith("+") -> cleanPhone.substring(1)
-                            cleanPhone.startsWith("00") -> cleanPhone.substring(2)
-                            cleanPhone.startsWith("01") && cleanPhone.length == 11 -> "20" + cleanPhone.substring(1)
-                            cleanPhone.startsWith("05") && cleanPhone.length == 10 -> "966" + cleanPhone.substring(1)
-                            cleanPhone.startsWith("0") -> cleanPhone.substring(1)
-                            else -> cleanPhone
+                // ── Primary Actions: Call & WhatsApp ───────────────────
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    // Call
+                    PrimaryActionButton(
+                        icon = Icons.Outlined.Call,
+                        label = if (lang == "en") "Call" else "اتصال",
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = Color.White,
+                        onClick = {
+                            context.startActivity(Intent(Intent.ACTION_DIAL).apply {
+                                data = Uri.parse("tel:${relative.phone}")
+                            })
                         }
-                        context.startActivity(Intent(Intent.ACTION_VIEW).apply {
-                            data = Uri.parse("https://api.whatsapp.com/send?phone=$formattedPhone")
-                        })
-                        viewModel.recordCommunication(relative.id, "رسالة", "تواصل سريع عبر الواتساب")
-                    }
-                )
+                    )
 
-                // 3. Log Contact
-                UniformActionButton(
-                    icon = Icons.Outlined.CheckCircle,
-                    label = if (lang == "en") "Log" else "سجّل",
-                    containerColor = SoftGold.copy(alpha = 0.9f),
-                    contentColor = Color(0xFF2A1C00),
-                    modifier = Modifier.weight(1f),
-                    onClick = { viewModel.showRecordLogDialog.value = relative }
-                )
+                    // WhatsApp
+                    PrimaryActionButton(
+                        icon = Icons.AutoMirrored.Outlined.Chat,
+                        label = if (lang == "en") "WhatsApp" else "واتس",
+                        containerColor = Color(0xFF1B8A4A),
+                        contentColor = Color.White,
+                        onClick = {
+                            var cleanPhone = relative.phone.replace("""[\s\-\(\)]""".toRegex(), "")
+                            val formattedPhone = when {
+                                cleanPhone.startsWith("+") -> cleanPhone.substring(1)
+                                cleanPhone.startsWith("00") -> cleanPhone.substring(2)
+                                cleanPhone.startsWith("01") && cleanPhone.length == 11 -> "20" + cleanPhone.substring(1)
+                                cleanPhone.startsWith("05") && cleanPhone.length == 10 -> "966" + cleanPhone.substring(1)
+                                cleanPhone.startsWith("0") -> cleanPhone.substring(1)
+                                else -> cleanPhone
+                            }
+                            context.startActivity(Intent(Intent.ACTION_VIEW).apply {
+                                data = Uri.parse("https://api.whatsapp.com/send?phone=$formattedPhone")
+                            })
+                            viewModel.recordCommunication(relative.id, "رسالة", "تواصل سريع عبر الواتساب")
+                        }
+                    )
+                }
 
-                // 4. Edit
-                UniformActionButton(
-                    icon = Icons.Outlined.Edit,
-                    label = if (lang == "en") "Edit" else "تعديل",
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant,
-                    contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.weight(1f),
-                    onClick = { viewModel.showEditRelativeDialog.value = relative }
-                )
+                // ── Secondary Actions: Log, Edit, Delete ───────────────
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    // Log Record
+                    IconActionButton(
+                        icon = Icons.Outlined.CheckCircle,
+                        contentDescription = if (lang == "en") "Log" else "سجّل تواصل",
+                        containerColor = SoftGold.copy(alpha = 0.25f),
+                        contentColor = Color(0xFF7A5200),
+                        onClick = { viewModel.showRecordLogDialog.value = relative }
+                    )
 
-                // 5. Delete
-                UniformActionButton(
-                    icon = Icons.Outlined.Delete,
-                    label = if (lang == "en") "Del" else "حذف",
-                    containerColor = Color(0xFFFDE8E8),
-                    contentColor = Color(0xFFD32F2F),
-                    modifier = Modifier.weight(0.9f),
-                    onClick = { showDeleteConfirm = true }
-                )
+                    // Edit
+                    IconActionButton(
+                        icon = Icons.Outlined.Edit,
+                        contentDescription = if (lang == "en") "Edit" else "تعديل",
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                        contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                        onClick = { viewModel.showEditRelativeDialog.value = relative }
+                    )
+
+                    // Delete
+                    IconActionButton(
+                        icon = Icons.Outlined.Delete,
+                        contentDescription = if (lang == "en") "Delete" else "حذف",
+                        containerColor = Color(0xFFFDE8E8),
+                        contentColor = Color(0xFFD32F2F),
+                        onClick = { showDeleteConfirm = true }
+                    )
+                }
             }
         }
     }
@@ -325,15 +332,53 @@ fun RelativeCard(
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Uniform Action Button — All 5 buttons strictly share height, shape & baseline
+// Primary Action Button (Call / WhatsApp) — Pill button with Icon + Text
 // ─────────────────────────────────────────────────────────────────────────────
 @Composable
-private fun UniformActionButton(
+private fun PrimaryActionButton(
     icon: ImageVector,
     label: String,
     containerColor: Color,
     contentColor: Color,
-    modifier: Modifier = Modifier,
+    onClick: () -> Unit
+) {
+    Surface(
+        onClick = onClick,
+        shape = RoundedCornerShape(12.dp),
+        color = containerColor,
+        contentColor = contentColor,
+        modifier = Modifier.height(36.dp)
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center,
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = label,
+                modifier = Modifier.size(15.dp)
+            )
+            Spacer(modifier = Modifier.width(5.dp))
+            Text(
+                text = label,
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Bold,
+                maxLines = 1
+            )
+        }
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Icon Action Button (Log / Edit / Delete) — Fixed size square chip
+// ─────────────────────────────────────────────────────────────────────────────
+@Composable
+private fun IconActionButton(
+    icon: ImageVector,
+    contentDescription: String,
+    containerColor: Color,
+    contentColor: Color,
     onClick: () -> Unit
 ) {
     Surface(
@@ -341,25 +386,13 @@ private fun UniformActionButton(
         shape = RoundedCornerShape(10.dp),
         color = containerColor,
         contentColor = contentColor,
-        modifier = modifier.height(36.dp)
+        modifier = Modifier.size(36.dp)
     ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center,
-            modifier = Modifier.padding(horizontal = 4.dp, vertical = 4.dp)
-        ) {
+        Box(contentAlignment = Alignment.Center) {
             Icon(
                 imageVector = icon,
-                contentDescription = label,
-                modifier = Modifier.size(14.dp)
-            )
-            Spacer(modifier = Modifier.width(3.dp))
-            Text(
-                text = label,
-                fontSize = 10.5.sp,
-                fontWeight = FontWeight.Bold,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
+                contentDescription = contentDescription,
+                modifier = Modifier.size(17.dp)
             )
         }
     }
