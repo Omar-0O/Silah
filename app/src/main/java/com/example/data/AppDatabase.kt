@@ -35,7 +35,7 @@ abstract class AppDatabase : RoomDatabase() {
                 )
                 .fallbackToDestructiveMigration()
                 .fallbackToDestructiveMigrationOnDowngrade()
-                .addCallback(AppDatabaseCallback(scope) { instance ?: INSTANCE })
+                .addCallback(AppDatabaseCallback())
                 .build()
                 INSTANCE = instance
                 instance
@@ -43,52 +43,21 @@ abstract class AppDatabase : RoomDatabase() {
         }
     }
 
-    private class AppDatabaseCallback(
-        private val scope: CoroutineScope,
-        private val provider: () -> AppDatabase?
-    ) : RoomDatabase.Callback() {
+    private class AppDatabaseCallback : RoomDatabase.Callback() {
         override fun onCreate(db: SupportSQLiteDatabase) {
             super.onCreate(db)
-            scope.launch(Dispatchers.IO) {
-                try {
-                    provider()?.let { database ->
-                        populateInitialTemplates(database.quickTemplateDao())
-                    }
-                } catch (e: Exception) {
-                    e.printStackTrace()
-                }
-            }
-        }
-
-        suspend fun populateInitialTemplates(dao: QuickTemplateDao) {
-            val initialTemplates = listOf(
-                QuickTemplate(
-                    title = "تهنئة يوم الجمعة",
-                    content = "السلام عليكم ورحمة الله وبركاته. طيب الله جمعتكم بكل خير، وجعلها الله مغفرة لذنوبكم وباباً للرزق والبركة. طاب يومكم.",
-                    category = "يوم الجمعة"
-                ),
-                QuickTemplate(
-                    title = "سؤال عن الحال",
-                    content = "السلام عليكم يا غالي، أردت فقط الاطمئنان على صحتك وأحوالك. أسأل الله أن تكون دائماً في أتم الصحة والعافية. مشتاقون لرؤيتك قريبًا.",
-                    category = "سؤال عام"
-                ),
-                QuickTemplate(
-                    title = "تهنئة بالعيد",
-                    content = "كل عام وأنتم بخير وصحة وعافية! بمناسبة حلول العيد المبارك، أعاده الله علينا وعليكم باليمن والبركات، وتقبل الله منا ومنكم صالح الأعمال.",
-                    category = "أعياد ومناسبات"
-                ),
-                QuickTemplate(
-                    title = "دعاء بالشفاء",
-                    content = "أسأل الله العظيم رب العرش العظيم أن يشفيك شفاءً لا يغادر سقماً، ويلبسك ثوب الصحة والعافية ويحفظك لنا من كل سوء.",
-                    category = "دعاء وعيادة"
-                ),
-                QuickTemplate(
-                    title = "شكر وتقدير",
-                    content = "أتقدم إليكم بخالص الشكر والتقدير والمحبة على طيب تواصلكم ولطفكم، دمتم لي سنداً وذخراً في هذه الحياة.",
-                    category = "شكر"
+            try {
+                db.execSQL(
+                    "INSERT INTO quick_templates (title, content, category) VALUES " +
+                    "('تهنئة يوم الجمعة', 'السلام عليكم ورحمة الله وبركاته. طيب الله جمعتكم بكل خير، وجعلها الله مغفرة لذنوبكم وباباً للرزق والبركة. طاب يومكم.', 'يوم الجمعة'), " +
+                    "('سؤال عن الحال', 'السلام عليكم يا غالي، أردت فقط الاطمئنان على صحتك وأحوالك. أسأل الله أن تكون دائماً في أتم الصحة والعافية. مشتاقون لرؤيتك قريبًا.', 'سؤال عام'), " +
+                    "('تهنئة بالعيد', 'كل عام وأنتم بخير وصحة وعافية! بمناسبة حلول العيد المبارك، أعاده الله علينا وعليكم باليمن والبركات، وتقبل الله منا ومنكم صالح الأعمال.', 'أعياد ومناسبات'), " +
+                    "('دعاء بالشفاء', 'أسأل الله العظيم رب العرش العظيم أن يشفيك شفاءً لا يغادر سقماً، ويلبسك ثوب الصحة والعافية ويحفظك لنا من كل سوء.', 'دعاء وعيادة'), " +
+                    "('شكر وتقدير', 'أتقدم إليكم بخالص الشكر والتقدير والمحبة على طيب تواصلكم ولطفكم، دمتم لي سنداً وذخراً في هذه الحياة.', 'شكر')"
                 )
-            )
-            dao.insertTemplates(initialTemplates)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
         }
     }
 }
