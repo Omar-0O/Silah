@@ -245,9 +245,9 @@ private fun StreakCard(
                 }
             }
 
-            // 7 Days Visual Row (RTL - starting from Right)
+            // 7 Days Visual Row (Ltr - week starts from Left side)
             CompositionLocalProvider(
-                androidx.compose.ui.platform.LocalLayoutDirection provides androidx.compose.ui.unit.LayoutDirection.Rtl
+                androidx.compose.ui.platform.LocalLayoutDirection provides androidx.compose.ui.unit.LayoutDirection.Ltr
             ) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
