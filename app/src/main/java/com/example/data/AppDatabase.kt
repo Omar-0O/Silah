@@ -50,8 +50,12 @@ abstract class AppDatabase : RoomDatabase() {
         override fun onCreate(db: SupportSQLiteDatabase) {
             super.onCreate(db)
             scope.launch(Dispatchers.IO) {
-                provider()?.let { database ->
-                    populateInitialTemplates(database.quickTemplateDao())
+                try {
+                    provider()?.let { database ->
+                        populateInitialTemplates(database.quickTemplateDao())
+                    }
+                } catch (e: Exception) {
+                    e.printStackTrace()
                 }
             }
         }

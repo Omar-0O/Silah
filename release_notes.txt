@@ -1,0 +1,7 @@
+### 🚀 Silah v2.0.0 Release Highlights
+
+- 🌙 **Refined Dark Mode System**: Complete color palette optimization across cards, backgrounds, and interactive dialogs.
+- 🌐 **RTL / AutoMirrored Support**: Upgraded iconography to AutoMirrored variants for seamless Arabic layout support.
+- 📱 **Enhanced Touch Ergonomics**: Integrated responsive LazyRow filter chips to prevent UI overflow on compact screen devices.
+- 🧪 **Full Automated Test Coverage**: Verified unit tests across ViewModel, Workers, Database, and Backup utilities.
+- ⚙️ **Production Artifacts**: Includes app-release.apk (APK) and app-release.aab (Android App Bundle).

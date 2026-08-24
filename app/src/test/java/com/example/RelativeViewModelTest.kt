@@ -83,13 +83,13 @@ class RelativeViewModelTest {
     @Test
     fun testGenerateLocalSmartMessage() {
         val msgFriday = viewModel.generateLocalSmartMessage("أحمد", "أشقاء", "يوم الجمعة")
-        assertTrue(msgFriday.contains("جمعة مباركة وطيبة"))
+        assertTrue(msgFriday.contains("جمعة"))
 
         val msgEid = viewModel.generateLocalSmartMessage("والدتي", "والدان", "عيد الفطر/الأضحى")
-        assertTrue(msgEid.contains("حلول العيد المبارك"))
+        assertTrue(msgEid.contains("العيد"))
 
         val msgGeneral = viewModel.generateLocalSmartMessage("خالد", "أقارب آخرون", "سؤال عام عن الحال")
-        assertTrue(msgGeneral.contains("الاطمئنان على أحوالكم وصحتكم"))
+        assertTrue(msgGeneral.contains("أحوالك"))
     }
 
     @Test

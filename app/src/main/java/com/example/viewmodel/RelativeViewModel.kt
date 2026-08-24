@@ -116,8 +116,22 @@ class RelativeViewModel(application: Application) : AndroidViewModel(application
     val showSupportSilaDialog = MutableStateFlow(false)
     val activeMilestone = MutableStateFlow<com.example.ui.dialogs.MilestoneType?>(null)
 
+    // Safe SharedPreferences helpers to prevent startup crash on type mismatch
+    private fun safeGetString(key: String, default: String): String {
+        return try { prefs.getString(key, default) ?: default } catch (e: Exception) { default }
+    }
+    private fun safeGetBoolean(key: String, default: Boolean): Boolean {
+        return try { prefs.getBoolean(key, default) } catch (e: Exception) { default }
+    }
+    private fun safeGetLong(key: String, default: Long): Long {
+        return try { prefs.getLong(key, default) } catch (e: Exception) { default }
+    }
+    private fun safeGetStringSet(key: String, default: Set<String>): Set<String> {
+        return try { prefs.getStringSet(key, default) ?: default } catch (e: Exception) { default }
+    }
+
     // Dark mode state persisted in SharedPreferences
-    val isDarkMode = MutableStateFlow(prefs.getBoolean("dark_mode", false))
+    val isDarkMode = MutableStateFlow(safeGetBoolean("dark_mode", false))
 
     fun toggleDarkMode(enabled: Boolean) {
         isDarkMode.value = enabled
@@ -125,9 +139,9 @@ class RelativeViewModel(application: Application) : AndroidViewModel(application
     }
 
     // Notification preferences persisted in SharedPreferences
-    val prefNotifyDueRelatives = MutableStateFlow(prefs.getBoolean("pref_notify_due_relatives", true))
-    val prefNotifyEncouragement = MutableStateFlow(prefs.getBoolean("pref_notify_encouragement", true))
-    val prefNotifyMonthly = MutableStateFlow(prefs.getBoolean("pref_notify_monthly", true))
+    val prefNotifyDueRelatives = MutableStateFlow(safeGetBoolean("pref_notify_due_relatives", true))
+    val prefNotifyEncouragement = MutableStateFlow(safeGetBoolean("pref_notify_encouragement", true))
+    val prefNotifyMonthly = MutableStateFlow(safeGetBoolean("pref_notify_monthly", true))
 
     fun toggleNotifyDueRelatives(enabled: Boolean) {
         prefNotifyDueRelatives.value = enabled
@@ -146,7 +160,7 @@ class RelativeViewModel(application: Application) : AndroidViewModel(application
 
     // Days using Sila — computed fresh from prefs (not cached in a StateFlow)
     fun getAppUsageDays(): Int {
-        val firstLaunch = prefs.getLong("app_first_launch_time", System.currentTimeMillis())
+        val firstLaunch = safeGetLong("app_first_launch_time", System.currentTimeMillis())
         val diffMs = System.currentTimeMillis() - firstLaunch
         return ((diffMs / (1000 * 60 * 60 * 24)) + 1).toInt()
     }
@@ -189,8 +203,8 @@ class RelativeViewModel(application: Application) : AndroidViewModel(application
     private fun checkMilestonesByCount(contactedCount: Int) {
         if (contactedCount < 5) return
 
-        val achievedSet = prefs.getStringSet("achieved_milestones", emptySet()) ?: emptySet()
-        val lastPromptTime = prefs.getLong("last_support_prompt_time", 0L)
+        val achievedSet = safeGetStringSet("achieved_milestones", emptySet())
+        val lastPromptTime = safeGetLong("last_support_prompt_time", 0L)
         val now = System.currentTimeMillis()
         val isCooldownActive = lastPromptTime > 0L && (now - lastPromptTime < 30 * 86_400_000L)
 
@@ -231,7 +245,7 @@ class RelativeViewModel(application: Application) : AndroidViewModel(application
     }
 
     private fun markMilestoneAchieved(milestoneId: String) {
-        val currentSet = prefs.getStringSet("achieved_milestones", emptySet()) ?: emptySet()
+        val currentSet = safeGetStringSet("achieved_milestones", emptySet())
         val updated = currentSet.toMutableSet().apply { add(milestoneId) }
         prefs.edit().putStringSet("achieved_milestones", updated).apply()
     }
@@ -266,7 +280,7 @@ class RelativeViewModel(application: Application) : AndroidViewModel(application
     }
 
     // App language state persisted in SharedPreferences ("ar" or "en")
-    val selectedLanguage = MutableStateFlow(prefs.getString("selected_language", "ar") ?: "ar")
+    val selectedLanguage = MutableStateFlow(safeGetString("selected_language", "ar"))
 
     fun selectLanguage(langCode: String) {
         selectedLanguage.value = langCode
@@ -274,9 +288,9 @@ class RelativeViewModel(application: Application) : AndroidViewModel(application
     }
 
     // User Profile state (Name, Gender & Avatar)
-    val userName = MutableStateFlow(prefs.getString("user_name", "") ?: "")
-    val userGender = MutableStateFlow(prefs.getString("user_gender", "male") ?: "male")
-    val userAvatarId = MutableStateFlow(prefs.getString("user_avatar_id", "avatar_01") ?: "avatar_01")
+    val userName = MutableStateFlow(safeGetString("user_name", ""))
+    val userGender = MutableStateFlow(safeGetString("user_gender", "male"))
+    val userAvatarId = MutableStateFlow(safeGetString("user_avatar_id", "avatar_01"))
 
     fun saveUserProfile(name: String, gender: String) {
         userName.value = name
@@ -654,11 +668,11 @@ data class DeviceContact(
         }
 
         return when (occasion) {
-            "يوم الجمعة" -> "السلام عليكم ورحمة الله وبركاته يا $greeting. في هذا يوم الجمعة المبارك، أسأل الله أن يملأ قلبكم بالأنوار، ويحفظكم من كل مكروه، ويتقبل طاعاتكم وصالح أعمالكم. جمعة مباركة وطيبة ✨"
-            "عيد الفطر/الأضحى" -> "السلام عليكم ورحمة الله وبركاته يا $greeting. أتقدم إليكم بأصدق التهاني وأطيب التبريكات بمناسبة حلول العيد المبارك، سائلاً المولى عز وجل أن يتقبل منا ومنكم صالح الأعمال، وأن يعيده علينا وعليكم بالخير واليمن والمسرات والبركات 🌸"
-            "سؤال عام عن الحال" -> "السلام عليكم يا $greeting. أردت الاطمئنان على أحوالكم وصحتكم، عساكم بألف خير ونعمة دائماً. مشتاقون لسماع أخباركم الطيبة ورؤيتكم في أقرب فرصة. دمتم سالمين 🤍"
-            "دعاء بالشفاء" -> "السلام عليكم ورحمة الله وبركاته يا $greeting. بلغني وعكتكم الصحية، وأسأل الله العظيم رب العرش العظيم أن يشفيك شفاءً لا يغادر سقماً، وأن يلبسك ثوب الصحة والعافية والوقار، طهور ونور إن شاء الله 🤲"
-            else -> "السلام عليكم يا $greeting. أتمنى لكم يوماً جميلاً مليئاً بالخير والتوفيق والمسرات، دمتم في حفظ الله ورعايته."
+            "يوم الجمعة" -> "السلام عليكم ورحمة الله وبركاته يا $greeting. في هذا اليوم المبارك، أسأل الله أن يملأ قلبكم بالنور والسكينة، ويحفظكم من كل مكروه، ويجعل أيامكم بركة ورحمة. جمعة طيبة ومباركة ✨"
+            "عيد الفطر/الأضحى" -> "السلام عليكم ورحمة الله وبركاته يا $greeting. كل عام وأنتم في أحسن حال! أتقدم إليكم بأصدق التهاني بمناسبة العيد، سائلاً الله أن يتقبل منكم الطاعات، وأن يعيده عليكم بالخير والبركة والسرور 🌸"
+            "سؤال عام عن الحال" -> "السلام عليكم يا $greeting. حبيت أطمن على أحوالك وصحتك، عساك بخير ونعمة يارب. مشتاقين نسمع أخباركم الطيبة ونشوفكم قريب جداً. دمت بخير وعافية 🤍"
+            "دعاء بالشفاء" -> "السلام عليكم ورحمة الله وبركاته يا $greeting. ألف سلامة عليك وطهور إن شاء الله، أسأل الله العظيم رب العرش العظيم أن يشفيك شفاءً تاماً لا يغادر سقماً، ويمن عليك بالصحة والعافية وتكون دايماً بخير 🤲"
+            else -> "السلام عليكم يا $greeting. أتمنى لك يوماً طيباً جميلاً مليئاً بالطمأنينة والخير، دمت في حفظ الله ورعايته 🌿"
         }
     }
 
@@ -685,11 +699,11 @@ data class DeviceContact(
 }
 
 enum class RelativeStatus(val label: String, val labelEn: String, val colorHex: String) {
-    NEEDS_CONTACT_URGENT("تواصل الآن (لم يتصل قط)", "Contact Now (Never Called)", "E53935"),
-    OVERDUE_CRITICAL("تأخرت كثيراً في الوصل!", "Very Overdue!", "D32F2F"),
-    NEEDS_CONTACT("حان وقت الصلة اليوم", "Time to Connect Today", "EF6C00"),
-    OK_SOON("تواصل معه قريباً", "Connect Soon", "FBC02D"),
-    CONNECTED("أحسنت! متصل مؤخراً", "Great! Recently Connected", "2E7D32");
+    NEEDS_CONTACT_URGENT("لم تتواصل معه بعد.. ابدأ اليوم 🌿", "Contact Now (Never Called)", "E53935"),
+    OVERDUE_CRITICAL("شخص عزيز مشتاق لسماع صوتك! ❤️", "Very Overdue!", "D32F2F"),
+    NEEDS_CONTACT("اليوم فرصة جميلة لتطمئن عليه 🌸", "Time to Connect Today", "EF6C00"),
+    OK_SOON("طمئنه قريبًا 🌿", "Connect Soon", "FBC02D"),
+    CONNECTED("تواصل مبارك ومستمر ✨", "Great! Recently Connected", "2E7D32");
 
     fun getLabel(lang: String) = if (lang == "en") labelEn else label
 }

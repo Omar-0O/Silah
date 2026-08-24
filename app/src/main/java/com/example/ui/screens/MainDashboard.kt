@@ -82,7 +82,9 @@ fun AppNavigation(viewModel: RelativeViewModel) {
     val prefs = androidx.compose.ui.platform.LocalContext.current
         .getSharedPreferences("app_settings", android.content.Context.MODE_PRIVATE)
 
-    var showOnboarding by remember { mutableStateOf(!prefs.getBoolean("onboarding_done", false)) }
+    var showOnboarding by remember {
+        mutableStateOf(!(try { prefs.getBoolean("onboarding_done", false) } catch (e: Exception) { false }))
+    }
     var showSplash by remember { mutableStateOf(true) }
 
     when {
