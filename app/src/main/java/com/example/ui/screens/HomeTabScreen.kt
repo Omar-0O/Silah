@@ -106,16 +106,6 @@ fun HomeTabScreen(viewModel: RelativeViewModel) {
                         )
                     }
                 },
-                actions = {
-                    // Settings
-                    IconButton(onClick = { showProfileDialog = true }) {
-                        Icon(
-                            Icons.Outlined.Settings,
-                            contentDescription = "إعدادات",
-                            tint = MaterialTheme.colorScheme.primary
-                        )
-                    }
-                },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
             )
         },
@@ -151,109 +141,13 @@ fun HomeTabScreen(viewModel: RelativeViewModel) {
                 )
             }
 
-            // 3. Quick Stats Row
-            item {
-                QuickStatsRow(
-                    relativesCount = relatives.size,
-                    dueCount = dueRelatives.size,
-                    logsCount = totalLogsCount,
-                    lang = lang
-                )
-            }
-
-            // 4. Due Relatives Carousel
+            // 3. Due Relatives Carousel
             item {
                 DueRelativesCarousel(
                     dueRelatives = dueRelatives,
                     viewModel = viewModel
                 )
             }
-        }
-    }
-}
-
-// ── Quick Stats Row ───────────────────────────────────────────────────────────
-@Composable
-private fun QuickStatsRow(
-    relativesCount: Int,
-    dueCount: Int,
-    logsCount: Int,
-    lang: String
-) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(10.dp)
-    ) {
-        MiniStatCard(
-            emoji = "👥",
-            value = relativesCount.toString(),
-            label = if (lang == "en") "Relatives" else "أقارب",
-            color = PrimaryGreen,
-            modifier = Modifier.weight(1f)
-        )
-        MiniStatCard(
-            emoji = "🔔",
-            value = dueCount.toString(),
-            label = if (lang == "en") "Due Today" else "بانتظارك",
-            color = if (dueCount > 0) Color(0xFFE53935) else PrimaryGreen,
-            modifier = Modifier.weight(1f)
-        )
-        MiniStatCard(
-            emoji = "🤝",
-            value = logsCount.toString(),
-            label = if (lang == "en") "Total Logs" else "صلات مسجلة",
-            color = Color(0xFF0E7075),
-            modifier = Modifier.weight(1f)
-        )
-    }
-}
-
-@Composable
-private fun MiniStatCard(
-    emoji: String,
-    value: String,
-    label: String,
-    color: Color,
-    modifier: Modifier = Modifier
-) {
-    Card(
-        shape = RoundedCornerShape(18.dp),
-        colors = CardDefaults.cardColors(containerColor = color.copy(alpha = 0.08f)),
-        modifier = modifier.shadow(2.dp, RoundedCornerShape(18.dp))
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 12.dp, horizontal = 6.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(4.dp)
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(42.dp)
-                    .background(color.copy(alpha = 0.14f), androidx.compose.foundation.shape.CircleShape),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = emoji,
-                    fontSize = 22.sp
-                )
-            }
-            Spacer(modifier = Modifier.height(2.dp))
-            Text(
-                text = value,
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Black,
-                color = color
-            )
-            Text(
-                text = label,
-                fontSize = 11.sp,
-                color = color.copy(alpha = 0.85f),
-                fontWeight = FontWeight.Bold,
-                maxLines = 1,
-                textAlign = androidx.compose.ui.text.style.TextAlign.Center
-            )
         }
     }
 }

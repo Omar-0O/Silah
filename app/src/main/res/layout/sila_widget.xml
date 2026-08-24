@@ -1,58 +1,60 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/widget_container"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/widget_background"
-    android:padding="16dp">
+    android:orientation="vertical"
+    android:padding="12dp">
 
-    <TextView
-        android:id="@+id/widget_title"
-        android:layout_width="wrap_content"
+    <!-- Widget Header -->
+    <RelativeLayout
+        android:id="@+id/widget_header"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_alignParentTop="true"
-        android:layout_alignParentRight="true"
-        android:text="صِلَةِ ✨"
-        android:textColor="#3F694D"
-        android:textSize="12sp"
-        android:textStyle="bold" />
-
-    <LinearLayout
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_centerInParent="true"
-        android:layout_alignParentRight="true"
-        android:orientation="vertical"
-        android:gravity="right"
-        android:layout_marginRight="4dp">
+        android:paddingBottom="8dp">
 
         <TextView
-            android:id="@+id/widget_contact_name"
+            android:id="@+id/widget_title"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="الوالد الغالي"
-            android:textColor="#1C221E"
-            android:textSize="16sp"
+            android:layout_alignParentRight="true"
+            android:text="صِلَةِ ✨"
+            android:textColor="#3F694D"
+            android:textSize="14sp"
             android:textStyle="bold" />
 
         <TextView
-            android:id="@+id/widget_contact_status"
+            android:id="@+id/widget_subtitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="تواصل معه اليوم"
-            android:textColor="#6B8775"
-            android:textSize="11sp" />
-    </LinearLayout>
+            android:layout_alignParentLeft="true"
+            android:layout_centerVertical="true"
+            android:text="حسب أولوية التذكير"
+            android:textColor="#8A9E90"
+            android:textSize="10sp" />
+    </RelativeLayout>
 
-    <ImageView
-        android:id="@+id/widget_call_button"
-        android:layout_width="40dp"
-        android:layout_height="40dp"
-        android:layout_alignParentLeft="true"
-        android:layout_centerVertical="true"
-        android:background="@drawable/widget_button_background"
-        android:src="@android:drawable/ic_menu_call"
-        android:padding="8dp"
-        android:contentDescription="اتصال سريع" />
+    <!-- Scrollable ListView -->
+    <ListView
+        android:id="@+id/widget_list"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:divider="@android:color/transparent"
+        android:dividerHeight="4dp"
+        android:scrollbars="vertical"
+        android:nestedScrollingEnabled="true" />
 
-</RelativeLayout>
+    <!-- Empty View state when list has no items -->
+    <TextView
+        android:id="@+id/widget_empty"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center"
+        android:text="لا يوجد أقارب مضافين بعد\nإضغط للفتح والإضافة 💚"
+        android:textColor="#6B8775"
+        android:textSize="13sp"
+        android:visibility="gone" />
+
+</LinearLayout>

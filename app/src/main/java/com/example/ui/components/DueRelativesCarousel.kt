@@ -116,7 +116,7 @@ fun DueRelativesCarousel(
                 modifier = Modifier.fillMaxWidth(),
                 contentPadding = PaddingValues(vertical = 8.dp, horizontal = 4.dp)
             ) {
-                items(dueRelatives) { relative ->
+                items(dueRelatives, key = { it.id }) { relative ->
                     val status = viewModel.getRelativeStatus(relative)
                     val statusBgColor = Color("#15${status.colorHex}".toColorInt())
                     val statusTextColor = Color("#FF${status.colorHex}".toColorInt())
@@ -193,13 +193,16 @@ fun DueRelativesCarousel(
                                     IconButton(
                                         onClick = {
                                             var cleanPhone = relative.phone.replace("""[\s\-\(\)]""".toRegex(), "")
-                                            if (!cleanPhone.startsWith("+") && !cleanPhone.startsWith("00")) {
-                                                if (cleanPhone.startsWith("0")) {
-                                                    cleanPhone = "966" + cleanPhone.substring(1)
-                                                }
+                                            val formattedPhone = when {
+                                                cleanPhone.startsWith("+") -> cleanPhone.substring(1)
+                                                cleanPhone.startsWith("00") -> cleanPhone.substring(2)
+                                                cleanPhone.startsWith("01") && cleanPhone.length == 11 -> "20" + cleanPhone.substring(1)
+                                                cleanPhone.startsWith("05") && cleanPhone.length == 10 -> "966" + cleanPhone.substring(1)
+                                                cleanPhone.startsWith("0") -> cleanPhone.substring(1)
+                                                else -> cleanPhone
                                             }
                                             val intent = Intent(Intent.ACTION_VIEW).apply {
-                                                data = "https://api.whatsapp.com/send?phone=$cleanPhone".toUri()
+                                                data = "https://api.whatsapp.com/send?phone=$formattedPhone".toUri()
                                             }
                                             context.startActivity(intent)
                                             val commType = if (lang == "en") "Message" else "رسالة"

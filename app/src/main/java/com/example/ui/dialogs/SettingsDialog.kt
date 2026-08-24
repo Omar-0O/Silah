@@ -62,6 +62,49 @@ fun SettingsDialog(
                         color = MaterialTheme.colorScheme.primary
                     )
 
+                    // ── Language Selector Section ────────────────────────────────
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                if (selectedLanguage == "en") "App Language" else "لغة التطبيق (Language)",
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text(
+                                if (selectedLanguage == "en") "Choose display language" else "اختر لغة عرض الواجهة",
+                                fontSize = 11.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+
+                        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                            FilterChip(
+                                selected = selectedLanguage == "ar",
+                                onClick = { viewModel.selectLanguage("ar") },
+                                label = { Text("العربية 🇸🇦", fontSize = 12.sp, fontWeight = FontWeight.Bold) },
+                                colors = FilterChipDefaults.filterChipColors(
+                                    selectedContainerColor = MaterialTheme.colorScheme.primary,
+                                    selectedLabelColor = MaterialTheme.colorScheme.onPrimary
+                                )
+                            )
+                            FilterChip(
+                                selected = selectedLanguage == "en",
+                                onClick = { viewModel.selectLanguage("en") },
+                                label = { Text("English 🇬🇧", fontSize = 12.sp, fontWeight = FontWeight.Bold) },
+                                colors = FilterChipDefaults.filterChipColors(
+                                    selectedContainerColor = MaterialTheme.colorScheme.primary,
+                                    selectedLabelColor = MaterialTheme.colorScheme.onPrimary
+                                )
+                            )
+                        }
+                    }
+
+                    HorizontalDivider()
+
                     // ── Dark Mode Switch ────────────────────────────────────────
                     Row(
                         modifier = Modifier.fillMaxWidth(),

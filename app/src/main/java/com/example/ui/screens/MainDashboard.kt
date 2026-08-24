@@ -392,7 +392,7 @@ fun LogsHistoryDialog(
     val lang by viewModel.selectedLanguage.collectAsState()
     val layoutDirection = if (lang == "en") LayoutDirection.Ltr else LayoutDirection.Rtl
     val relativeLogs = logs.filter { it.relativeId == relative.id }.sortedByDescending { it.timestamp }
-    val dateLocale = if (lang == "en") Locale.ENGLISH else Locale("ar")
+    val dateLocale = if (lang == "en") Locale.ENGLISH else Locale.forLanguageTag("ar")
     val dateFormat = remember(lang) { SimpleDateFormat("yyyy/MM/dd - hh:mm a", dateLocale) }
 
     Dialog(onDismissRequest = onDismiss) {
@@ -431,7 +431,7 @@ fun LogsHistoryDialog(
                         modifier = Modifier.weight(1f),
                         verticalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
-                        items(relativeLogs) { log ->
+                        items(relativeLogs, key = { it.id }) { log ->
                             Card(
                                 shape = RoundedCornerShape(14.dp),
                                 colors = CardDefaults.cardColors(

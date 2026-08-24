@@ -38,6 +38,8 @@ import kotlinx.coroutines.launch
 
 class RelativeViewModel(application: Application) : AndroidViewModel(application) {
 
+    private val prefs = application.getSharedPreferences("app_settings", Context.MODE_PRIVATE)
+
     private val db = AppDatabase.getDatabase(application, viewModelScope)
     private val repository = RelativeRepository(
         db.relativeDao(),
@@ -45,12 +47,6 @@ class RelativeViewModel(application: Application) : AndroidViewModel(application
         db.quickTemplateDao(),
         db.familyMemoryDao()
     )
-
-    init {
-        setupDueNotificationsWorker()
-        setupUsageNotificationWorker()
-        ensureFirstLaunchRecorded()
-    }
 
     // Raw database state flows
     val relatives: StateFlow<List<Relative>> = repository.allRelatives
@@ -121,7 +117,6 @@ class RelativeViewModel(application: Application) : AndroidViewModel(application
     val activeMilestone = MutableStateFlow<com.example.ui.dialogs.MilestoneType?>(null)
 
     // Dark mode state persisted in SharedPreferences
-    private val prefs = application.getSharedPreferences("app_settings", Context.MODE_PRIVATE)
     val isDarkMode = MutableStateFlow(prefs.getBoolean("dark_mode", false))
 
     fun toggleDarkMode(enabled: Boolean) {
@@ -166,6 +161,12 @@ class RelativeViewModel(application: Application) : AndroidViewModel(application
         if (!prefs.contains("app_first_launch_time")) {
             prefs.edit().putLong("app_first_launch_time", System.currentTimeMillis()).apply()
         }
+    }
+
+    init {
+        setupDueNotificationsWorker()
+        setupUsageNotificationWorker()
+        ensureFirstLaunchRecorded()
     }
 
     private fun observeMilestones() {

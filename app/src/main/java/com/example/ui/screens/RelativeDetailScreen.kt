@@ -73,7 +73,7 @@ fun RelativeDetailScreen(
         label = "urgency_arc"
     )
 
-    val dateLocale = if (lang == "en") Locale.ENGLISH else Locale("ar")
+    val dateLocale = if (lang == "en") Locale.ENGLISH else Locale.forLanguageTag("ar")
     val dateFormat = remember(lang) { SimpleDateFormat("dd MMM yyyy  •  hh:mm a", dateLocale) }
 
     // Avatar gradient
@@ -259,12 +259,17 @@ fun RelativeDetailScreen(
                         contentColor = Color.White,
                         modifier = Modifier.weight(1f),
                         onClick = {
-                            var phone = relative.phone.replace("""[\s\-\(\)]""".toRegex(), "")
-                            if (!phone.startsWith("+") && !phone.startsWith("00")) {
-                                if (phone.startsWith("0")) phone = "966" + phone.substring(1)
+                            var cleanPhone = relative.phone.replace("""[\s\-\(\)]""".toRegex(), "")
+                            val formattedPhone = when {
+                                cleanPhone.startsWith("+") -> cleanPhone.substring(1)
+                                cleanPhone.startsWith("00") -> cleanPhone.substring(2)
+                                cleanPhone.startsWith("01") && cleanPhone.length == 11 -> "20" + cleanPhone.substring(1)
+                                cleanPhone.startsWith("05") && cleanPhone.length == 10 -> "966" + cleanPhone.substring(1)
+                                cleanPhone.startsWith("0") -> cleanPhone.substring(1)
+                                else -> cleanPhone
                             }
                             context.startActivity(Intent(Intent.ACTION_VIEW).apply {
-                                data = Uri.parse("https://api.whatsapp.com/send?phone=$phone")
+                                data = Uri.parse("https://api.whatsapp.com/send?phone=$formattedPhone")
                             })
                             viewModel.recordCommunication(relative.id, "رسالة", "تواصل عبر الواتساب")
                         }

@@ -209,12 +209,17 @@ fun RelativeCard(
                     containerColor = Color(0xFF1B8A4A),
                     contentColor = Color.White,
                     onClick = {
-                        var phone = relative.phone.replace("""[\s\-\(\)]""".toRegex(), "")
-                        if (!phone.startsWith("+") && !phone.startsWith("00")) {
-                            if (phone.startsWith("0")) phone = "966" + phone.substring(1)
+                        var cleanPhone = relative.phone.replace("""[\s\-\(\)]""".toRegex(), "")
+                        val formattedPhone = when {
+                            cleanPhone.startsWith("+") -> cleanPhone.substring(1)
+                            cleanPhone.startsWith("00") -> cleanPhone.substring(2)
+                            cleanPhone.startsWith("01") && cleanPhone.length == 11 -> "20" + cleanPhone.substring(1)
+                            cleanPhone.startsWith("05") && cleanPhone.length == 10 -> "966" + cleanPhone.substring(1)
+                            cleanPhone.startsWith("0") -> cleanPhone.substring(1)
+                            else -> cleanPhone
                         }
                         context.startActivity(Intent(Intent.ACTION_VIEW).apply {
-                            data = Uri.parse("https://api.whatsapp.com/send?phone=$phone")
+                            data = Uri.parse("https://api.whatsapp.com/send?phone=$formattedPhone")
                         })
                         viewModel.recordCommunication(relative.id, "رسالة", "تواصل سريع عبر الواتساب")
                     }

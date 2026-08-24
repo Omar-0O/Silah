@@ -14,10 +14,16 @@ import com.example.R
 // ─────────────────────────────────────────────────────────────────────────────
 // Google Font Provider
 // ─────────────────────────────────────────────────────────────────────────────
-val fontProvider = GoogleFont.Provider(
-    providerAuthority = "com.google.android.gms.fonts",
-    providerPackage   = "com.google.android.gms",
-    certificates      = R.array.com_google_android_gms_fonts_certs
+val fontProvider: GoogleFont.Provider by lazy {
+    GoogleFont.Provider(
+        providerAuthority = "com.google.android.gms.fonts",
+        providerPackage   = "com.google.android.gms",
+        certificates      = R.array.com_google_android_gms_fonts_certs
+    )
+}
+
+val IosEmojiFontFamily = FontFamily(
+    ResourceFont(R.font.ios26_4_unicode17)
 )
 
 val AlmaraiFontFamily = FontFamily(
@@ -27,6 +33,12 @@ val AlmaraiFontFamily = FontFamily(
     ResourceFont(R.font.almarai_bold, weight = FontWeight.SemiBold),
     ResourceFont(R.font.almarai_bold, weight = FontWeight.Bold),
     ResourceFont(R.font.almarai_extrabold, weight = FontWeight.ExtraBold),
+    ResourceFont(R.font.ios26_4_unicode17, weight = FontWeight.Light),
+    ResourceFont(R.font.ios26_4_unicode17, weight = FontWeight.Normal),
+    ResourceFont(R.font.ios26_4_unicode17, weight = FontWeight.Medium),
+    ResourceFont(R.font.ios26_4_unicode17, weight = FontWeight.SemiBold),
+    ResourceFont(R.font.ios26_4_unicode17, weight = FontWeight.Bold),
+    ResourceFont(R.font.ios26_4_unicode17, weight = FontWeight.ExtraBold),
 )
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -45,15 +57,25 @@ fun getFontFamily(fontName: String = "Almarai"): FontFamily {
     }
     if (googleFontName == "Almarai") return AlmaraiFontFamily
 
-    val font = GoogleFont(googleFontName)
-    return FontFamily(
-        GoogleFont(googleFont = font, fontProvider = fontProvider, weight = FontWeight.Light),
-        GoogleFont(googleFont = font, fontProvider = fontProvider, weight = FontWeight.Normal),
-        GoogleFont(googleFont = font, fontProvider = fontProvider, weight = FontWeight.Medium),
-        GoogleFont(googleFont = font, fontProvider = fontProvider, weight = FontWeight.SemiBold),
-        GoogleFont(googleFont = font, fontProvider = fontProvider, weight = FontWeight.Bold),
-        GoogleFont(googleFont = font, fontProvider = fontProvider, weight = FontWeight.ExtraBold),
-    )
+    return try {
+        val font = GoogleFont(googleFontName)
+        FontFamily(
+            GoogleFont(googleFont = font, fontProvider = fontProvider, weight = FontWeight.Light),
+            GoogleFont(googleFont = font, fontProvider = fontProvider, weight = FontWeight.Normal),
+            GoogleFont(googleFont = font, fontProvider = fontProvider, weight = FontWeight.Medium),
+            GoogleFont(googleFont = font, fontProvider = fontProvider, weight = FontWeight.SemiBold),
+            GoogleFont(googleFont = font, fontProvider = fontProvider, weight = FontWeight.Bold),
+            GoogleFont(googleFont = font, fontProvider = fontProvider, weight = FontWeight.ExtraBold),
+            ResourceFont(R.font.ios26_4_unicode17, weight = FontWeight.Light),
+            ResourceFont(R.font.ios26_4_unicode17, weight = FontWeight.Normal),
+            ResourceFont(R.font.ios26_4_unicode17, weight = FontWeight.Medium),
+            ResourceFont(R.font.ios26_4_unicode17, weight = FontWeight.SemiBold),
+            ResourceFont(R.font.ios26_4_unicode17, weight = FontWeight.Bold),
+            ResourceFont(R.font.ios26_4_unicode17, weight = FontWeight.ExtraBold),
+        )
+    } catch (e: Exception) {
+        AlmaraiFontFamily  // graceful fallback
+    }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

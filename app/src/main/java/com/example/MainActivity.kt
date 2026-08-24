@@ -22,6 +22,9 @@ import com.example.ui.screens.AppNavigation
 import com.example.ui.theme.MyApplicationTheme
 import com.example.viewmodel.RelativeViewModel
 
+import android.content.pm.PackageManager
+import androidx.core.content.ContextCompat
+
 class MainActivity : ComponentActivity() {
 
     private val viewModel: RelativeViewModel by viewModels()
@@ -59,16 +62,29 @@ class MainActivity : ComponentActivity() {
                 }
             }
 
-            // Connect launchers and request startup permissions
+            // Connect launchers and request startup permissions if not already granted
             LaunchedEffect(Unit) {
-                val permissionsList = mutableListOf(
-                    android.Manifest.permission.READ_CONTACTS,
-                    android.Manifest.permission.READ_CALL_LOG
-                )
-                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
-                    permissionsList.add(android.Manifest.permission.POST_NOTIFICATIONS)
+                val callLogGranted = ContextCompat.checkSelfPermission(this@MainActivity, android.Manifest.permission.READ_CALL_LOG) == PackageManager.PERMISSION_GRANTED
+                if (callLogGranted) {
+                    viewModel.syncCallLogsWithRelatives(applicationContext)
                 }
-                permissionLauncher.launch(permissionsList.toTypedArray())
+
+                val ungrantedPermissions = mutableListOf<String>()
+                if (ContextCompat.checkSelfPermission(this@MainActivity, android.Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED) {
+                    ungrantedPermissions.add(android.Manifest.permission.READ_CONTACTS)
+                }
+                if (!callLogGranted) {
+                    ungrantedPermissions.add(android.Manifest.permission.READ_CALL_LOG)
+                }
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+                    if (ContextCompat.checkSelfPermission(this@MainActivity, android.Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                        ungrantedPermissions.add(android.Manifest.permission.POST_NOTIFICATIONS)
+                    }
+                }
+
+                if (ungrantedPermissions.isNotEmpty()) {
+                    permissionLauncher.launch(ungrantedPermissions.toTypedArray())
+                }
 
                 viewModel.setExportLauncher {
                     exportLauncher.launch(viewModel.suggestedBackupName())

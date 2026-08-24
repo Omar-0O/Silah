@@ -556,28 +556,27 @@ private fun InstaPaySupportModal(
                         shape = RoundedCornerShape(14.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = PrimaryGreen)
                     ) {
-                        Icon(Icons.Outlined.Launch, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Icon(Icons.Outlined.OpenInNew, contentDescription = null, modifier = Modifier.size(18.dp))
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(if (lang == "en") "Open InstaPay Link" else "فتح رابط InstaPay", fontWeight = FontWeight.Bold)
                     }
 
-                    // QR Code
-                    qrBitmap?.let { bmp ->
-                        Text(
-                            text = if (lang == "en") "Scan QR Code with InstaPay app" else "امسح الـ QR Code من تطبيق InstaPay",
-                            fontSize = 11.sp,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Image(
-                            bitmap = bmp,
-                            contentDescription = "InstaPay QR Code",
-                            modifier = Modifier
-                                .size(140.dp)
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(Color.White)
-                                .padding(8.dp)
-                        )
-                    }
+                    // QR Code Section
+                    Text(
+                        text = if (lang == "en") "Scan QR Code with InstaPay app" else "امسح الـ QR Code من تطبيق InstaPay",
+                        fontSize = 11.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Image(
+                        painter = androidx.compose.ui.res.painterResource(id = com.example.R.drawable.instapay_qr),
+                        contentDescription = "InstaPay QR Code",
+                        contentScale = androidx.compose.ui.layout.ContentScale.Fit,
+                        modifier = Modifier
+                            .size(200.dp)
+                            .clip(RoundedCornerShape(16.dp))
+                            .background(Color.White)
+                            .padding(8.dp)
+                    )
 
                     TextButton(onClick = onDismiss) {
                         Text(if (lang == "en") "Close" else "إغلاق", color = MaterialTheme.colorScheme.onSurfaceVariant)
