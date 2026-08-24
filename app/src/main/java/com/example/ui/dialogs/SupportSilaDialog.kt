@@ -91,7 +91,7 @@ fun SupportSilaDialog(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = if (selectedLanguage == "en") "🤍 Support Sila" else "🤍 ادعم صِلَةِ",
+                            text = if (selectedLanguage == "en") "Support Sila 🤍" else "ادعم صِلَةِ 🤍",
                             fontSize = 20.sp,
                             fontWeight = FontWeight.Bold,
                             color = PrimaryGreen
@@ -153,7 +153,7 @@ fun SupportSilaDialog(
 
                     // Personal Impact Section (Real application data only)
                     Text(
-                        text = if (selectedLanguage == "en") "🤍 Your Sila Impact" else "🤍 أثرك في صِلَةِ",
+                        text = if (selectedLanguage == "en") "Your Sila Impact 🤍" else "أثرك في صِلَةِ 🤍",
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface
@@ -248,7 +248,7 @@ fun SupportSilaDialog(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
-                                    text = if (selectedLanguage == "en") "🤍 Thank you for supporting Sila!" else "🤍 شكرًا لدعمك لصِلَة",
+                                    text = if (selectedLanguage == "en") "Thank you for supporting Sila! 🤍" else "شكرًا لدعمك لصِلَة 🤍",
                                     fontWeight = FontWeight.Bold,
                                     color = Color(0xFFB45309),
                                     fontSize = 14.sp
@@ -440,8 +440,6 @@ private fun InstaPaySupportModal(
     onActionDone: () -> Unit
 ) {
     val context = LocalContext.current
-    var selectedAmount by remember { mutableStateOf("50 EGP") }
-    var customAmount by remember { mutableStateOf("") }
     val layoutDirection = if (lang == "en") LayoutDirection.Ltr else LayoutDirection.Rtl
 
     var qrBitmap by remember { mutableStateOf<androidx.compose.ui.graphics.ImageBitmap?>(null) }
@@ -472,42 +470,7 @@ private fun InstaPaySupportModal(
                         color = PrimaryGreen
                     )
 
-                    // Choose Amount Section
-                    Text(
-                        text = if (lang == "en") "Select Amount (Optional)" else "اختر المبلغ (اختياري)",
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        modifier = Modifier.fillMaxWidth()
-                    )
 
-                    val amounts = listOf("10 EGP", "50 EGP", "100 EGP", "500 EGP", "مبلغ آخر")
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)
-                    ) {
-                        amounts.forEach { amt ->
-                            val isSelected = selectedAmount == amt
-                            FilterChip(
-                                selected = isSelected,
-                                onClick = { selectedAmount = amt },
-                                label = { Text(amt, fontSize = 11.sp) },
-                                modifier = Modifier.weight(1f)
-                            )
-                        }
-                    }
-
-                    if (selectedAmount == "مبلغ آخر") {
-                        OutlinedTextField(
-                            value = customAmount,
-                            onValueChange = { customAmount = it },
-                            label = { Text(if (lang == "en") "Custom Amount (EGP)" else "المبلغ بالجنيه") },
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                            singleLine = true,
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                    }
-
-                    HorizontalDivider()
 
                     // IPA Box
                     Card(
@@ -595,8 +558,6 @@ private fun WalletSupportModal(
     onActionDone: () -> Unit
 ) {
     val context = LocalContext.current
-    var selectedAmount by remember { mutableStateOf("50 EGP") }
-    var customAmount by remember { mutableStateOf("") }
     val layoutDirection = if (lang == "en") LayoutDirection.Ltr else LayoutDirection.Rtl
 
     var qrBitmap by remember { mutableStateOf<androidx.compose.ui.graphics.ImageBitmap?>(null) }
@@ -627,42 +588,7 @@ private fun WalletSupportModal(
                         color = PrimaryGreen
                     )
 
-                    // Choose Amount Section
-                    Text(
-                        text = if (lang == "en") "Select Amount (Optional)" else "اختر المبلغ (اختياري)",
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        modifier = Modifier.fillMaxWidth()
-                    )
 
-                    val amounts = listOf("10 EGP", "50 EGP", "100 EGP", "500 EGP", "مبلغ آخر")
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)
-                    ) {
-                        amounts.forEach { amt ->
-                            val isSelected = selectedAmount == amt
-                            FilterChip(
-                                selected = isSelected,
-                                onClick = { selectedAmount = amt },
-                                label = { Text(amt, fontSize = 11.sp) },
-                                modifier = Modifier.weight(1f)
-                            )
-                        }
-                    }
-
-                    if (selectedAmount == "مبلغ آخر") {
-                        OutlinedTextField(
-                            value = customAmount,
-                            onValueChange = { customAmount = it },
-                            label = { Text(if (lang == "en") "Custom Amount (EGP)" else "المبلغ بالجنيه") },
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                            singleLine = true,
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                    }
-
-                    HorizontalDivider()
 
                     // Wallet Phone Box
                     Card(
