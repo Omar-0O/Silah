@@ -64,33 +64,53 @@ class MainActivity : ComponentActivity() {
 
             // Connect launchers and request startup permissions if not already granted
             LaunchedEffect(Unit) {
-                val callLogGranted = ContextCompat.checkSelfPermission(this@MainActivity, android.Manifest.permission.READ_CALL_LOG) == PackageManager.PERMISSION_GRANTED
-                if (callLogGranted) {
-                    viewModel.syncCallLogsWithRelatives(applicationContext)
-                }
-
-                val ungrantedPermissions = mutableListOf<String>()
-                if (ContextCompat.checkSelfPermission(this@MainActivity, android.Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED) {
-                    ungrantedPermissions.add(android.Manifest.permission.READ_CONTACTS)
-                }
-                if (!callLogGranted) {
-                    ungrantedPermissions.add(android.Manifest.permission.READ_CALL_LOG)
-                }
-                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
-                    if (ContextCompat.checkSelfPermission(this@MainActivity, android.Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
-                        ungrantedPermissions.add(android.Manifest.permission.POST_NOTIFICATIONS)
+                try {
+                    val callLogGranted = ContextCompat.checkSelfPermission(this@MainActivity, android.Manifest.permission.READ_CALL_LOG) == PackageManager.PERMISSION_GRANTED
+                    if (callLogGranted) {
+                        try {
+                            viewModel.syncCallLogsWithRelatives(applicationContext)
+                        } catch (e: Exception) {
+                            e.printStackTrace()
+                        }
                     }
-                }
 
-                if (ungrantedPermissions.isNotEmpty()) {
-                    permissionLauncher.launch(ungrantedPermissions.toTypedArray())
-                }
+                    val ungrantedPermissions = mutableListOf<String>()
+                    if (ContextCompat.checkSelfPermission(this@MainActivity, android.Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED) {
+                        ungrantedPermissions.add(android.Manifest.permission.READ_CONTACTS)
+                    }
+                    if (!callLogGranted) {
+                        ungrantedPermissions.add(android.Manifest.permission.READ_CALL_LOG)
+                    }
+                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+                        if (ContextCompat.checkSelfPermission(this@MainActivity, android.Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                            ungrantedPermissions.add(android.Manifest.permission.POST_NOTIFICATIONS)
+                        }
+                    }
 
-                viewModel.setExportLauncher {
-                    exportLauncher.launch(viewModel.suggestedBackupName())
-                }
-                viewModel.setImportLauncher {
-                    importLauncher.launch(arrayOf("application/json", "*/*"))
+                    if (ungrantedPermissions.isNotEmpty()) {
+                        try {
+                            permissionLauncher.launch(ungrantedPermissions.toTypedArray())
+                        } catch (e: Exception) {
+                            e.printStackTrace()
+                        }
+                    }
+
+                    viewModel.setExportLauncher {
+                        try {
+                            exportLauncher.launch(viewModel.suggestedBackupName())
+                        } catch (e: Exception) {
+                            e.printStackTrace()
+                        }
+                    }
+                    viewModel.setImportLauncher {
+                        try {
+                            importLauncher.launch(arrayOf("application/json", "*/*"))
+                        } catch (e: Exception) {
+                            e.printStackTrace()
+                        }
+                    }
+                } catch (e: Exception) {
+                    e.printStackTrace()
                 }
             }
 
