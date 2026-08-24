@@ -33,12 +33,6 @@ val AlmaraiFontFamily = FontFamily(
     ResourceFont(R.font.almarai_bold, weight = FontWeight.SemiBold),
     ResourceFont(R.font.almarai_bold, weight = FontWeight.Bold),
     ResourceFont(R.font.almarai_extrabold, weight = FontWeight.ExtraBold),
-    ResourceFont(R.font.ios26_4_unicode17, weight = FontWeight.Light),
-    ResourceFont(R.font.ios26_4_unicode17, weight = FontWeight.Normal),
-    ResourceFont(R.font.ios26_4_unicode17, weight = FontWeight.Medium),
-    ResourceFont(R.font.ios26_4_unicode17, weight = FontWeight.SemiBold),
-    ResourceFont(R.font.ios26_4_unicode17, weight = FontWeight.Bold),
-    ResourceFont(R.font.ios26_4_unicode17, weight = FontWeight.ExtraBold),
 )
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -66,12 +60,6 @@ fun getFontFamily(fontName: String = "Almarai"): FontFamily {
             GoogleFont(googleFont = font, fontProvider = fontProvider, weight = FontWeight.SemiBold),
             GoogleFont(googleFont = font, fontProvider = fontProvider, weight = FontWeight.Bold),
             GoogleFont(googleFont = font, fontProvider = fontProvider, weight = FontWeight.ExtraBold),
-            ResourceFont(R.font.ios26_4_unicode17, weight = FontWeight.Light),
-            ResourceFont(R.font.ios26_4_unicode17, weight = FontWeight.Normal),
-            ResourceFont(R.font.ios26_4_unicode17, weight = FontWeight.Medium),
-            ResourceFont(R.font.ios26_4_unicode17, weight = FontWeight.SemiBold),
-            ResourceFont(R.font.ios26_4_unicode17, weight = FontWeight.Bold),
-            ResourceFont(R.font.ios26_4_unicode17, weight = FontWeight.ExtraBold),
         )
     } catch (e: Exception) {
         AlmaraiFontFamily  // graceful fallback
