@@ -108,7 +108,7 @@ class ReminderWorker(
                 return when (degree) {
                     "والدان" -> {
                         when {
-                            cleanName.contains("أم", ignoreCase = true) || cleanName.contains("والدة", ignoreCase = true) ->
+                            cleanName.contains("أم", ignoreCase = true) || cleanName.contains("امي", ignoreCase = true) || cleanName.contains("أمي", ignoreCase = true) || cleanName.contains("والدة", ignoreCase = true) || cleanName.contains("والدتي", ignoreCase = true) ->
                                 "بقالك فترة مش بتطمن على والدتك 💚"
                             else -> "بقالك فترة مش بتطمن على والدك 💚"
                         }

@@ -279,8 +279,8 @@ fun RelativeCard(
                     IconActionButton(
                         icon = Icons.Outlined.Delete,
                         contentDescription = if (lang == "en") "Delete" else "حذف",
-                        containerColor = Color(0xFFFDE8E8),
-                        contentColor = Color(0xFFD32F2F),
+                        containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.5f),
+                        contentColor = MaterialTheme.colorScheme.error,
                         onClick = { showDeleteConfirm = true }
                     )
                 }
@@ -347,19 +347,19 @@ private fun PrimaryActionButton(
         shape = RoundedCornerShape(12.dp),
         color = containerColor,
         contentColor = contentColor,
-        modifier = Modifier.height(36.dp)
+        modifier = Modifier.height(40.dp)
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center,
-            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
+            modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp)
         ) {
             Icon(
                 imageVector = icon,
                 contentDescription = label,
-                modifier = Modifier.size(15.dp)
+                modifier = Modifier.size(16.dp)
             )
-            Spacer(modifier = Modifier.width(5.dp))
+            Spacer(modifier = Modifier.width(6.dp))
             Text(
                 text = label,
                 fontSize = 12.sp,
@@ -386,13 +386,13 @@ private fun IconActionButton(
         shape = RoundedCornerShape(10.dp),
         color = containerColor,
         contentColor = contentColor,
-        modifier = Modifier.size(36.dp)
+        modifier = Modifier.size(40.dp)
     ) {
         Box(contentAlignment = Alignment.Center) {
             Icon(
                 imageVector = icon,
                 contentDescription = contentDescription,
-                modifier = Modifier.size(17.dp)
+                modifier = Modifier.size(18.dp)
             )
         }
     }

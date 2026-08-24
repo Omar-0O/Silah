@@ -18,34 +18,36 @@ import androidx.compose.ui.platform.LocalContext
 
 private val DarkColorScheme = darkColorScheme(
     primary              = PrimaryGreenLight,        // #4DB882
-    onPrimary            = Color(0xFF062010),
-    primaryContainer     = Color(0xFF0F3222),
-    onPrimaryContainer   = Color(0xFFA8DFC0),
+    onPrimary            = Color(0xFF041B0E),
+    primaryContainer     = Color(0xFF143B28),
+    onPrimaryContainer   = Color(0xFFB5EAD0),
 
     secondary            = SageLight,                // #8DB39E
-    onSecondary          = Color(0xFF0A1E12),
-    secondaryContainer   = Color(0xFF1A3228),
-    onSecondaryContainer = Color(0xFFBBD6C7),
+    onSecondary          = Color(0xFF081B10),
+    secondaryContainer   = Color(0xFF1B382B),
+    onSecondaryContainer = Color(0xFFC7E6D6),
 
     tertiary             = GoldGlow,                 // #F5D278
     onTertiary           = Color(0xFF2A1C00),
-    tertiaryContainer    = Color(0xFF3A2800),
-    onTertiaryContainer  = Color(0xFFF5D278),
+    tertiaryContainer    = Color(0xFF402E05),
+    onTertiaryContainer  = Color(0xFFF7DE98),
 
     background           = DeepCharcoal,             // #0C1410
-    onBackground         = Color(0xFFECF3EE),
+    onBackground         = Color(0xFFF0F7F2),
 
     surface              = SurfaceDark,              // #121D16
-    onSurface            = Color(0xFFECF3EE),
+    onSurface            = Color(0xFFF0F7F2),
 
     surfaceVariant       = SurfaceDarkVariant,       // #1A2921
-    onSurfaceVariant     = Color(0xFF9BBFAA),
+    onSurfaceVariant     = Color(0xFFA5CBB4),
 
-    outline              = Color(0xFF2C4236),
-    outlineVariant       = Color(0xFF1E3028),
+    outline              = Color(0xFF284032),
+    outlineVariant       = Color(0xFF1C3024),
 
     error                = Color(0xFFFF6B6B),
-    onError              = Color(0xFF2D0000),
+    onError              = Color(0xFF380000),
+    errorContainer       = Color(0xFF4A1818),
+    onErrorContainer     = Color(0xFFFFDAD6),
 )
 
 private val LightColorScheme = lightColorScheme(

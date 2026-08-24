@@ -12,6 +12,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.outlined.Chat
+import androidx.compose.material.icons.automirrored.outlined.Notes
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
@@ -253,7 +255,7 @@ fun RelativeDetailScreen(
                     )
                     // WhatsApp
                     DetailActionButton(
-                        icon = Icons.Outlined.Chat,
+                        icon = Icons.AutoMirrored.Outlined.Chat,
                         label = "WhatsApp",
                         containerColor = Color(0xFF1B8A4A),
                         contentColor = Color.White,
@@ -318,7 +320,7 @@ fun RelativeDetailScreen(
                         if (relative.notes.isNotEmpty()) {
                             HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
                             InfoRow(
-                                icon = Icons.Outlined.Notes,
+                                icon = Icons.AutoMirrored.Outlined.Notes,
                                 label = if (lang == "en") "Notes" else "ملاحظات",
                                 value = relative.notes
                             )

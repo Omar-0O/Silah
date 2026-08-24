@@ -79,10 +79,10 @@ fun DueRelativesCarousel(
         if (dueRelatives.isEmpty()) {
             Card(
                 shape = RoundedCornerShape(20.dp),
-                colors = CardDefaults.cardColors(containerColor = Color(0xFFECF5F0)),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f)),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .border(1.dp, Color(0xFF94DAB2).copy(alpha = 0.3f), RoundedCornerShape(20.dp))
+                    .border(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.25f), RoundedCornerShape(20.dp))
             ) {
                 Row(
                     modifier = Modifier.padding(16.dp),
@@ -92,7 +92,7 @@ fun DueRelativesCarousel(
                     Icon(
                         imageVector = Icons.Default.CheckCircle,
                         contentDescription = null,
-                        tint = PrimaryGreen,
+                        tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.size(36.dp)
                     )
                     Column {
@@ -100,12 +100,12 @@ fun DueRelativesCarousel(
                             text = if (lang == "en") "All relatives are connected! 🎉" else "جميع أرحامكِ موصولون بالكامل! 🎉",
                             fontSize = 14.sp,
                             fontWeight = FontWeight.Bold,
-                            color = PrimaryGreen
+                            color = MaterialTheme.colorScheme.primary
                         )
                         Text(
                             text = if (lang == "en") "Great job staying in touch with your family!" else "ما شاء الله، التزامكِ رائع ويقرب المسافات. طابت أيامكِ ببركة الود والرحمة.",
                             fontSize = 12.sp,
-                            color = SecondaryGreyGreen
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }

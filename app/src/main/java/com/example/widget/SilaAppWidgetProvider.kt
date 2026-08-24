@@ -39,7 +39,9 @@ class SilaAppWidgetProvider : AppWidgetProvider() {
             views.setEmptyView(R.id.widget_list, R.id.widget_empty)
 
             // Setup PendingIntent template for ListView item clicks (Dialing contact)
-            val callIntent = Intent(Intent.ACTION_DIAL)
+            val callIntent = Intent(context, MainActivity::class.java).apply {
+                action = Intent.ACTION_DIAL
+            }
             val callPendingIntent = PendingIntent.getActivity(
                 context,
                 0,

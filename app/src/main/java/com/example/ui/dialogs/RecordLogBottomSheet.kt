@@ -2,12 +2,13 @@ package com.example.ui.dialogs
 
 import android.view.HapticFeedbackConstants
 import android.widget.Toast
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Chat
 import androidx.compose.material.icons.filled.Call
-import androidx.compose.material.icons.filled.Chat
 import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
@@ -40,12 +41,12 @@ fun RecordLogBottomSheet(
     val commTypes = if (lang == "en") listOf(
         Triple("مكالمة", "Phone Call 📞", Icons.Default.Call),
         Triple("زيارة", "Family Visit 🏠", Icons.Default.People),
-        Triple("رسالة", "Message/WhatsApp ✉️", Icons.Default.Chat),
+        Triple("رسالة", "Message/WhatsApp ✉️", Icons.AutoMirrored.Filled.Chat),
         Triple("هدية", "Gift/Occasion 🎁", Icons.Default.Star)
     ) else listOf(
         Triple("مكالمة", "مكالمة هاتفية 📞", Icons.Default.Call),
         Triple("زيارة", "زيارة عائلية 🏠", Icons.Default.People),
-        Triple("رسالة", "رسالة نصية/واتساب ✉️", Icons.Default.Chat),
+        Triple("رسالة", "رسالة نصية/واتساب ✉️", Icons.AutoMirrored.Filled.Chat),
         Triple("هدية", "هدية/مناسبة 🎁", Icons.Default.Star)
     )
 
@@ -76,11 +77,12 @@ fun RecordLogBottomSheet(
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
-            Row(
+            LazyRow(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                contentPadding = PaddingValues(horizontal = 2.dp)
             ) {
-                commTypes.forEach { (type, label, icon) ->
+                items(commTypes) { (type, label, icon) ->
                     val isSelected = selectedType == type
                     FilterChip(
                         selected = isSelected,
