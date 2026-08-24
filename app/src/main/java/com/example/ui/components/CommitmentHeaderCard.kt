@@ -235,6 +235,83 @@ fun CommitmentHeaderCard(
                     }
                 }
             }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // ── Glassmorphic Stats Row ──────────────────────────────────────────
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(Color.Black.copy(alpha = 0.18f), RoundedCornerShape(16.dp))
+                    .padding(vertical = 10.dp, horizontal = 12.dp),
+                horizontalArrangement = Arrangement.SpaceAround,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Stat 1: Connected Relatives
+                HeaderStatItem(
+                    value = "$uniqueRelativesContacted/$totalRelativesCount",
+                    label = if (lang == "en") "Relatives Tied" else "الأقارب الموصولون",
+                    icon = "🤝"
+                )
+
+                // Vertical Divider
+                Box(
+                    modifier = Modifier
+                        .height(24.dp)
+                        .width(1.dp)
+                        .background(Color.White.copy(alpha = 0.15f))
+                )
+
+                // Stat 2: Total Logs
+                HeaderStatItem(
+                    value = "$totalLogsCount",
+                    label = if (lang == "en") "Total Ties" else "إجمالي التوصيلات",
+                    icon = "📜"
+                )
+
+                // Vertical Divider
+                Box(
+                    modifier = Modifier
+                        .height(24.dp)
+                        .width(1.dp)
+                        .background(Color.White.copy(alpha = 0.15f))
+                )
+
+                // Stat 3: Active Days
+                HeaderStatItem(
+                    value = "$uniqueDaysCount",
+                    label = if (lang == "en") "Active Days" else "أيام التواصل",
+                    icon = "✨"
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun HeaderStatItem(
+    value: String,
+    label: String,
+    icon: String
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(6.dp)
+    ) {
+        Text(text = icon, fontSize = 14.sp)
+        Column {
+            Text(
+                text = value,
+                fontSize = 13.sp,
+                fontWeight = FontWeight.Bold,
+                color = SoftGold
+            )
+            Text(
+                text = label,
+                fontSize = 9.sp,
+                color = Color.White.copy(alpha = 0.65f),
+                fontWeight = FontWeight.Normal
+            )
         }
     }
 }

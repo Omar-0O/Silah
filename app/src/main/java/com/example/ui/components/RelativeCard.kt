@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.Chat
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -89,13 +90,21 @@ fun RelativeCard(
                 horizontalArrangement = Arrangement.spacedBy(14.dp)
             ) {
 
-                // Avatar circle
-                RelativeAvatar(
-                    name = relative.name,
-                    photoUri = relative.photoUri,
-                    size = 52.dp,
-                    fontSize = 22.sp
-                )
+                // Avatar circle with status ring indicator
+                Box(contentAlignment = Alignment.Center) {
+                    Box(
+                        modifier = Modifier
+                            .size(58.dp)
+                            .clip(CircleShape)
+                            .background(statusColor.copy(alpha = 0.2f))
+                    )
+                    RelativeAvatar(
+                        name = relative.name,
+                        photoUri = relative.photoUri,
+                        size = 50.dp,
+                        fontSize = 21.sp
+                    )
+                }
 
                 // Name + degree + status row
                 Column(
@@ -104,7 +113,7 @@ fun RelativeCard(
                 ) {
                     Text(
                         text = relative.name,
-                        fontSize = 16.sp,
+                        fontSize = 17.sp,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface,
                         maxLines = 1,
@@ -118,16 +127,28 @@ fun RelativeCard(
                     )
                 }
 
-                // Status pill
+                // Status pill with custom label & emoji
                 Surface(
                     shape = RoundedCornerShape(50.dp),
-                    color = statusColor.copy(alpha = 0.12f),
+                    color = statusColor.copy(alpha = 0.14f),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, statusColor.copy(alpha = 0.3f))
                 ) {
-                    Text(
-                        text = statusEmoji(status),
-                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
-                        fontSize = 16.sp
-                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
+                    ) {
+                        Text(
+                            text = statusEmoji(status),
+                            fontSize = 14.sp
+                        )
+                        Text(
+                            text = if (lang == "en") status.labelEn else status.label,
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = statusColor
+                        )
+                    }
                 }
             }
 
@@ -181,20 +202,21 @@ fun RelativeCard(
                 color = MaterialTheme.colorScheme.outline.copy(alpha = 0.35f)
             )
 
-            // ── Action Bar ────────────────────────────────────────────────────
+            // ── Action Bar (All 5 buttons perfectly aligned on the exact same horizontal line) ──
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 10.dp, vertical = 8.dp),
-                horizontalArrangement = Arrangement.SpaceEvenly,
+                    .padding(horizontal = 10.dp, vertical = 10.dp),
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Call
-                ActionButton(
+                // 1. Call
+                UniformActionButton(
                     icon = Icons.Outlined.Call,
                     label = if (lang == "en") "Call" else "اتصال",
                     containerColor = MaterialTheme.colorScheme.primary,
                     contentColor = Color.White,
+                    modifier = Modifier.weight(1.1f),
                     onClick = {
                         context.startActivity(Intent(Intent.ACTION_DIAL).apply {
                             data = Uri.parse("tel:${relative.phone}")
@@ -202,12 +224,13 @@ fun RelativeCard(
                     }
                 )
 
-                // WhatsApp
-                ActionButton(
-                    icon = Icons.Outlined.Chat,
-                    label = "WhatsApp",
+                // 2. WhatsApp
+                UniformActionButton(
+                    icon = Icons.AutoMirrored.Outlined.Chat,
+                    label = if (lang == "en") "WA" else "واتس",
                     containerColor = Color(0xFF1B8A4A),
                     contentColor = Color.White,
+                    modifier = Modifier.weight(1.1f),
                     onClick = {
                         var cleanPhone = relative.phone.replace("""[\s\-\(\)]""".toRegex(), "")
                         val formattedPhone = when {
@@ -225,30 +248,33 @@ fun RelativeCard(
                     }
                 )
 
-                // Log Contact
-                ActionIconChip(
+                // 3. Log Contact
+                UniformActionButton(
                     icon = Icons.Outlined.CheckCircle,
                     label = if (lang == "en") "Log" else "سجّل",
-                    tint = SoftGold,
-                    bgColor = SoftGold.copy(alpha = 0.12f),
+                    containerColor = SoftGold.copy(alpha = 0.9f),
+                    contentColor = Color(0xFF2A1C00),
+                    modifier = Modifier.weight(1f),
                     onClick = { viewModel.showRecordLogDialog.value = relative }
                 )
 
-                // Edit
-                ActionIconChip(
+                // 4. Edit
+                UniformActionButton(
                     icon = Icons.Outlined.Edit,
                     label = if (lang == "en") "Edit" else "تعديل",
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    bgColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                    contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.weight(1f),
                     onClick = { viewModel.showEditRelativeDialog.value = relative }
                 )
 
-                // Delete
-                ActionIconChip(
+                // 5. Delete
+                UniformActionButton(
                     icon = Icons.Outlined.Delete,
-                    label = if (lang == "en") "Delete" else "حذف",
-                    tint = Color(0xFFD32F2F),
-                    bgColor = Color(0xFFD32F2F).copy(alpha = 0.1f),
+                    label = if (lang == "en") "Del" else "حذف",
+                    containerColor = Color(0xFFFDE8E8),
+                    contentColor = Color(0xFFD32F2F),
+                    modifier = Modifier.weight(0.9f),
                     onClick = { showDeleteConfirm = true }
                 )
             }
@@ -298,67 +324,44 @@ fun RelativeCard(
     }
 }
 
-// ─────────────────────────────────────────────────
-// Pill-button for primary actions (Call / WhatsApp)
-// ─────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// Uniform Action Button — All 5 buttons strictly share height, shape & baseline
+// ─────────────────────────────────────────────────────────────────────────────
 @Composable
-private fun ActionButton(
+private fun UniformActionButton(
     icon: ImageVector,
     label: String,
     containerColor: Color,
     contentColor: Color,
+    modifier: Modifier = Modifier,
     onClick: () -> Unit
 ) {
-    Button(
+    Surface(
         onClick = onClick,
-        colors = ButtonDefaults.buttonColors(
-            containerColor = containerColor,
-            contentColor = contentColor
-        ),
-        shape = RoundedCornerShape(12.dp),
-        contentPadding = PaddingValues(horizontal = 14.dp, vertical = 0.dp),
-        modifier = Modifier.height(36.dp)
+        shape = RoundedCornerShape(10.dp),
+        color = containerColor,
+        contentColor = contentColor,
+        modifier = modifier.height(36.dp)
     ) {
-        Icon(icon, contentDescription = label, modifier = Modifier.size(15.dp))
-        Spacer(modifier = Modifier.width(5.dp))
-        Text(label, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
-    }
-}
-
-// ─────────────────────────────────────────────────
-// Compact icon-chip for secondary actions (Log/Edit/Delete)
-// ─────────────────────────────────────────────────
-@Composable
-private fun ActionIconChip(
-    icon: ImageVector,
-    label: String,
-    tint: Color,
-    bgColor: Color,
-    onClick: () -> Unit
-) {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(2.dp)
-    ) {
-        IconButton(
-            onClick = onClick,
-            modifier = Modifier
-                .size(36.dp)
-                .background(bgColor, RoundedCornerShape(10.dp))
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center,
+            modifier = Modifier.padding(horizontal = 4.dp, vertical = 4.dp)
         ) {
             Icon(
                 imageVector = icon,
                 contentDescription = label,
-                tint = tint,
-                modifier = Modifier.size(18.dp)
+                modifier = Modifier.size(14.dp)
+            )
+            Spacer(modifier = Modifier.width(3.dp))
+            Text(
+                text = label,
+                fontSize = 10.5.sp,
+                fontWeight = FontWeight.Bold,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
         }
-        Text(
-            text = label,
-            fontSize = 9.sp,
-            color = tint.copy(alpha = 0.8f),
-            fontWeight = FontWeight.Medium
-        )
     }
 }
 
