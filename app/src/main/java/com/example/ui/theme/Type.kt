@@ -22,9 +22,7 @@ val fontProvider: GoogleFont.Provider by lazy {
     )
 }
 
-val IosEmojiFontFamily = FontFamily(
-    ResourceFont(R.font.ios26_4_unicode17)
-)
+val IosEmojiFontFamily = FontFamily.Default
 
 val AlmaraiFontFamily = FontFamily(
     ResourceFont(R.font.almarai_light, weight = FontWeight.Light),
