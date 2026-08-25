@@ -236,82 +236,83 @@ fun CommitmentHeaderCard(
                 }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // ── Glassmorphic Stats Row ──────────────────────────────────────────
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(Color.Black.copy(alpha = 0.18f), RoundedCornerShape(16.dp))
-                    .padding(vertical = 10.dp, horizontal = 12.dp),
-                horizontalArrangement = Arrangement.SpaceAround,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                // Stat 1: Connected Relatives
-                HeaderStatItem(
-                    value = "$uniqueRelativesContacted/$totalRelativesCount",
-                    label = if (lang == "en") "Relatives Tied" else "الأقارب الموصولون",
-                    icon = "🤝"
-                )
-
-                // Vertical Divider
-                Box(
+            // ── Glassmorphic Stats Row (Only shown if user has added relatives) ─
+            if (totalRelativesCount > 0) {
+                Spacer(modifier = Modifier.height(16.dp))
+                Row(
                     modifier = Modifier
-                        .height(24.dp)
-                        .width(1.dp)
-                        .background(Color.White.copy(alpha = 0.15f))
-                )
+                        .fillMaxWidth()
+                        .background(Color.Black.copy(alpha = 0.22f), RoundedCornerShape(16.dp))
+                        .padding(vertical = 10.dp, horizontal = 6.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    // Stat 1: Connected Relatives
+                    HeaderStatItem(
+                        value = "$uniqueRelativesContacted/$totalRelativesCount",
+                        label = if (lang == "en") "Tied" else "الأقارب الموصولون"
+                    )
 
-                // Stat 2: Total Logs
-                HeaderStatItem(
-                    value = "$totalLogsCount",
-                    label = if (lang == "en") "Total Ties" else "إجمالي التوصيلات",
-                    icon = "📜"
-                )
+                    // Vertical Divider
+                    Box(
+                        modifier = Modifier
+                            .height(20.dp)
+                            .width(1.dp)
+                            .background(Color.White.copy(alpha = 0.18f))
+                    )
 
-                // Vertical Divider
-                Box(
-                    modifier = Modifier
-                        .height(24.dp)
-                        .width(1.dp)
-                        .background(Color.White.copy(alpha = 0.15f))
-                )
+                    // Stat 2: Total Logs
+                    HeaderStatItem(
+                        value = "$totalLogsCount",
+                        label = if (lang == "en") "Total" else "إجمالي التوصيلات"
+                    )
 
-                // Stat 3: Active Days
-                HeaderStatItem(
-                    value = "$uniqueDaysCount",
-                    label = if (lang == "en") "Active Days" else "أيام التواصل",
-                    icon = "✨"
-                )
+                    // Vertical Divider
+                    Box(
+                        modifier = Modifier
+                            .height(20.dp)
+                            .width(1.dp)
+                            .background(Color.White.copy(alpha = 0.18f))
+                    )
+
+                    // Stat 3: Active Days
+                    HeaderStatItem(
+                        value = "$uniqueDaysCount",
+                        label = if (lang == "en") "Days" else "أيام التواصل"
+                    )
+                }
             }
         }
     }
 }
 
 @Composable
-private fun HeaderStatItem(
+private fun RowScope.HeaderStatItem(
     value: String,
-    label: String,
-    icon: String
+    label: String
 ) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(6.dp)
+    Column(
+        modifier = Modifier
+            .weight(1f)
+            .padding(horizontal = 2.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
     ) {
-        Text(text = icon, fontSize = 14.sp)
-        Column {
-            Text(
-                text = value,
-                fontSize = 13.sp,
-                fontWeight = FontWeight.Bold,
-                color = SoftGold
-            )
-            Text(
-                text = label,
-                fontSize = 9.sp,
-                color = Color.White.copy(alpha = 0.65f),
-                fontWeight = FontWeight.Normal
-            )
-        }
+        Text(
+            text = value,
+            fontSize = 12.sp,
+            fontWeight = FontWeight.Bold,
+            color = SoftGold,
+            maxLines = 1,
+            softWrap = false
+        )
+        Text(
+            text = label,
+            fontSize = 9.sp,
+            color = Color.White.copy(alpha = 0.8f),
+            fontWeight = FontWeight.Medium,
+            maxLines = 1,
+            softWrap = false
+        )
     }
 }

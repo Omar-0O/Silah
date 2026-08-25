@@ -79,13 +79,20 @@ enum class SilaTab(
 // ── App Navigation (Splash → Onboarding → Main) ───────────────────────────────
 @Composable
 fun AppNavigation(viewModel: RelativeViewModel) {
-    val prefs = androidx.compose.ui.platform.LocalContext.current
-        .getSharedPreferences("app_settings", android.content.Context.MODE_PRIVATE)
-
-    var showOnboarding by remember {
-        mutableStateOf(!(try { prefs.getBoolean("onboarding_done", false) } catch (e: Exception) { false }))
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val prefs = remember(context) { context.getSharedPreferences("app_settings", android.content.Context.MODE_PRIVATE) }
+    
+    var onboardingDone by remember {
+        mutableStateOf(
+            try { prefs.getBoolean("onboarding_done", false) } catch (e: Exception) { false }
+        )
     }
+
+    var forceShowOnboarding by remember { mutableStateOf(false) }
     var showSplash by remember { mutableStateOf(true) }
+
+    // Show onboarding if not completed yet, OR if manually requested
+    val showOnboarding = forceShowOnboarding || !onboardingDone
 
     when {
         showSplash -> SplashScreen(onFinished = { showSplash = false })
@@ -93,16 +100,23 @@ fun AppNavigation(viewModel: RelativeViewModel) {
             viewModel = viewModel,
             onFinished = {
                 prefs.edit().putBoolean("onboarding_done", true).apply()
-                showOnboarding = false
+                onboardingDone = true
+                forceShowOnboarding = false
             }
         )
-        else -> MainDashboardScreen(viewModel = viewModel)
+        else -> MainDashboardScreen(
+            viewModel = viewModel,
+            onReplayOnboarding = { forceShowOnboarding = true }
+        )
     }
 }
 
 // ── Main Dashboard Screen with Bottom Nav ────────────────────────────────────
 @Composable
-fun MainDashboardScreen(viewModel: RelativeViewModel) {
+fun MainDashboardScreen(
+    viewModel: RelativeViewModel,
+    onReplayOnboarding: () -> Unit = {}
+) {
     val showAddRelativeDialog by viewModel.showAddRelativeDialog.collectAsState()
     val showEditRelativeDialog by viewModel.showEditRelativeDialog.collectAsState()
     val showSettingsDialog by viewModel.showSettingsDialog.collectAsState()
@@ -186,7 +200,8 @@ fun MainDashboardScreen(viewModel: RelativeViewModel) {
             if (showSettingsDialog) {
                 SettingsDialog(
                     viewModel = viewModel,
-                    onDismiss = { viewModel.showSettingsDialog.value = false }
+                    onDismiss = { viewModel.showSettingsDialog.value = false },
+                    onReplayOnboarding = onReplayOnboarding
                 )
             }
             if (showRecordLogDialog != null) {

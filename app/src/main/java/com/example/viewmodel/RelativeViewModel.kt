@@ -430,29 +430,28 @@ data class DeviceContact(
         viewModelScope.launch(Dispatchers.IO) {
             isLoadingContacts.value = true
             val contactsList = mutableListOf<DeviceContact>()
+            val uri = android.provider.ContactsContract.CommonDataKinds.Phone.CONTENT_URI
+            
+            // Standard projection columns guaranteed to exist on ContactsContract.CommonDataKinds.Phone
+            val projection = arrayOf(
+                android.provider.ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME,
+                android.provider.ContactsContract.CommonDataKinds.Phone.NUMBER,
+                android.provider.ContactsContract.CommonDataKinds.Phone.PHOTO_URI
+            )
+
             try {
                 val contentResolver = context.contentResolver
-                val uri = android.provider.ContactsContract.CommonDataKinds.Phone.CONTENT_URI
-                val projection = arrayOf(
-                    android.provider.ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME,
-                    android.provider.ContactsContract.CommonDataKinds.Phone.NUMBER,
-                    android.provider.ContactsContract.CommonDataKinds.Phone.PHOTO_URI,
-                    "account_type"
-                )
                 contentResolver.query(uri, projection, null, null, null)?.use { cursor ->
                     val nameIndex = cursor.getColumnIndex(android.provider.ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME)
                     val numberIndex = cursor.getColumnIndex(android.provider.ContactsContract.CommonDataKinds.Phone.NUMBER)
                     val photoUriIndex = cursor.getColumnIndex(android.provider.ContactsContract.CommonDataKinds.Phone.PHOTO_URI)
-                    val accountTypeIndex = cursor.getColumnIndex("account_type")
                     while (cursor.moveToNext()) {
                         if (nameIndex != -1 && numberIndex != -1) {
-                            val name = cursor.getString(nameIndex) ?: ""
-                            val number = cursor.getString(numberIndex) ?: ""
+                            val name = cursor.getString(nameIndex)?.trim() ?: ""
+                            val number = cursor.getString(numberIndex)?.trim() ?: ""
                             val photoUri = if (photoUriIndex != -1) cursor.getString(photoUriIndex) else null
-                            val accountType = if (accountTypeIndex != -1) cursor.getString(accountTypeIndex) else null
-                            val isGoogle = accountType?.contains("google", ignoreCase = true) == true
                             if (name.isNotEmpty() && number.isNotEmpty()) {
-                                contactsList.add(DeviceContact(name, number, isGoogle, photoUri))
+                                contactsList.add(DeviceContact(name = name, phone = number, isGoogle = false, photoUri = photoUri))
                             }
                         }
                     }
@@ -460,9 +459,34 @@ data class DeviceContact(
             } catch (e: Exception) {
                 e.printStackTrace()
             }
+
+            // Fallback query with null projection if contactsList is empty due to custom OEM schema
+            if (contactsList.isEmpty()) {
+                try {
+                    val contentResolver = context.contentResolver
+                    contentResolver.query(uri, null, null, null, null)?.use { cursor ->
+                        val nameIndex = cursor.getColumnIndex(android.provider.ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME)
+                        val numberIndex = cursor.getColumnIndex(android.provider.ContactsContract.CommonDataKinds.Phone.NUMBER)
+                        val photoUriIndex = cursor.getColumnIndex(android.provider.ContactsContract.CommonDataKinds.Phone.PHOTO_URI)
+                        while (cursor.moveToNext()) {
+                            if (nameIndex != -1 && numberIndex != -1) {
+                                val name = cursor.getString(nameIndex)?.trim() ?: ""
+                                val number = cursor.getString(numberIndex)?.trim() ?: ""
+                                val photoUri = if (photoUriIndex != -1) cursor.getString(photoUriIndex) else null
+                                if (name.isNotEmpty() && number.isNotEmpty()) {
+                                    contactsList.add(DeviceContact(name = name, phone = number, isGoogle = false, photoUri = photoUri))
+                                }
+                            }
+                        }
+                    }
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+            }
+
             // Sort, remove duplicates, and update state
             deviceContacts.value = contactsList
-                .distinctBy { it.phone.replace("\\s|-|\\(|\\)".toRegex(), "") }
+                .distinctBy { com.example.data.CallLogManager.normalizePhoneNumber(it.phone).ifEmpty { it.phone } }
                 .sortedBy { it.name }
             isLoadingContacts.value = false
         }

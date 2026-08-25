@@ -12,4 +12,4 @@ package-lock.json
 local.properties
 .env
 debug.keystore
-
+*.keystore

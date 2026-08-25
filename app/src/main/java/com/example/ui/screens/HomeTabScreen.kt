@@ -88,22 +88,30 @@ fun HomeTabScreen(viewModel: RelativeViewModel) {
             TopAppBar(
                 title = {
                     Row(
+                        modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        com.example.ui.components.SilaUserAvatar(
-                            avatarId = userAvatarId,
-                            size = 42.dp,
-                            showBorder = true,
-                            modifier = Modifier.clickableNoRipple { showProfileDialog = true }
-                        )
-                        Text(
-                            text = if (userName.isNotBlank()) userName
-                                   else if (lang == "en") "Family Keeper" else "حافظ الأرحام",
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onBackground,
-                            fontSize = 17.sp
-                        )
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            com.example.ui.components.SilaUserAvatar(
+                                avatarId = userAvatarId,
+                                size = 42.dp,
+                                showBorder = true,
+                                modifier = Modifier.clickableNoRipple { showProfileDialog = true }
+                            )
+                            Column {
+                                Text(
+                                    text = if (userName.isNotBlank()) userName
+                                           else if (lang == "en") "Family Keeper" else "حافظ الأرحام",
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onBackground,
+                                    fontSize = 16.sp
+                                )
+                            }
+                        }
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
@@ -145,7 +153,8 @@ fun HomeTabScreen(viewModel: RelativeViewModel) {
             item {
                 DueRelativesCarousel(
                     dueRelatives = dueRelatives,
-                    viewModel = viewModel
+                    viewModel = viewModel,
+                    totalRelativesCount = relatives.size
                 )
             }
         }

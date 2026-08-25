@@ -104,4 +104,11 @@ class RelativeViewModelTest {
         assertEquals("عمر", viewModel.userName.value)
         assertEquals("male", viewModel.userGender.value)
     }
+
+    @Test
+    fun testFetchDeviceContactsDoesNotCrash() {
+        val application = ApplicationProvider.getApplicationContext<Application>()
+        viewModel.fetchDeviceContacts(application)
+        assertNotNull(viewModel.deviceContacts.value)
+    }
 }

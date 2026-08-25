@@ -58,7 +58,7 @@ fun SplashScreen(onFinished: () -> Unit) {
                     .padding(8.dp)
             ) {
                 Image(
-                    painter = painterResource(id = R.drawable.app_logo),
+                    painter = painterResource(id = R.drawable.ic_sila_logo),
                     contentDescription = "شعار صِلَةِ",
                     modifier = Modifier
                         .fillMaxSize()

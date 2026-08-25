@@ -100,6 +100,20 @@ fun RelativesTabScreen(
         }
     }
 
+    val launchImportContacts: () -> Unit = {
+        val hasPermission = androidx.core.content.ContextCompat.checkSelfPermission(
+            context,
+            Manifest.permission.READ_CONTACTS
+        ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+
+        if (hasPermission) {
+            viewModel.fetchDeviceContacts(context)
+            viewModel.showImportContactsDialog.value = true
+        } else {
+            contactsPermissionLauncher.launch(Manifest.permission.READ_CONTACTS)
+        }
+    }
+
     // Permission launcher for Call Logs
     val callLogPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
@@ -138,7 +152,7 @@ fun RelativesTabScreen(
         }
         // إذا كانت قائمة الأقارب فارغة لأول مرة، افتح واجهة استيراد جهات الاتصال مباشرة
         if (allRelatives.isEmpty()) {
-            contactsPermissionLauncher.launch(Manifest.permission.READ_CONTACTS)
+            launchImportContacts()
         }
     }
 
@@ -214,9 +228,7 @@ fun RelativesTabScreen(
                         )
                     }
                     Button(
-                        onClick = {
-                            contactsPermissionLauncher.launch(Manifest.permission.READ_CONTACTS)
-                        },
+                        onClick = launchImportContacts,
                         colors = ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.7f),
                             contentColor = MaterialTheme.colorScheme.onSecondaryContainer
@@ -349,9 +361,7 @@ fun RelativesTabScreen(
                     } else {
                         SilaEmptyStateView(
                             lang = lang,
-                            onImportContactsClick = {
-                                contactsPermissionLauncher.launch(Manifest.permission.READ_CONTACTS)
-                            },
+                            onImportContactsClick = launchImportContacts,
                             onAddRelativeClick = {
                                 viewModel.showAddRelativeDialog.value = true
                             }

@@ -1,15 +1,22 @@
 package com.example.ui.screens
 
+import android.widget.Toast
 import androidx.compose.animation.*
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Contacts
+import androidx.compose.material.icons.filled.PersonAdd
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -18,12 +25,14 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.R
+import com.example.ui.dialogs.ImportContactsDialog
 import com.example.viewmodel.RelativeViewModel
 
 data class OnboardingItem(
@@ -33,20 +42,25 @@ data class OnboardingItem(
     val subtitleEn: String
 )
 
+@OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun OnboardingScreen(
     viewModel: RelativeViewModel,
     onFinished: () -> Unit
 ) {
-    val context = androidx.compose.ui.platform.LocalContext.current
+    val context = LocalContext.current
     val selectedLanguage by viewModel.selectedLanguage.collectAsState()
     val savedName by viewModel.userName.collectAsState()
     val savedGender by viewModel.userGender.collectAsState()
+    val existingRelatives by viewModel.relatives.collectAsState()
 
     var nameInput by remember { mutableStateOf(savedName) }
     var genderInput by remember { mutableStateOf(savedGender) }
     var currentPage by remember { mutableIntStateOf(0) }
     var showNameError by remember { mutableStateOf(false) }
+    var showRelativesError by remember { mutableStateOf(false) }
+
+    var showImportContactsDialog by remember { mutableStateOf(false) }
 
     val onboardingItems = listOf(
         // Page 0: Language Selection
@@ -56,21 +70,28 @@ fun OnboardingScreen(
             subtitleAr = "رفيقك الذكي لمتابعة تواصلك اليومي\nمع أرحامك وأقاربك بسهولة ويسر",
             subtitleEn = "Your smart companion to track your daily connection with your relatives effortlessly"
         ),
-        // Page 1: Name & Gender Input (Matching User Screenshot)
+        // Page 1: Name & Gender Input
         OnboardingItem(
             titleAr = "ادخل اسمك",
             titleEn = "Enter Your Name",
-            subtitleAr = "لتتمكن من تخصيص تجربتك",
+            subtitleAr = "لتتمكن من تخصيص تجربتك في التطبيق",
             subtitleEn = "To personalize your app experience"
         ),
-        // Page 2: Auto Call Tracking
+        // Page 2: Concept & Mandatory Relatives Selection from Contacts
+        OnboardingItem(
+            titleAr = "اختر أرحامك من جهات الاتصال 📱",
+            titleEn = "Select Relatives from Contacts 📱",
+            subtitleAr = "صِلَةِ يساعدك على دوام التواصل مع أقاربك. اختر أرحامك من قائمة جهات اتصالك لنذكّرك بالاطمئنان عليهم 💖",
+            subtitleEn = "Silah helps you maintain family ties without forgetting. Pick your relatives from your contacts so we can remind you 💖"
+        ),
+        // Page 3: Auto Call Tracking
         OnboardingItem(
             titleAr = "مزامنة المكالمات تلقائياً",
             titleEn = "Auto Call Tracking",
             subtitleAr = "رصد وتحديث مواعيد الاتصال بالأقارب تلقائياً\nدون الحاجة للتسجيل اليدوي",
             subtitleEn = "Automatically logs call times with relatives without manual input"
         ),
-        // Page 3: Smart Reminders
+        // Page 4: Smart Reminders
         OnboardingItem(
             titleAr = "تذكيرات وإشعارات ذكية",
             titleEn = "Smart Reminders",
@@ -84,11 +105,11 @@ fun OnboardingScreen(
             .fillMaxSize()
             .background(Color.White)
     ) {
-        // ── Top Half: Teal Gradient Header matching user screenshot ──────────────
+        // ── Top Half: Teal Gradient Header ──────────────────────────────────────
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .weight(1.2f)
+                .weight(if (currentPage == 2) 0.8f else 1.2f)
                 .background(
                     Brush.verticalGradient(
                         colors = listOf(
@@ -104,50 +125,51 @@ fun OnboardingScreen(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center,
                 modifier = Modifier
-                    .padding(24.dp)
+                    .padding(horizontal = 24.dp, vertical = 16.dp)
                     .fillMaxSize()
             ) {
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // Circular Illustration Badge Container
-                Box(
-                    contentAlignment = Alignment.Center,
-                    modifier = Modifier
-                        .size(140.dp)
-                        .shadow(12.dp, CircleShape, ambientColor = Color.Black.copy(alpha = 0.2f))
-                        .clip(CircleShape)
-                        .background(Color.White)
-                        .padding(10.dp)
-                ) {
-                    Image(
-                        painter = painterResource(id = R.drawable.app_logo),
-                        contentDescription = "شعار التطبيق",
+                if (currentPage != 2) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Box(
+                        contentAlignment = Alignment.Center,
                         modifier = Modifier
-                            .fillMaxSize()
+                            .size(120.dp)
+                            .shadow(12.dp, CircleShape, ambientColor = Color.Black.copy(alpha = 0.2f))
                             .clip(CircleShape)
-                    )
+                            .background(Color.White)
+                            .padding(10.dp)
+                    ) {
+                        Image(
+                            painter = painterResource(id = R.drawable.ic_sila_logo),
+                            contentDescription = "شعار التطبيق",
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .clip(CircleShape)
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(16.dp))
+                } else {
+                    Spacer(modifier = Modifier.height(8.dp))
                 }
-
-                Spacer(modifier = Modifier.height(20.dp))
 
                 // Title
                 Text(
                     text = if (selectedLanguage == "en") onboardingItems[currentPage].titleEn else onboardingItems[currentPage].titleAr,
-                    fontSize = 24.sp,
+                    fontSize = if (currentPage == 2) 20.sp else 24.sp,
                     fontWeight = FontWeight.Black,
                     color = Color.White,
                     textAlign = TextAlign.Center
                 )
 
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(6.dp))
 
                 // Subtitle
                 Text(
                     text = if (selectedLanguage == "en") onboardingItems[currentPage].subtitleEn else onboardingItems[currentPage].subtitleAr,
-                    fontSize = 14.sp,
+                    fontSize = 13.sp,
                     color = Color(0xFFCBE5E7),
                     textAlign = TextAlign.Center,
-                    lineHeight = 22.sp,
+                    lineHeight = 20.sp,
                     fontWeight = FontWeight.Normal
                 )
             }
@@ -159,9 +181,9 @@ fun OnboardingScreen(
             verticalArrangement = Arrangement.SpaceBetween,
             modifier = Modifier
                 .fillMaxWidth()
-                .weight(1f)
+                .weight(if (currentPage == 2) 1.3f else 1f)
                 .background(Color.White)
-                .padding(horizontal = 28.dp, vertical = 20.dp)
+                .padding(horizontal = 24.dp, vertical = 16.dp)
         ) {
             when (currentPage) {
                 // ── Page 0: Language Selector ─────────────────────────────────
@@ -201,14 +223,13 @@ fun OnboardingScreen(
                     }
                 }
 
-                // ── Page 1: Name & Gender Entry (User Screenshot Match) ───────
+                // ── Page 1: Name & Gender Entry ───────────────────────────────
                 1 -> {
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.spacedBy(16.dp),
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        // Outlined Name Field
                         OutlinedTextField(
                             value = nameInput,
                             onValueChange = {
@@ -244,20 +265,19 @@ fun OnboardingScreen(
                             )
                         }
 
-                        // Gender Selection Cards with Character Avatar Preview
+                        // Gender Selection Cards
                         Row(
                             horizontalArrangement = Arrangement.spacedBy(16.dp),
                             verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier.fillMaxWidth()
                         ) {
-                            // Male Card (ولد)
                             Card(
                                 onClick = { genderInput = "male" },
                                 shape = RoundedCornerShape(16.dp),
                                 colors = CardDefaults.cardColors(
                                     containerColor = if (genderInput == "male") Color(0xFFE0F2F1) else Color(0xFFF8FAFC)
                                 ),
-                                border = androidx.compose.foundation.BorderStroke(
+                                border = BorderStroke(
                                     2.dp,
                                     if (genderInput == "male") Color(0xFF0E7075) else Color(0xFFE2E8F0)
                                 ),
@@ -292,14 +312,13 @@ fun OnboardingScreen(
                                 }
                             }
 
-                            // Female Card (بنت)
                             Card(
                                 onClick = { genderInput = "female" },
                                 shape = RoundedCornerShape(16.dp),
                                 colors = CardDefaults.cardColors(
                                     containerColor = if (genderInput == "female") Color(0xFFFCE4EC) else Color(0xFFF8FAFC)
                                 ),
-                                border = androidx.compose.foundation.BorderStroke(
+                                border = BorderStroke(
                                     2.dp,
                                     if (genderInput == "female") Color(0xFFE91E63) else Color(0xFFE2E8F0)
                                 ),
@@ -337,7 +356,141 @@ fun OnboardingScreen(
                     }
                 }
 
-                // ── Pages 2 & 3: Feature Info Cards ───────────────────────────
+                // ── Page 2: Concept Explanation & Mandatory Relatives Selection from Contacts ─────
+                2 -> {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(14.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f)
+                            .verticalScroll(rememberScrollState())
+                    ) {
+                        // Concept Explanation Banner (شرح فكرة التطبيق)
+                        Card(
+                            shape = RoundedCornerShape(16.dp),
+                            colors = CardDefaults.cardColors(containerColor = Color(0xFFF0FDF4)),
+                            border = BorderStroke(1.dp, Color(0xFF86EFAC)),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(14.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                            ) {
+                                Text("💡", fontSize = 26.sp)
+                                Column {
+                                    Text(
+                                        text = if (selectedLanguage == "en") "How Silah Works" else "فكرة تطبيق صِلَةِ",
+                                        fontSize = 14.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color(0xFF166534)
+                                    )
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Text(
+                                        text = if (selectedLanguage == "en")
+                                            "Silah reminds you to stay in touch with your relatives with care. Select your relatives from your contacts to start!"
+                                        else
+                                            "صِلَةِ ينظم ويتابع تواصلك مع أرحامك. حدد أرحامك وأقاربك من قائمة جهات اتصالك وسنتكفّل بالتذكير والمتابعة.",
+                                        fontSize = 12.sp,
+                                        color = Color(0xFF15803D),
+                                        lineHeight = 17.sp
+                                    )
+                                }
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(4.dp))
+
+                        // Large Contacts Import Button
+                        Button(
+                            onClick = {
+                                showImportContactsDialog = true
+                                showRelativesError = false
+                            },
+                            shape = RoundedCornerShape(16.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color(0xFF0E7075),
+                                contentColor = Color.White
+                            ),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(56.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Contacts,
+                                contentDescription = null,
+                                modifier = Modifier.size(22.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = if (selectedLanguage == "en") "Select Relatives from Contacts 📱" else "اختر أرحامك من جهات الاتصال 📱",
+                                fontSize = 15.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+
+                        // Display list of selected contacts if any
+                        if (existingRelatives.isNotEmpty()) {
+                            Text(
+                                text = if (selectedLanguage == "en") "✓ Selected Relatives (${existingRelatives.size}):" else "✓ الأرحام المضافون (${existingRelatives.size}):",
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFF166534),
+                                modifier = Modifier.padding(top = 8.dp)
+                            )
+
+                            FlowRow(
+                                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                                verticalArrangement = Arrangement.spacedBy(6.dp),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                existingRelatives.forEach { rel ->
+                                    AssistChip(
+                                        onClick = { viewModel.deleteRelative(rel) },
+                                        label = { Text(rel.name, fontSize = 12.sp, fontWeight = FontWeight.Bold) },
+                                        leadingIcon = { Text("👤", fontSize = 12.sp) },
+                                        trailingIcon = { Text("✕", fontSize = 12.sp, color = Color.Red) },
+                                        colors = AssistChipDefaults.assistChipColors(containerColor = Color(0xFFE0F2F1)),
+                                        border = AssistChipDefaults.assistChipBorder(enabled = true, borderColor = Color(0xFF80CBC4))
+                                    )
+                                }
+                            }
+                        } else {
+                            // Show hint card when no contacts selected yet
+                            Card(
+                                shape = RoundedCornerShape(12.dp),
+                                colors = CardDefaults.cardColors(
+                                    containerColor = if (showRelativesError) Color(0xFFFEF2F2) else Color(0xFFF8FAFC)
+                                ),
+                                border = BorderStroke(
+                                    1.dp,
+                                    if (showRelativesError) Color(0xFFFCA5A5) else Color(0xFFE2E8F0)
+                                ),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Column(
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    modifier = Modifier.padding(14.dp)
+                                ) {
+                                    Text(
+                                        text = if (showRelativesError) {
+                                            if (selectedLanguage == "en") "⚠️ You must select at least 1 relative from contacts to continue!" else "⚠️ يجب اختيار قريب واحد على الأقل من جهات الاتصال للاستمرار!"
+                                        } else {
+                                            if (selectedLanguage == "en") "ℹ️ Click the button above to import your relatives from contacts." else "ℹ️ اضغط على الزر أعلاه لاختيار أقاربك من قائمة أرقامك."
+                                        },
+                                        fontSize = 12.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = if (showRelativesError) Color(0xFFD32F2F) else Color(0xFF64748B),
+                                        textAlign = TextAlign.Center
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // ── Pages 3 & 4: Feature Info Cards ───────────────────────────
                 else -> {
                     Text(
                         text = if (selectedLanguage == "en") {
@@ -358,7 +511,9 @@ fun OnboardingScreen(
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.Center,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.dp)
             ) {
                 // Show Back Button if on Page > 0
                 if (currentPage > 0) {
@@ -370,7 +525,7 @@ fun OnboardingScreen(
                     ) {
                         Box(contentAlignment = Alignment.Center) {
                             Icon(
-                                imageVector = if (selectedLanguage == "en") Icons.AutoMirrored.Filled.ArrowBack else Icons.AutoMirrored.Filled.ArrowForward,
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                                 contentDescription = "السابق",
                                 tint = Color(0xFF475569),
                                 modifier = Modifier.size(20.dp)
@@ -386,17 +541,30 @@ fun OnboardingScreen(
                         if (currentPage == 1) {
                             if (nameInput.trim().isEmpty()) {
                                 showNameError = true
-                                android.widget.Toast.makeText(
+                                Toast.makeText(
                                     context,
                                     if (selectedLanguage == "en") "Please enter your name first!" else "الرجاء كتابة اسمك أولاً للاستمرار!",
-                                    android.widget.Toast.LENGTH_SHORT
+                                    Toast.LENGTH_SHORT
                                 ).show()
                                 return@Button
                             }
                             showNameError = false
-                            // Save profile name & gender
                             viewModel.saveUserProfile(nameInput.trim(), genderInput)
                         }
+
+                        if (currentPage == 2) {
+                            if (existingRelatives.isEmpty()) {
+                                showRelativesError = true
+                                Toast.makeText(
+                                    context,
+                                    if (selectedLanguage == "en") "Please select at least one relative from contacts!" else "يرجى اختيار قريب واحد على الأقل من جهات الاتصال للاستمرار 📱",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                                return@Button
+                            }
+                            showRelativesError = false
+                        }
+
                         if (currentPage < onboardingItems.size - 1) {
                             currentPage++
                         } else {
@@ -424,11 +592,11 @@ fun OnboardingScreen(
                 }
             }
 
-            // ── 4-Dot Page Indicator matching user screenshot ──────────────────
+            // ── 5-Dot Page Indicator ───────────────────────────────────────────
             Row(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.padding(bottom = 8.dp)
+                modifier = Modifier.padding(top = 8.dp, bottom = 4.dp)
             ) {
                 onboardingItems.indices.forEach { index ->
                     val isActive = index == currentPage
@@ -443,5 +611,13 @@ fun OnboardingScreen(
                 }
             }
         }
+    }
+
+    // ── Dialog: Import Contacts ────────────────────────────────────────────────
+    if (showImportContactsDialog) {
+        ImportContactsDialog(
+            viewModel = viewModel,
+            onDismiss = { showImportContactsDialog = false }
+        )
     }
 }

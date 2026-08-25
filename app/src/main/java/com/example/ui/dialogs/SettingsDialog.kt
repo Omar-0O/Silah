@@ -29,7 +29,8 @@ import androidx.compose.ui.unit.LayoutDirection
 @Composable
 fun SettingsDialog(
     viewModel: RelativeViewModel,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
+    onReplayOnboarding: () -> Unit = {}
 ) {
     val isDarkMode by viewModel.isDarkMode.collectAsState()
     val selectedLanguage by viewModel.selectedLanguage.collectAsState()
@@ -358,6 +359,24 @@ fun SettingsDialog(
                                     color = Color(0xFFB45309)
                                 )
                             }
+                        }
+
+                        // Replay Onboarding Button
+                        OutlinedButton(
+                            onClick = {
+                                onDismiss()
+                                onReplayOnboarding()
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(14.dp),
+                            border = BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)),
+                            colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.primary)
+                        ) {
+                            Text(
+                                if (selectedLanguage == "en") "View Introduction & Onboarding 🚀" else "عرض الشاشة التعريفية للأرحام 🚀",
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Bold
+                            )
                         }
                     }
 

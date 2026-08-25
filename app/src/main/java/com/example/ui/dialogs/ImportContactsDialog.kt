@@ -1,7 +1,11 @@
 package com.example.ui.dialogs
 
+import android.Manifest
+import android.content.pm.PackageManager
 import android.view.HapticFeedbackConstants
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -21,17 +25,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import androidx.core.content.ContextCompat
 import com.example.data.CallLogManager
 import com.example.ui.theme.SoftGold
 import com.example.viewmodel.RelativeViewModel
-import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.ui.platform.LocalLayoutDirection
-import androidx.compose.ui.unit.LayoutDirection
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -50,6 +55,27 @@ fun ImportContactsDialog(
 
     var searchQuery by remember { mutableStateOf("") }
     var selectedContactPhone by remember { mutableStateOf<String?>(null) }
+
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            viewModel.fetchDeviceContacts(context)
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        val hasPermission = ContextCompat.checkSelfPermission(
+            context,
+            Manifest.permission.READ_CONTACTS
+        ) == PackageManager.PERMISSION_GRANTED
+
+        if (hasPermission) {
+            viewModel.fetchDeviceContacts(context)
+        } else {
+            permissionLauncher.launch(Manifest.permission.READ_CONTACTS)
+        }
+    }
 
     // Existing normalized numbers to avoid double addition
     val existingNormalizedPhones = remember(existingRelatives) {
@@ -72,210 +98,254 @@ fun ImportContactsDialog(
                     .fillMaxWidth()
                     .fillMaxHeight(0.85f)
             ) {
-            Column(
-                modifier = Modifier.padding(20.dp)
-            ) {
-                // Header Title
-                Text(
-                    text = if (selectedLanguage == "en") "Import Relatives from Phone 📲" else "استيراد الأقارب من الهاتف 📲",
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary
-                )
-                Text(
-                    text = if (selectedLanguage == "en") "Select your relatives and set reminder intervals easily" else "حدد أرحامك واضبط تكرار التذكير لكل قريب بسهولة",
-                    fontSize = 11.sp,
-                    color = MaterialTheme.colorScheme.secondary
-                )
-
-                Spacer(modifier = Modifier.height(10.dp))
-
-                // Explanatory Banner (User Flow Guidance)
-                Card(
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.07f)),
-                    shape = RoundedCornerShape(14.dp),
-                    modifier = Modifier.fillMaxWidth()
+                Column(
+                    modifier = Modifier.padding(20.dp)
                 ) {
+                    // Header Title
                     Text(
-                        text = if (selectedLanguage == "en") "💡 The app automatically detects calls with your relatives via phone log, and you can also record contact manually anytime."
-                               else "💡 يكتشف التطبيق مكالماتك تلقائياً مع أقاربك عبر سجل الهاتف، ويمكنك أيضاً تسجيل التواصل يدوياً في أي وقت.",
-                        fontSize = 11.sp,
-                        color = MaterialTheme.colorScheme.primary,
-                        lineHeight = 17.sp,
-                        modifier = Modifier.padding(10.dp)
+                        text = if (selectedLanguage == "en") "Import Relatives from Phone 📲" else "استيراد الأقارب من الهاتف 📲",
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary
                     )
-                }
+                    Text(
+                        text = if (selectedLanguage == "en") "Select your relatives and set reminder intervals easily" else "حدد أرحامك واضبط تكرار التذكير لكل قريب بسهولة",
+                        fontSize = 11.sp,
+                        color = MaterialTheme.colorScheme.secondary
+                    )
 
-                Spacer(modifier = Modifier.height(10.dp))
+                    Spacer(modifier = Modifier.height(10.dp))
 
-                // Search Bar
-                OutlinedTextField(
-                    value = searchQuery,
-                    onValueChange = { searchQuery = it },
-                    placeholder = { Text(if (selectedLanguage == "en") "Search name or phone number..." else "ابحث بالاسم أو رقم الهاتف...", fontSize = 12.sp) },
-                    leadingIcon = { Icon(Icons.Outlined.Search, contentDescription = null, modifier = Modifier.size(18.dp)) },
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(14.dp),
-                    singleLine = true
-                )
-
-                Spacer(modifier = Modifier.height(10.dp))
-
-                if (isLoading) {
-                    Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .fillMaxWidth(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text(if (selectedLanguage == "en") "Loading contacts..." else "جاري قراءة جهات الاتصال...", fontSize = 12.sp, color = MaterialTheme.colorScheme.secondary)
-                        }
-                    }
-                } else if (filteredContacts.isEmpty()) {
-                    Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .fillMaxWidth(),
-                        contentAlignment = Alignment.Center
+                    // Explanatory Banner (User Flow Guidance)
+                    Card(
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.07f)),
+                        shape = RoundedCornerShape(14.dp),
+                        modifier = Modifier.fillMaxWidth()
                     ) {
                         Text(
-                            text = if (searchQuery.isNotEmpty())
-                                (if (selectedLanguage == "en") "No matching contacts found" else "لا يوجد جهات اتصال مطابقة للبحث")
-                            else
-                                (if (selectedLanguage == "en") "No contacts found on device" else "لم يتم العثور على جهات اتصال في الهاتف"),
-                            fontSize = 13.sp,
-                            color = MaterialTheme.colorScheme.secondary
+                            text = if (selectedLanguage == "en") "💡 The app automatically detects calls with your relatives via phone log, and you can also record contact manually anytime."
+                                   else "💡 يكتشف التطبيق مكالماتك تلقائياً مع أقاربك عبر سجل الهاتف، ويمكنك أيضاً تسجيل التواصل يدوياً في أي وقت.",
+                            fontSize = 11.sp,
+                            color = MaterialTheme.colorScheme.primary,
+                            lineHeight = 17.sp,
+                            modifier = Modifier.padding(10.dp)
                         )
                     }
-                } else {
-                    LazyColumn(
-                        modifier = Modifier.weight(1f),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        items(filteredContacts) { contact ->
-                            val name = contact.name
-                            val phone = contact.phone
-                            val photoUri = contact.photoUri
-                            val normalized = CallLogManager.normalizePhoneNumber(phone)
-                            val isAlreadyAdded = existingNormalizedPhones.contains(normalized)
-                            val isExpanded = selectedContactPhone == phone
 
-                            Card(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clickable(enabled = !isAlreadyAdded) {
-                                        selectedContactPhone = if (isExpanded) null else phone
-                                    },
-                                shape = RoundedCornerShape(16.dp),
-                                colors = CardDefaults.cardColors(
-                                    containerColor = if (isAlreadyAdded)
-                                        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f)
-                                    else if (isExpanded)
-                                        MaterialTheme.colorScheme.primary.copy(alpha = 0.06f)
-                                    else
-                                        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
-                                )
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    // Search Bar
+                    OutlinedTextField(
+                        value = searchQuery,
+                        onValueChange = { searchQuery = it },
+                        placeholder = { Text(if (selectedLanguage == "en") "Search name or phone number..." else "ابحث بالاسم أو رقم الهاتف...", fontSize = 12.sp) },
+                        leadingIcon = { Icon(Icons.Outlined.Search, contentDescription = null, modifier = Modifier.size(18.dp)) },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(14.dp),
+                        singleLine = true
+                    )
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    if (isLoading) {
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .fillMaxWidth(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text(if (selectedLanguage == "en") "Loading contacts..." else "جاري قراءة جهات الاتصال...", fontSize = 12.sp, color = MaterialTheme.colorScheme.secondary)
+                            }
+                        }
+                    } else if (filteredContacts.isEmpty()) {
+                        val hasPermission = ContextCompat.checkSelfPermission(
+                            context,
+                            Manifest.permission.READ_CONTACTS
+                        ) == PackageManager.PERMISSION_GRANTED
+
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .fillMaxWidth(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                modifier = Modifier.padding(16.dp)
                             ) {
-                                Column(modifier = Modifier.padding(12.dp)) {
-                                    Row(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.SpaceBetween,
-                                        verticalAlignment = Alignment.CenterVertically
+                                Text(
+                                    text = if (!hasPermission) {
+                                        if (selectedLanguage == "en") "Permission required to access contacts 📱"
+                                        else "يلزم السماح بالوصول لجهات الاتصال لانتخاب أرحامك 📱"
+                                    } else if (searchQuery.isNotEmpty()) {
+                                        if (selectedLanguage == "en") "No matching contacts found"
+                                        else "لا يوجد جهات اتصال مطابقة للبحث"
+                                    } else {
+                                        if (selectedLanguage == "en") "No contacts found on device"
+                                        else "لم يتم العثور على جهات اتصال في الهاتف"
+                                    },
+                                    fontSize = 13.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.secondary,
+                                    textAlign = TextAlign.Center
+                                )
+
+                                Spacer(modifier = Modifier.height(12.dp))
+
+                                if (!hasPermission) {
+                                    Button(
+                                        onClick = { permissionLauncher.launch(Manifest.permission.READ_CONTACTS) },
+                                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                                        shape = RoundedCornerShape(12.dp)
                                     ) {
-                                        Row(
-                                            verticalAlignment = Alignment.CenterVertically,
-                                            horizontalArrangement = Arrangement.spacedBy(10.dp)
-                                        ) {
-                                            com.example.ui.components.RelativeAvatar(
-                                                name = name,
-                                                photoUri = photoUri,
-                                                size = 38.dp,
-                                                fontSize = 15.sp
-                                            )
-
-                                            Column {
-                                                Text(
-                                                    text = name,
-                                                    fontWeight = FontWeight.Bold,
-                                                    fontSize = 14.sp,
-                                                    color = if (isAlreadyAdded) MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f) else MaterialTheme.colorScheme.onSurface
-                                                )
-                                                Text(
-                                                    text = phone,
-                                                    fontSize = 11.sp,
-                                                    color = MaterialTheme.colorScheme.secondary
-                                                )
-                                            }
-                                        }
-
-                                        if (isAlreadyAdded) {
-                                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                                Icon(
-                                                    imageVector = Icons.Default.CheckCircle,
-                                                    contentDescription = null,
-                                                    tint = Color(0xFF2E7D32),
-                                                    modifier = Modifier.size(16.dp)
-                                                )
-                                                Spacer(modifier = Modifier.width(4.dp))
-                                                Text(if (selectedLanguage == "en") "Added 🟢" else "مضاف 🟢", fontSize = 11.sp, color = Color(0xFF2E7D32), fontWeight = FontWeight.Bold)
-                                            }
-                                        } else {
-                                            Text(
-                                                text = if (isExpanded) (if (selectedLanguage == "en") "Close ▲" else "إغلاق ▲") else (if (selectedLanguage == "en") "Set Reminder ＋" else "تحديد التذكير ＋"),
-                                                color = MaterialTheme.colorScheme.primary,
-                                                fontSize = 12.sp,
-                                                fontWeight = FontWeight.Bold
-                                            )
-                                        }
+                                        Text(
+                                            text = if (selectedLanguage == "en") "Grant Contacts Permission 📱" else "منح صلاحية جهات الاتصال 📱",
+                                            fontSize = 12.sp,
+                                            fontWeight = FontWeight.Bold
+                                        )
                                     }
-
-                                    // Inline Setup Form when contact is tapped
-                                    AnimatedVisibility(visible = isExpanded && !isAlreadyAdded) {
-                                        ContactSetupInlineForm(
-                                            initialName = name,
-                                            initialPhone = phone,
-                                            viewModel = viewModel,
-                                            lang = selectedLanguage,
-                                            onSave = { degree, interval ->
-                                                view.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
-                                                viewModel.addRelative(
-                                                    name = name,
-                                                    phone = phone,
-                                                    relationshipDegree = degree,
-                                                    intervalDays = interval,
-                                                    notes = if (selectedLanguage == "en") "Imported from contacts" else "تم استيراده من جهات الاتصال",
-                                                    photoUri = photoUri
-                                                )
-                                                val toastMsg = if (selectedLanguage == "en") "$name successfully added to Silah! ✨" else "تمت إضافة $name بنجاح في صِلَةِ! ✨"
-                                                Toast.makeText(context, toastMsg, Toast.LENGTH_SHORT).show()
-                                                selectedContactPhone = null
-                                            }
+                                } else if (contacts.isEmpty()) {
+                                    OutlinedButton(
+                                        onClick = { viewModel.fetchDeviceContacts(context) },
+                                        shape = RoundedCornerShape(12.dp)
+                                    ) {
+                                        Text(
+                                            text = if (selectedLanguage == "en") "Refresh Contacts 🔄" else "تحديث جهات الاتصال 🔄",
+                                            fontSize = 12.sp
                                         )
                                     }
                                 }
                             }
                         }
+                    } else {
+                        LazyColumn(
+                            modifier = Modifier.weight(1f),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            items(filteredContacts) { contact ->
+                                val name = contact.name
+                                val phone = contact.phone
+                                val photoUri = contact.photoUri
+                                val normalized = CallLogManager.normalizePhoneNumber(phone)
+                                val isAlreadyAdded = existingNormalizedPhones.contains(normalized)
+                                val isExpanded = selectedContactPhone == phone
+
+                                Card(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable(enabled = !isAlreadyAdded) {
+                                            selectedContactPhone = if (isExpanded) null else phone
+                                        },
+                                    shape = RoundedCornerShape(16.dp),
+                                    colors = CardDefaults.cardColors(
+                                        containerColor = if (isAlreadyAdded)
+                                            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f)
+                                        else if (isExpanded)
+                                            MaterialTheme.colorScheme.primary.copy(alpha = 0.06f)
+                                        else
+                                            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
+                                    )
+                                ) {
+                                    Column(modifier = Modifier.padding(12.dp)) {
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.SpaceBetween,
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Row(
+                                                verticalAlignment = Alignment.CenterVertically,
+                                                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                                            ) {
+                                                com.example.ui.components.RelativeAvatar(
+                                                    name = name,
+                                                    photoUri = photoUri,
+                                                    size = 38.dp,
+                                                    fontSize = 15.sp
+                                                )
+
+                                                Column {
+                                                    Text(
+                                                        text = name,
+                                                        fontWeight = FontWeight.Bold,
+                                                        fontSize = 14.sp,
+                                                        color = if (isAlreadyAdded) MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f) else MaterialTheme.colorScheme.onSurface
+                                                    )
+                                                    Text(
+                                                        text = phone,
+                                                        fontSize = 11.sp,
+                                                        color = MaterialTheme.colorScheme.secondary
+                                                    )
+                                                }
+                                            }
+
+                                            if (isAlreadyAdded) {
+                                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                                    Icon(
+                                                        imageVector = Icons.Default.CheckCircle,
+                                                        contentDescription = null,
+                                                        tint = Color(0xFF2E7D32),
+                                                        modifier = Modifier.size(16.dp)
+                                                    )
+                                                    Spacer(modifier = Modifier.width(4.dp))
+                                                    Text(if (selectedLanguage == "en") "Added 🟢" else "مضاف 🟢", fontSize = 11.sp, color = Color(0xFF2E7D32), fontWeight = FontWeight.Bold)
+                                                }
+                                            } else {
+                                                Text(
+                                                    text = if (isExpanded) (if (selectedLanguage == "en") "Close ▲" else "إغلاق ▲") else (if (selectedLanguage == "en") "Set Reminder ＋" else "تحديد التذكير ＋"),
+                                                    color = MaterialTheme.colorScheme.primary,
+                                                    fontSize = 12.sp,
+                                                    fontWeight = FontWeight.Bold
+                                                )
+                                            }
+                                        }
+
+                                        // Inline Setup Form when contact is tapped
+                                        AnimatedVisibility(visible = isExpanded && !isAlreadyAdded) {
+                                            ContactSetupInlineForm(
+                                                initialName = name,
+                                                initialPhone = phone,
+                                                viewModel = viewModel,
+                                                lang = selectedLanguage,
+                                                onSave = { degree, interval ->
+                                                    view.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
+                                                    viewModel.addRelative(
+                                                        name = name,
+                                                        phone = phone,
+                                                        relationshipDegree = degree,
+                                                        intervalDays = interval,
+                                                        notes = if (selectedLanguage == "en") "Imported from contacts" else "تم استيراده من جهات الاتصال",
+                                                        photoUri = photoUri
+                                                    )
+                                                    val toastMsg = if (selectedLanguage == "en") "$name successfully added to Silah! ✨" else "تمت إضافة $name بنجاح في صِلَةِ! ✨"
+                                                    Toast.makeText(context, toastMsg, Toast.LENGTH_SHORT).show()
+                                                    selectedContactPhone = null
+                                                }
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     }
-                }
 
-                Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.height(12.dp))
 
-                // Bottom Dismiss Action
-                Button(
-                    onClick = onDismiss,
-                    colors = ButtonDefaults.buttonColors(containerColor = SoftGold, contentColor = Color(0xFF141816)),
-                    shape = RoundedCornerShape(14.dp),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text(if (selectedLanguage == "en") "Done & Return to List 🌸" else "تم والعودة للقائمة 🌸", fontWeight = FontWeight.Bold)
+                    // Bottom Dismiss Action
+                    Button(
+                        onClick = onDismiss,
+                        colors = ButtonDefaults.buttonColors(containerColor = SoftGold, contentColor = Color(0xFF141816)),
+                        shape = RoundedCornerShape(14.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(if (selectedLanguage == "en") "Done & Return to List 🌸" else "تم والعودة للقائمة 🌸", fontWeight = FontWeight.Bold)
+                    }
                 }
             }
         }
     }
-}
 }
 
 @Composable
