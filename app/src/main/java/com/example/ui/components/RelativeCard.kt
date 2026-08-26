@@ -2,15 +2,12 @@ package com.example.ui.components
 
 import android.content.Intent
 import android.net.Uri
-import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.Chat
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -90,19 +87,21 @@ fun RelativeCard(
                 horizontalArrangement = Arrangement.spacedBy(14.dp)
             ) {
 
-                // Avatar circle with status ring indicator
-                Box(contentAlignment = Alignment.Center) {
-                    Box(
-                        modifier = Modifier
-                            .size(58.dp)
-                            .clip(CircleShape)
-                            .background(statusColor.copy(alpha = 0.2f))
-                    )
-                    RelativeAvatar(
-                        name = relative.name,
-                        photoUri = relative.photoUri,
-                        size = 50.dp,
-                        fontSize = 21.sp
+                // Avatar circle with gradient + initials
+                Box(
+                    contentAlignment = Alignment.Center,
+                    modifier = Modifier
+                        .size(52.dp)
+                        .clip(CircleShape)
+                        .background(
+                            Brush.linearGradient(listOf(avatarFrom, avatarTo))
+                        )
+                ) {
+                    Text(
+                        text = relative.name.take(1),
+                        fontSize = 22.sp,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = Color.White
                     )
                 }
 
@@ -113,42 +112,30 @@ fun RelativeCard(
                 ) {
                     Text(
                         text = relative.name,
-                        fontSize = 17.sp,
+                        fontSize = 16.sp,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
                     Text(
-                        text = com.example.utils.DateUtils.translateDegree(relative.relationshipDegree, lang),
+                        text = relative.relationshipDegree,
                         fontSize = 12.sp,
                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75f),
                         fontWeight = FontWeight.Medium
                     )
                 }
 
-                // Status pill with custom label & emoji
+                // Status pill
                 Surface(
                     shape = RoundedCornerShape(50.dp),
-                    color = statusColor.copy(alpha = 0.14f),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, statusColor.copy(alpha = 0.3f))
+                    color = statusColor.copy(alpha = 0.12f),
                 ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp),
-                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
-                    ) {
-                        Text(
-                            text = statusEmoji(status),
-                            fontSize = 14.sp
-                        )
-                        Text(
-                            text = if (lang == "en") status.labelEn else status.label,
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = statusColor
-                        )
-                    }
+                    Text(
+                        text = statusEmoji(status),
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
+                        fontSize = 16.sp
+                    )
                 }
             }
 
@@ -202,23 +189,24 @@ fun RelativeCard(
                 color = MaterialTheme.colorScheme.outline.copy(alpha = 0.35f)
             )
 
-            // ── Action Bar (Separated groups with zero overlapping) ───────────────────
-            Row(
+            // ── Adaptive Action Bar ───────────────────────────────────────────
+            BoxWithConstraints(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 10.dp, vertical = 8.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                    .padding(horizontal = 10.dp, vertical = 8.dp)
             ) {
-                // ── Primary Actions: Call & WhatsApp ───────────────────
+                val cardWidth = maxWidth
+                val isNarrow = cardWidth < 340.dp
+
                 Row(
-                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Call
-                    PrimaryActionButton(
+                    // 1. Call Button
+                    ActionButton(
                         icon = Icons.Outlined.Call,
-                        label = if (lang == "en") "Call" else "اتصال",
+                        label = if (isNarrow) "" else (if (lang == "en") "Call" else "اتصال"),
                         containerColor = MaterialTheme.colorScheme.primary,
                         contentColor = Color.White,
                         onClick = {
@@ -228,59 +216,48 @@ fun RelativeCard(
                         }
                     )
 
-                    // WhatsApp
-                    PrimaryActionButton(
-                        icon = Icons.AutoMirrored.Outlined.Chat,
-                        label = if (lang == "en") "WhatsApp" else "واتس",
+                    // 2. WhatsApp Button
+                    ActionButton(
+                        icon = Icons.Outlined.Chat,
+                        label = if (isNarrow) "" else (if (lang == "en") "WhatsApp" else "واتساب"),
                         containerColor = Color(0xFF1B8A4A),
                         contentColor = Color.White,
                         onClick = {
-                            var cleanPhone = relative.phone.replace("""[\s\-\(\)]""".toRegex(), "")
-                            val formattedPhone = when {
-                                cleanPhone.startsWith("+") -> cleanPhone.substring(1)
-                                cleanPhone.startsWith("00") -> cleanPhone.substring(2)
-                                cleanPhone.startsWith("01") && cleanPhone.length == 11 -> "20" + cleanPhone.substring(1)
-                                cleanPhone.startsWith("05") && cleanPhone.length == 10 -> "966" + cleanPhone.substring(1)
-                                cleanPhone.startsWith("0") -> cleanPhone.substring(1)
-                                else -> cleanPhone
+                            var phone = relative.phone.replace("""[\s\-\(\)]""".toRegex(), "")
+                            if (!phone.startsWith("+") && !phone.startsWith("00")) {
+                                if (phone.startsWith("0")) phone = "966" + phone.substring(1)
                             }
                             context.startActivity(Intent(Intent.ACTION_VIEW).apply {
-                                data = Uri.parse("https://api.whatsapp.com/send?phone=$formattedPhone")
+                                data = Uri.parse("https://api.whatsapp.com/send?phone=$phone")
                             })
                             viewModel.recordCommunication(relative.id, "رسالة", "تواصل سريع عبر الواتساب")
                         }
                     )
-                }
 
-                // ── Secondary Actions: Log, Edit, Delete ───────────────
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(4.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    // Log Record
-                    IconActionButton(
+                    // 3. Log Contact Button (First-class Action)
+                    ActionButton(
                         icon = Icons.Outlined.CheckCircle,
-                        contentDescription = if (lang == "en") "Log" else "سجّل تواصل",
-                        containerColor = SoftGold.copy(alpha = 0.25f),
-                        contentColor = Color(0xFF7A5200),
+                        label = if (isNarrow) "" else (if (lang == "en") "Log" else "سجّل"),
+                        containerColor = SoftGold,
+                        contentColor = Color(0xFF141816),
                         onClick = { viewModel.showRecordLogDialog.value = relative }
                     )
 
-                    // Edit
-                    IconActionButton(
+                    // 4. Edit Action Chip
+                    ActionIconChip(
                         icon = Icons.Outlined.Edit,
-                        contentDescription = if (lang == "en") "Edit" else "تعديل",
-                        containerColor = MaterialTheme.colorScheme.surfaceVariant,
-                        contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                        label = if (lang == "en") "Edit" else "تعديل",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        bgColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
                         onClick = { viewModel.showEditRelativeDialog.value = relative }
                     )
 
-                    // Delete
-                    IconActionButton(
+                    // 5. Delete Action Chip
+                    ActionIconChip(
                         icon = Icons.Outlined.Delete,
-                        contentDescription = if (lang == "en") "Delete" else "حذف",
-                        containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.5f),
-                        contentColor = MaterialTheme.colorScheme.error,
+                        label = if (lang == "en") "Delete" else "حذف",
+                        tint = Color(0xFFD32F2F),
+                        bgColor = Color(0xFFD32F2F).copy(alpha = 0.12f),
                         onClick = { showDeleteConfirm = true }
                     )
                 }
@@ -331,34 +308,32 @@ fun RelativeCard(
     }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Primary Action Button (Call / WhatsApp) — Pill button with Icon + Text
-// ─────────────────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────
+// Pill-button for primary actions (Call / WhatsApp / Log)
+// ─────────────────────────────────────────────────
 @Composable
-private fun PrimaryActionButton(
+private fun ActionButton(
     icon: ImageVector,
     label: String,
     containerColor: Color,
     contentColor: Color,
     onClick: () -> Unit
 ) {
-    Surface(
+    Button(
         onClick = onClick,
-        shape = RoundedCornerShape(10.dp),
-        color = containerColor,
-        contentColor = contentColor,
+        colors = ButtonDefaults.buttonColors(
+            containerColor = containerColor,
+            contentColor = contentColor
+        ),
+        shape = RoundedCornerShape(12.dp),
+        contentPadding = PaddingValues(
+            horizontal = if (label.isEmpty()) 10.dp else 10.dp,
+            vertical = 0.dp
+        ),
         modifier = Modifier.height(36.dp)
     ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center,
-            modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp)
-        ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = label,
-                modifier = Modifier.size(14.dp)
-            )
+        Icon(icon, contentDescription = label.ifEmpty { null }, modifier = Modifier.size(15.dp))
+        if (label.isNotEmpty()) {
             Spacer(modifier = Modifier.width(4.dp))
             Text(
                 text = label,
@@ -371,31 +346,30 @@ private fun PrimaryActionButton(
     }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Icon Action Button (Log / Edit / Delete) — Fixed size square chip
-// ─────────────────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────
+// Compact icon-chip for secondary actions (Edit/Delete)
+// ─────────────────────────────────────────────────
 @Composable
-private fun IconActionButton(
+private fun ActionIconChip(
     icon: ImageVector,
-    contentDescription: String,
-    containerColor: Color,
-    contentColor: Color,
+    label: String,
+    tint: Color,
+    bgColor: Color,
     onClick: () -> Unit
 ) {
-    Surface(
+    IconButton(
         onClick = onClick,
-        shape = RoundedCornerShape(10.dp),
-        color = containerColor,
-        contentColor = contentColor,
-        modifier = Modifier.size(36.dp)
+        modifier = Modifier
+            .size(36.dp)
+            .clip(RoundedCornerShape(10.dp))
+            .background(bgColor)
     ) {
-        Box(contentAlignment = Alignment.Center) {
-            Icon(
-                imageVector = icon,
-                contentDescription = contentDescription,
-                modifier = Modifier.size(16.dp)
-            )
-        }
+        Icon(
+            imageVector = icon,
+            contentDescription = label,
+            tint = tint,
+            modifier = Modifier.size(18.dp)
+        )
     }
 }
 

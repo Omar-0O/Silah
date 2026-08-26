@@ -218,10 +218,32 @@ fun MainDashboardScreen(
                     onDismiss = { viewModel.showLogsHistoryDialog.value = null }
                 )
             }
-            if (showImportContactsDialog) {
-                ImportContactsDialog(
-                    viewModel = viewModel,
-                    onDismiss = { viewModel.showImportContactsDialog.value = false }
+            val showSupportSilaDialog by viewModel.showSupportSilaDialog.collectAsState()
+            val activeMilestoneDialog by viewModel.activeMilestoneDialog.collectAsState()
+
+            if (showSupportSilaDialog) {
+                val contactedCount = relatives.count { it.lastContactDate > 0 }
+                val logs by viewModel.logs.collectAsState()
+                val prefs = androidx.compose.ui.platform.LocalContext.current
+                    .getSharedPreferences("silah_prefs", android.content.Context.MODE_PRIVATE)
+                val firstLaunch = prefs.getLong("app_first_launch_time", System.currentTimeMillis())
+                val daysUsingApp = java.util.concurrent.TimeUnit.MILLISECONDS.toDays(
+                    System.currentTimeMillis() - firstLaunch
+                )
+
+                com.example.ui.dialogs.SupportSilaDialog(
+                    contactedCount = contactedCount,
+                    interactionCount = logs.size,
+                    daysUsingApp = daysUsingApp,
+                    onDismiss = { viewModel.showSupportSilaDialog.value = false }
+                )
+            }
+
+            if (activeMilestoneDialog != null) {
+                com.example.ui.dialogs.MilestoneDialog(
+                    milestoneCount = activeMilestoneDialog!!,
+                    onSupportClick = { viewModel.showSupportSilaDialog.value = true },
+                    onDismiss = { viewModel.activeMilestoneDialog.value = null }
                 )
             }
 

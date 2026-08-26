@@ -215,18 +215,6 @@ fun RelativesTabScreen(
                     }
                 },
                 actions = {
-                    IconButton(
-                        onClick = { viewModel.showSettingsDialog.value = true },
-                        modifier = Modifier
-                            .padding(end = 4.dp)
-                            .testTag("settings_button")
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Settings,
-                            contentDescription = "الإعدادات",
-                            tint = MaterialTheme.colorScheme.primary
-                        )
-                    }
                     Button(
                         onClick = launchImportContacts,
                         colors = ButtonDefaults.buttonColors(

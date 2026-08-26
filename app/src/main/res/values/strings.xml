@@ -11,5 +11,8 @@
     <string name="backup_restore">النسخ الاحتياطي والاستعادة</string>
     <string name="export_backup">تصدير نسخة احتياطية 📤</string>
     <string name="import_backup">استعادة من نسخة احتياطية 📥</string>
+    <string name="support_sila">ادعم صِلَةِ 🤍</string>
+    <string name="support_sila_desc">ساعد في بقاء التطبيق مجانياً 100% وبدون إعلانات</string>
+    <string name="milestone_title">إنجاز جديد في وصل الرحم! ✨</string>
     <string name="close">إغلاق</string>
 </resources>

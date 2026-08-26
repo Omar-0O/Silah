@@ -6,668 +6,776 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.widget.Toast
-import androidx.compose.foundation.BorderStroke
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.*
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.ContentCopy
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.automirrored.filled.OpenInNew
+import androidx.compose.material.icons.filled.Phone
+import androidx.compose.material.icons.filled.QrCode
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
-import com.example.data.InstapayConfig
 import com.example.data.SupportConfig
-import com.example.data.WalletMethod
-import com.example.ui.theme.PrimaryGreen
-import com.example.ui.theme.SoftGold
 import com.example.utils.QRCodeUtils
-import com.example.viewmodel.RelativeViewModel
 
+enum class SupportPage { MAIN, INSTAPAY, VODAFONE_CASH }
+
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SupportSilaDialog(
-    viewModel: RelativeViewModel,
+    contactedCount: Int,
+    interactionCount: Int,
+    daysUsingApp: Long,
     onDismiss: () -> Unit
 ) {
-    val selectedLanguage by viewModel.selectedLanguage.collectAsState()
-    val relatives by viewModel.relatives.collectAsState()
-    val logs by viewModel.logs.collectAsState()
-    // getAppUsageDays() is called fresh each time the dialog opens
-    val usageDays = remember { viewModel.getAppUsageDays() }
-
-    val layoutDirection = if (selectedLanguage == "en") LayoutDirection.Ltr else LayoutDirection.Rtl
     val context = LocalContext.current
-
-    val supportConfig = remember { SupportConfig.DEFAULT }
-
-    var selectedSupportMethod by remember { mutableStateOf<String?>(null) } // "instapay" or "wallet"
-    var showThankYouMessage by remember { mutableStateOf(false) }
-
-    val contactedRelativesCount = remember(relatives) {
-        relatives.count { it.lastContactDate > 0L }
-    }
+    var currentPage by remember { mutableStateOf(SupportPage.MAIN) }
+    var showAppreciationBanner by remember { mutableStateOf(false) }
 
     Dialog(
         onDismissRequest = onDismiss,
         properties = DialogProperties(usePlatformDefaultWidth = false)
     ) {
-        CompositionLocalProvider(LocalLayoutDirection provides layoutDirection) {
+        BoxWithConstraints {
+            val isTablet = maxWidth > 600.dp
+            val dialogWidth = if (isTablet) 540.dp else maxWidth * 0.92f
+            val dialogMaxHeight = if (maxHeight > 800.dp) 0.85f else 0.92f
+
             Surface(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .padding(16.dp),
-                shape = RoundedCornerShape(28.dp),
-                color = MaterialTheme.colorScheme.surface
+                    .width(dialogWidth)
+                    .fillMaxHeight(dialogMaxHeight)
+                    .clip(RoundedCornerShape(28.dp)),
+                color = MaterialTheme.colorScheme.surface,
+                tonalElevation = 6.dp
             ) {
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
+                        .verticalScroll(rememberScrollState())
                         .padding(20.dp)
-                        .verticalScroll(rememberScrollState()),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    // Header Bar
+                    // Top Navigation Bar
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(
-                            text = if (selectedLanguage == "en") "Support Sila 🤍" else "ادعم صِلَةِ 🤍",
-                            fontSize = 20.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = PrimaryGreen
-                        )
-                        IconButton(onClick = onDismiss) {
-                            Icon(Icons.Outlined.Close, contentDescription = "Close")
-                        }
-                    }
-
-                    // Main App Core Philosophy Box
-                    Card(
-                        shape = RoundedCornerShape(20.dp),
-                        colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f)
-                        ),
-                        border = BorderStroke(1.dp, PrimaryGreen.copy(alpha = 0.3f))
-                    ) {
-                        Column(
-                            modifier = Modifier.padding(16.dp),
-                            verticalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            Text(
-                                text = if (selectedLanguage == "en")
-                                    "Sila is free, ad-free, and subscription-free."
-                                else
-                                    "صِلَة مجاني ومن غير إعلانات أو اشتراكات.",
-                                fontSize = 14.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = PrimaryGreen
-                            )
-                            Text(
-                                text = if (selectedLanguage == "en")
-                                    "If you like the application and wish to help me continue developing it, you can support with any amount that suits you.\n\nYour support is completely optional and helps me keep developing Sila and adding new features."
-                                else
-                                    "لو التطبيق عجبك وحابب تساعدني أكمل تطويره، تقدر تدعمني بالمبلغ اللي يناسبك.\n\nدعمك اختياري بالكامل، وبيساعدني أكمل تطوير صِلَة وإضافة مميزات جديدة.",
-                                fontSize = 13.sp,
-                                color = MaterialTheme.colorScheme.onSurface,
-                                lineHeight = 20.sp
-                            )
-                            Surface(
-                                shape = RoundedCornerShape(12.dp),
-                                color = PrimaryGreen.copy(alpha = 0.12f),
-                                modifier = Modifier.fillMaxWidth()
-                            ) {
-                                Text(
-                                    text = if (selectedLanguage == "en")
-                                        "Sila is free, and your support is completely optional and helps me keep developing it. 🤍"
-                                    else
-                                        "صِلَة مجاني، ودعمك اختياري ويساعدني أكمل تطويره. 🤍",
-                                    fontSize = 12.sp,
-                                    fontWeight = FontWeight.SemiBold,
-                                    color = PrimaryGreen,
-                                    modifier = Modifier.padding(10.dp),
-                                    textAlign = TextAlign.Center
-                                )
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            if (currentPage != SupportPage.MAIN) {
+                                IconButton(
+                                    onClick = { currentPage = SupportPage.MAIN },
+                                    modifier = Modifier
+                                        .padding(end = 8.dp)
+                                        .background(MaterialTheme.colorScheme.surfaceVariant, CircleShape)
+                                        .size(36.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                        contentDescription = "الرجوع",
+                                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
                             }
+
+                            Text(
+                                text = when (currentPage) {
+                                    SupportPage.MAIN -> "ادعم صِلَةِ"
+                                    SupportPage.INSTAPAY -> "الدعم عبر InstaPay"
+                                    SupportPage.VODAFONE_CASH -> "الدعم عبر المحفظة الإلكترونية"
+                                },
+                                style = MaterialTheme.typography.titleLarge.copy(
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 18.sp
+                                ),
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                        }
+
+                        IconButton(
+                            onClick = onDismiss,
+                            modifier = Modifier
+                                .background(MaterialTheme.colorScheme.surfaceVariant, CircleShape)
+                                .size(36.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Close,
+                                contentDescription = "إغلاق",
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
                         }
                     }
 
-                    // Personal Impact Section (Real application data only)
-                    Text(
-                        text = if (selectedLanguage == "en") "Your Sila Impact 🤍" else "أثرك في صِلَةِ 🤍",
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
+                    Spacer(modifier = Modifier.height(16.dp))
 
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    // Appreciation Banner
+                    AnimatedVisibility(
+                        visible = showAppreciationBanner,
+                        enter = fadeIn(),
+                        exit = fadeOut()
                     ) {
-                        // Impact Card 1: Relatives Contacted
-                        ImpactStatCard(
-                            modifier = Modifier.weight(1f),
-                            emoji = "👥",
-                            value = "$contactedRelativesCount",
-                            label = if (selectedLanguage == "en") "Relatives Contacted" else "أقارب تواصلت معهم"
-                        )
-                        // Impact Card 2: Total Interactions
-                        ImpactStatCard(
-                            modifier = Modifier.weight(1f),
-                            emoji = "📝",
-                            value = "${logs.size}",
-                            label = if (selectedLanguage == "en") "Interactions Recorded" else "تفاعل مسجل"
-                        )
-                        // Impact Card 3: Time Using Sila
-                        ImpactStatCard(
-                            modifier = Modifier.weight(1f),
-                            emoji = "⏳",
-                            value = "$usageDays",
-                            label = if (selectedLanguage == "en") "Days using Sila" else "يوم مع صِلَة"
-                        )
-                    }
-
-                    HorizontalDivider()
-
-                    // Choose Support Method Header
-                    Text(
-                        text = if (selectedLanguage == "en") "Choose a Support Method" else "اختر طريقة الدعم",
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-
-                    // Method 1: InstaPay
-                    if (supportConfig.instapay.enabled) {
-                        SupportMethodOptionCard(
-                            title = if (selectedLanguage == "en") "📲 InstaPay" else "📲 InstaPay",
-                            description = if (selectedLanguage == "en")
-                                "Direct and instant transfer via InstaPay."
-                            else
-                                "تحويل مباشر وسريع عبر InstaPay.",
-                            badgeText = "InstaPay",
-                            onClick = { selectedSupportMethod = "instapay" }
-                        )
-                    } else {
-                        DisabledSupportMethodCard(
-                            title = if (selectedLanguage == "en") "📲 InstaPay" else "📲 InstaPay",
-                            selectedLanguage = selectedLanguage
-                        )
-                    }
-
-                    // Method 2: Mobile Wallet
-                    val enabledWallet = supportConfig.wallets.firstOrNull { it.enabled }
-                    if (enabledWallet != null) {
-                        SupportMethodOptionCard(
-                            title = if (selectedLanguage == "en") "📱 Mobile Wallet (${enabledWallet.name})" else "📱 محفظة إلكترونية (${enabledWallet.nameAr})",
-                            description = if (selectedLanguage == "en")
-                                "Support Sila using your mobile wallet (${enabledWallet.name})."
-                            else
-                                "ادعم صِلَة من خلال محفظتك الإلكترونية (${enabledWallet.nameAr}).",
-                            badgeText = enabledWallet.name,
-                            onClick = { selectedSupportMethod = "wallet" }
-                        )
-                    } else {
-                        DisabledSupportMethodCard(
-                            title = if (selectedLanguage == "en") "📱 Mobile Wallet" else "📱 المحفظة الإلكترونية",
-                            selectedLanguage = selectedLanguage
-                        )
-                    }
-
-                    // Simple appreciation banner if copied/opened link
-                    if (showThankYouMessage) {
                         Card(
                             shape = RoundedCornerShape(16.dp),
-                            colors = CardDefaults.cardColors(containerColor = SoftGold.copy(alpha = 0.2f)),
-                            border = BorderStroke(1.dp, SoftGold)
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.tertiaryContainer
+                            ),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 14.dp)
                         ) {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(14.dp),
-                                horizontalArrangement = Arrangement.Center,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text(
-                                    text = if (selectedLanguage == "en") "Thank you for supporting Sila! 🤍" else "شكرًا لدعمك لصِلَة 🤍",
-                                    fontWeight = FontWeight.Bold,
-                                    color = Color(0xFFB45309),
-                                    fontSize = 14.sp
-                                )
-                            }
+                            Text(
+                                text = "شكرًا لدعمك لصِلَةِ! جزاك الله خيراً وبارك في رزقك.",
+                                modifier = Modifier.padding(14.dp),
+                                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
+                                color = MaterialTheme.colorScheme.onTertiaryContainer,
+                                textAlign = TextAlign.Center
+                            )
                         }
                     }
 
-                    Spacer(modifier = Modifier.weight(1f))
+                // Screen Switcher
+                AnimatedContent(
+                    targetState = currentPage,
+                    transitionSpec = { fadeIn() togetherWith fadeOut() },
+                    label = "SupportPageTransition"
+                ) { page ->
+                    when (page) {
+                        SupportPage.MAIN -> MainSupportContent(
+                            contactedCount = contactedCount,
+                            interactionCount = interactionCount,
+                            daysUsingApp = daysUsingApp,
+                            onSelectInstaPay = { currentPage = SupportPage.INSTAPAY },
+                            onSelectVodafone = { currentPage = SupportPage.VODAFONE_CASH }
+                        )
 
-                    // Close Button
-                    Button(
-                        onClick = onDismiss,
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(14.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = PrimaryGreen)
-                    ) {
-                        Text(
-                            text = if (selectedLanguage == "en") "Close" else "إغلاق",
-                            fontSize = 15.sp,
-                            fontWeight = FontWeight.Bold
+                        SupportPage.INSTAPAY -> DedicatedInstaPayPage(
+                            context = context,
+                            onActionDone = { showAppreciationBanner = true }
+                        )
+
+                        SupportPage.VODAFONE_CASH -> DedicatedVodafoneCashPage(
+                            context = context,
+                            onActionDone = { showAppreciationBanner = true }
                         )
                     }
                 }
             }
         }
     }
+}
+}
 
-    // Modal / Bottom Sheet for InstaPay Flow
-    if (selectedSupportMethod == "instapay") {
-        InstaPaySupportModal(
-            config = supportConfig.instapay,
-            lang = selectedLanguage,
-            onDismiss = { selectedSupportMethod = null },
-            onActionDone = { showThankYouMessage = true }
+@Composable
+private fun MainSupportContent(
+    contactedCount: Int,
+    interactionCount: Int,
+    daysUsingApp: Long,
+    onSelectInstaPay: () -> Unit,
+    onSelectVodafone: () -> Unit
+) {
+    Column {
+        // Philosophy Banner
+        Card(
+            shape = RoundedCornerShape(18.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.45f)
+            ),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Row(
+                modifier = Modifier.padding(16.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "صِلَةِ تطبيق مجاني 100% بدون إعلانات أو اشتراكات. دعمك الاختياري يساهم مباشرة في استمرار تطوير وتحديث التطبيق.",
+                    style = MaterialTheme.typography.bodyMedium.copy(
+                        fontSize = 13.5.sp,
+                        lineHeight = 20.sp
+                    ),
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(20.dp))
+
+        // Personal Impact Section
+        Text(
+            text = "أثرك في صِلَةِ 📊",
+            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+            color = MaterialTheme.colorScheme.onSurface
+        )
+        Spacer(modifier = Modifier.height(10.dp))
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            ImpactStatCard(
+                modifier = Modifier.weight(1f),
+                icon = "👥",
+                value = contactedCount.toString(),
+                label = "أقارب تواصلت معهم"
+            )
+            ImpactStatCard(
+                modifier = Modifier.weight(1f),
+                icon = "📝",
+                value = interactionCount.toString(),
+                label = "تفاعلات مسجلة"
+            )
+            ImpactStatCard(
+                modifier = Modifier.weight(1f),
+                icon = "⏳",
+                value = maxOf(1L, daysUsingApp).toString(),
+                label = "أيام استخدام"
+            )
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        // Support Methods Selection
+        Text(
+            text = "اختر طريقة الدعم 💳",
+            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+            color = MaterialTheme.colorScheme.onSurface
+        )
+        Spacer(modifier = Modifier.height(12.dp))
+
+        // Method 1 Button Card
+        SupportMethodNavCard(
+            title = "InstaPay (إنستا باي)",
+            subtitle = "تحويل مباشر وسريع عبر عنوان IPA",
+            iconText = "📲",
+            badgeText = "موصى به",
+            onClick = onSelectInstaPay
+        )
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        // Method 2 Button Card
+        SupportMethodNavCard(
+            title = "المحفظة الإلكترونية (فودافون كاش)",
+            subtitle = "تحويل من فودافون/اتصالات/أورنج كاش أو محفظة بنكية",
+            iconText = "📱",
+            badgeText = "سهل وسريع",
+            onClick = onSelectVodafone
         )
     }
+}
 
-    // Modal / Bottom Sheet for Mobile Wallet Flow
-    if (selectedSupportMethod == "wallet" && supportConfig.wallets.any { it.enabled }) {
-        val wallet = supportConfig.wallets.first { it.enabled }
-        WalletSupportModal(
-            wallet = wallet,
-            lang = selectedLanguage,
-            onDismiss = { selectedSupportMethod = null },
-            onActionDone = { showThankYouMessage = true }
-        )
+@Composable
+private fun DedicatedInstaPayPage(
+    context: Context,
+    onActionDone: () -> Unit
+) {
+    var showQR by remember { mutableStateOf(false) }
+
+    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        // Address Card
+        Card(
+            shape = RoundedCornerShape(20.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = Color(0xFFF0FDF4)
+            ),
+            border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFBBF7D0)),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(text = "📲", fontSize = 24.sp)
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Column {
+                        Text(
+                            text = "عنوان الدفع الخاص بـ InstaPay (IPA)",
+                            fontSize = 12.sp,
+                            color = Color(0xFF166534),
+                            fontWeight = FontWeight.Medium
+                        )
+                        Text(
+                            text = SupportConfig.INSTAPAY_ADDRESS,
+                            fontSize = 17.sp,
+                            fontWeight = FontWeight.Black,
+                            color = Color(0xFF14532D)
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(14.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    // Copy Address
+                    Button(
+                        onClick = {
+                            val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                            val clip = ClipData.newPlainText("InstaPay IPA", SupportConfig.INSTAPAY_ADDRESS)
+                            clipboard.setPrimaryClip(clip)
+                            Toast.makeText(context, "تم نسخ عنوان InstaPay بنجاح ✨", Toast.LENGTH_SHORT).show()
+                            onActionDone()
+                        },
+                        modifier = Modifier.weight(1f),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF166534)),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Icon(Icons.Default.ContentCopy, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text("نسخ العنوان", fontSize = 13.sp)
+                    }
+
+                    // Open InstaPay App
+                    OutlinedButton(
+                        onClick = {
+                            try {
+                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(SupportConfig.INSTAPAY_LINK))
+                                context.startActivity(intent)
+                                onActionDone()
+                            } catch (e: Exception) {
+                                Toast.makeText(context, "تعذر فتح تطبيق InstaPay تلقائياً", Toast.LENGTH_SHORT).show()
+                            }
+                        },
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Icon(Icons.AutoMirrored.Filled.OpenInNew, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text("فتح التطبيق", fontSize = 13.sp)
+                    }
+
+                    // Toggle QR
+                    IconButton(
+                        onClick = { showQR = !showQR },
+                        modifier = Modifier.background(Color(0xFFDCFCE7), RoundedCornerShape(12.dp))
+                    ) {
+                        Icon(Icons.Default.QrCode, contentDescription = "QR Code", tint = Color(0xFF166534))
+                    }
+                }
+
+                // QR Code View
+                AnimatedVisibility(visible = showQR) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 14.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        val qrBitmap = remember { QRCodeUtils.generateQRCode(SupportConfig.INSTAPAY_LINK, 400) }
+                        if (qrBitmap != null) {
+                            Card(
+                                shape = RoundedCornerShape(16.dp),
+                                colors = CardDefaults.cardColors(containerColor = Color.White),
+                                elevation = CardDefaults.cardElevation(2.dp),
+                                modifier = Modifier.size(170.dp)
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .padding(10.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Image(
+                                        bitmap = qrBitmap,
+                                        contentDescription = "QR Code",
+                                        modifier = Modifier.fillMaxSize()
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // Detailed Step-by-Step Guide
+        Card(
+            shape = RoundedCornerShape(20.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
+            ),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Text(
+                    text = "خطوات التحويل بالتفصيل 📋",
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+
+                StepGuideItem(
+                    stepNumber = "1",
+                    title = "افتح تطبيق InstaPay",
+                    description = "قم بفتح تطبيق إنستا باي على هاتفك واضغط على زر الإرسال."
+                )
+                HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp), color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f))
+
+                StepGuideItem(
+                    stepNumber = "2",
+                    title = "اختر الإرسال عبر عنوان IPA",
+                    description = "اختر \"إرسال نقود\" ثم حدد الخيار \"عنوان الدفع (IPA)\"."
+                )
+                HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp), color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f))
+
+                StepGuideItem(
+                    stepNumber = "3",
+                    title = "الصق عنوان الدفع",
+                    description = "أدخل العنوان: ${SupportConfig.INSTAPAY_ADDRESS} (أو اضغط زر نسخ العنوان أعلاه)."
+                )
+                HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp), color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f))
+
+                StepGuideItem(
+                    stepNumber = "4",
+                    title = "حدد المبلغ واضغط تأكيد",
+                    description = "اكتب مبلغ التبرع الاختياري وأدخل الرقم السري لـ InstaPay لإتمام التحويل."
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun DedicatedVodafoneCashPage(
+    context: Context,
+    onActionDone: () -> Unit
+) {
+    var showQR by remember { mutableStateOf(false) }
+
+    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        // Phone/Wallet Card
+        Card(
+            shape = RoundedCornerShape(20.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = Color(0xFFFEF2F2)
+            ),
+            border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFFECACA)),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(text = "📱", fontSize = 24.sp)
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Column {
+                        Text(
+                            text = "رقم المحفظة الإلكترونية (فودافون كاش)",
+                            fontSize = 12.sp,
+                            color = Color(0xFF991B1B),
+                            fontWeight = FontWeight.Medium
+                        )
+                        Text(
+                            text = SupportConfig.VODAFONE_CASH_NUMBER,
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Black,
+                            color = Color(0xFF7F1D1D)
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(14.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    // Copy Number
+                    Button(
+                        onClick = {
+                            val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                            val clip = ClipData.newPlainText("Vodafone Cash Number", SupportConfig.VODAFONE_CASH_NUMBER)
+                            clipboard.setPrimaryClip(clip)
+                            Toast.makeText(context, "تم نسخ الرقم بنجاح ✨", Toast.LENGTH_SHORT).show()
+                            onActionDone()
+                        },
+                        modifier = Modifier.weight(1f),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF991B1B)),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Icon(Icons.Default.ContentCopy, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text("نسخ الرقم", fontSize = 13.sp)
+                    }
+
+                    // Direct USSD Call *9#
+                    OutlinedButton(
+                        onClick = {
+                            try {
+                                val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:*9%23"))
+                                context.startActivity(intent)
+                                onActionDone()
+                            } catch (e: Exception) {
+                                Toast.makeText(context, "تعذر فتح لوحة الاتصال", Toast.LENGTH_SHORT).show()
+                            }
+                        },
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Icon(Icons.Default.Phone, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text("طلب *9#", fontSize = 13.sp)
+                    }
+
+                    // Toggle QR
+                    IconButton(
+                        onClick = { showQR = !showQR },
+                        modifier = Modifier.background(Color(0xFFFEE2E2), RoundedCornerShape(12.dp))
+                    ) {
+                        Icon(Icons.Default.QrCode, contentDescription = "QR Code", tint = Color(0xFF991B1B))
+                    }
+                }
+
+                // QR Code View
+                AnimatedVisibility(visible = showQR) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 14.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        val qrBitmap = remember { QRCodeUtils.generateQRCode(SupportConfig.VODAFONE_CASH_NUMBER, 400) }
+                        if (qrBitmap != null) {
+                            Card(
+                                shape = RoundedCornerShape(16.dp),
+                                colors = CardDefaults.cardColors(containerColor = Color.White),
+                                elevation = CardDefaults.cardElevation(2.dp),
+                                modifier = Modifier.size(170.dp)
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .padding(10.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Image(
+                                        bitmap = qrBitmap,
+                                        contentDescription = "QR Code",
+                                        modifier = Modifier.fillMaxSize()
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // Detailed Step-by-Step Guide
+        Card(
+            shape = RoundedCornerShape(20.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
+            ),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Text(
+                    text = "خطوات التحويل بالتفصيل 📋",
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+
+                StepGuideItem(
+                    stepNumber = "1",
+                    title = "افتح كود المحفظة أو التطبيق",
+                    description = "اطلب كود *9# (فودافون كاش) أو افتح تطبيق المحفظة الخاص بك (أورنج كاش، اتصالات، WE، محفظة البنك)."
+                )
+                HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp), color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f))
+
+                StepGuideItem(
+                    stepNumber = "2",
+                    title = "اختر تحويل الأموال",
+                    description = "حدد خيار \"تحويل الأموال\" ثم اختر الإرسال إلى رقم آخر."
+                )
+                HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp), color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f))
+
+                StepGuideItem(
+                    stepNumber = "3",
+                    title = "أدخل الرقم المستلم",
+                    description = "اكتب الرقم: ${SupportConfig.VODAFONE_CASH_NUMBER} (أو استخدم زر نسخ الرقم أعلاه)."
+                )
+                HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp), color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f))
+
+                StepGuideItem(
+                    stepNumber = "4",
+                    title = "حدد المبلغ والرقم السري",
+                    description = "أدخل مبلغ التبرع الاختياري ثم أدخل الرقم السري للمحفظة لتأكيد التحويل."
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun StepGuideItem(
+    stepNumber: String,
+    title: String,
+    description: String
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.Top
+    ) {
+        Box(
+            modifier = Modifier
+                .size(28.dp)
+                .background(MaterialTheme.colorScheme.primaryContainer, CircleShape),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = stepNumber,
+                fontSize = 13.sp,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onPrimaryContainer
+            )
+        }
+        Spacer(modifier = Modifier.width(12.dp))
+        Column {
+            Text(
+                text = title,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Spacer(modifier = Modifier.height(2.dp))
+            Text(
+                text = description,
+                fontSize = 12.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                lineHeight = 17.sp
+            )
+        }
+    }
+}
+
+@Composable
+private fun SupportMethodNavCard(
+    title: String,
+    subtitle: String,
+    iconText: String,
+    badgeText: String,
+    onClick: () -> Unit
+) {
+    Card(
+        shape = RoundedCornerShape(18.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+        ),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() }
+            .border(
+                width = 1.dp,
+                color = MaterialTheme.colorScheme.outline.copy(alpha = 0.15f),
+                shape = RoundedCornerShape(18.dp)
+            )
+    ) {
+        Row(
+            modifier = Modifier.padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(text = iconText, fontSize = 28.sp)
+            Spacer(modifier = Modifier.width(14.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = title,
+                        style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold),
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Surface(
+                        shape = RoundedCornerShape(8.dp),
+                        color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.6f)
+                    ) {
+                        Text(
+                            text = badgeText,
+                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.height(3.dp))
+                Text(
+                    text = subtitle,
+                    style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.5.sp),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            Text(
+                text = "⬅️",
+                fontSize = 16.sp
+            )
+        }
     }
 }
 
 @Composable
 private fun ImpactStatCard(
     modifier: Modifier = Modifier,
-    emoji: String,
+    icon: String,
     value: String,
     label: String
 ) {
     Card(
         modifier = modifier,
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+        )
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(10.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(4.dp)
+            modifier = Modifier.padding(12.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text(emoji, fontSize = 20.sp)
-            Text(value, fontSize = 16.sp, fontWeight = FontWeight.Bold, color = PrimaryGreen)
+            Text(text = icon, fontSize = 20.sp)
+            Spacer(modifier = Modifier.height(4.dp))
             Text(
-                label,
-                fontSize = 10.sp,
+                text = value,
+                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Spacer(modifier = Modifier.height(2.dp))
+            Text(
+                text = label,
+                style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,
-                lineHeight = 13.sp,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                maxLines = 2
             )
         }
     }
 }
 
-@Composable
-private fun SupportMethodOptionCard(
-    title: String,
-    description: String,
-    badgeText: String,
-    onClick: () -> Unit
-) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick),
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        border = BorderStroke(1.5.dp, PrimaryGreen.copy(alpha = 0.4f))
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(44.dp)
-                    .clip(CircleShape)
-                    .background(PrimaryGreen.copy(alpha = 0.12f)),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = Icons.Outlined.AccountBalanceWallet,
-                    contentDescription = null,
-                    tint = PrimaryGreen,
-                    modifier = Modifier.size(24.dp)
-                )
-            }
-
-            Column(modifier = Modifier.weight(1f)) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Text(title, fontSize = 15.sp, fontWeight = FontWeight.Bold)
-                    Surface(
-                        shape = RoundedCornerShape(8.dp),
-                        color = SoftGold.copy(alpha = 0.2f)
-                    ) {
-                        Text(
-                            badgeText,
-                            fontSize = 10.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color(0xFFB45309),
-                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                        )
-                    }
-                }
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    description,
-                    fontSize = 11.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    lineHeight = 16.sp
-                )
-            }
-
-            Icon(
-                imageVector = Icons.Outlined.ChevronRight,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-    }
-}
-
-@Composable
-private fun DisabledSupportMethodCard(
-    title: String,
-    selectedLanguage: String
-) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(18.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Text(title, fontSize = 14.sp, fontWeight = FontWeight.Medium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            Text(
-                if (selectedLanguage == "en") "Currently Unavailable" else "طريقة الدعم دي غير متاحة حاليًا.",
-                fontSize = 11.sp,
-                color = MaterialTheme.colorScheme.error
-            )
-        }
-    }
-}
-
-@Composable
-private fun InstaPaySupportModal(
-    config: InstapayConfig,
-    lang: String,
-    onDismiss: () -> Unit,
-    onActionDone: () -> Unit
-) {
-    val context = LocalContext.current
-    val layoutDirection = if (lang == "en") LayoutDirection.Ltr else LayoutDirection.Rtl
-
-    var qrBitmap by remember { mutableStateOf<androidx.compose.ui.graphics.ImageBitmap?>(null) }
-    LaunchedEffect(config.paymentLink) {
-        kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) {
-            qrBitmap = QRCodeUtils.generateQRCodeBitmap(config.paymentLink)
-        }
-    }
-
-    Dialog(onDismissRequest = onDismiss) {
-        CompositionLocalProvider(LocalLayoutDirection provides layoutDirection) {
-            Card(
-                shape = RoundedCornerShape(24.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Column(
-                    modifier = Modifier
-                        .padding(20.dp)
-                        .verticalScroll(rememberScrollState()),
-                    verticalArrangement = Arrangement.spacedBy(14.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Text(
-                        text = if (lang == "en") "Support via InstaPay 📲" else "الدعم عبر InstaPay 📲",
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = PrimaryGreen
-                    )
-
-
-
-                    // IPA Box
-                    Card(
-                        shape = RoundedCornerShape(16.dp),
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Column(
-                            modifier = Modifier.padding(14.dp),
-                            verticalArrangement = Arrangement.spacedBy(8.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            Text(
-                                text = "InstaPay IPA",
-                                fontSize = 11.sp,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                            Text(
-                                text = config.ipa,
-                                fontSize = 17.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = PrimaryGreen
-                            )
-                            OutlinedButton(
-                                onClick = {
-                                    copyToClipboard(context, "InstaPay IPA", config.ipa)
-                                    Toast.makeText(context, if (lang == "en") "IPA Copied!" else "تم نسخ العنوان!", Toast.LENGTH_SHORT).show()
-                                    onActionDone()
-                                },
-                                shape = RoundedCornerShape(12.dp)
-                            ) {
-                                Icon(Icons.Outlined.ContentCopy, contentDescription = null, modifier = Modifier.size(16.dp))
-                                Spacer(modifier = Modifier.width(6.dp))
-                                Text(if (lang == "en") "Copy IPA" else "نسخ IPA", fontSize = 12.sp)
-                            }
-                        }
-                    }
-
-                    // Direct Payment Link Button
-                    Button(
-                        onClick = {
-                            openUrlInBrowser(context, config.paymentLink)
-                            onActionDone()
-                        },
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(14.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = PrimaryGreen)
-                    ) {
-                        Icon(Icons.Outlined.OpenInNew, contentDescription = null, modifier = Modifier.size(18.dp))
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(if (lang == "en") "Open InstaPay Link" else "فتح رابط InstaPay", fontWeight = FontWeight.Bold)
-                    }
-
-                    // QR Code Section
-                    Text(
-                        text = if (lang == "en") "Scan QR Code with InstaPay app" else "امسح الـ QR Code من تطبيق InstaPay",
-                        fontSize = 11.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Image(
-                        painter = androidx.compose.ui.res.painterResource(id = com.example.R.drawable.instapay_qr),
-                        contentDescription = "InstaPay QR Code",
-                        contentScale = androidx.compose.ui.layout.ContentScale.Fit,
-                        modifier = Modifier
-                            .size(200.dp)
-                            .clip(RoundedCornerShape(16.dp))
-                            .background(Color.White)
-                            .padding(8.dp)
-                    )
-
-                    TextButton(onClick = onDismiss) {
-                        Text(if (lang == "en") "Close" else "إغلاق", color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun WalletSupportModal(
-    wallet: WalletMethod,
-    lang: String,
-    onDismiss: () -> Unit,
-    onActionDone: () -> Unit
-) {
-    val context = LocalContext.current
-    val layoutDirection = if (lang == "en") LayoutDirection.Ltr else LayoutDirection.Rtl
-
-    var qrBitmap by remember { mutableStateOf<androidx.compose.ui.graphics.ImageBitmap?>(null) }
-    LaunchedEffect(wallet.phoneNumber) {
-        kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) {
-            qrBitmap = QRCodeUtils.generateQRCodeBitmap(wallet.phoneNumber)
-        }
-    }
-
-    Dialog(onDismissRequest = onDismiss) {
-        CompositionLocalProvider(LocalLayoutDirection provides layoutDirection) {
-            Card(
-                shape = RoundedCornerShape(24.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Column(
-                    modifier = Modifier
-                        .padding(20.dp)
-                        .verticalScroll(rememberScrollState()),
-                    verticalArrangement = Arrangement.spacedBy(14.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Text(
-                        text = if (lang == "en") "Support via ${wallet.name} 📱" else "الدعم عبر ${wallet.nameAr} 📱",
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = PrimaryGreen
-                    )
-
-
-
-                    // Wallet Phone Box
-                    Card(
-                        shape = RoundedCornerShape(16.dp),
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Column(
-                            modifier = Modifier.padding(14.dp),
-                            verticalArrangement = Arrangement.spacedBy(8.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            Text(
-                                text = if (lang == "en") "${wallet.name} Number" else "رقم محفظة ${wallet.nameAr}",
-                                fontSize = 11.sp,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                            Text(
-                                text = wallet.phoneNumber,
-                                fontSize = 20.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = PrimaryGreen
-                            )
-                            Button(
-                                onClick = {
-                                    copyToClipboard(context, wallet.name, wallet.phoneNumber)
-                                    Toast.makeText(context, if (lang == "en") "Number Copied!" else "تم نسخ الرقم!", Toast.LENGTH_SHORT).show()
-                                    onActionDone()
-                                },
-                                shape = RoundedCornerShape(12.dp),
-                                colors = ButtonDefaults.buttonColors(containerColor = PrimaryGreen)
-                            ) {
-                                Icon(Icons.Outlined.ContentCopy, contentDescription = null, modifier = Modifier.size(16.dp))
-                                Spacer(modifier = Modifier.width(6.dp))
-                                Text(if (lang == "en") "Copy Number" else "نسخ الرقم", fontSize = 12.sp, fontWeight = FontWeight.Bold)
-                            }
-                        }
-                    }
-
-                    // QR Code
-                    qrBitmap?.let { bmp ->
-                        Text(
-                            text = if (lang == "en") "Scan QR Code for wallet transfer" else "امسح الـ QR Code للتحويل للمحفظة",
-                            fontSize = 11.sp,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Image(
-                            bitmap = bmp,
-                            contentDescription = "Wallet QR Code",
-                            modifier = Modifier
-                                .size(140.dp)
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(Color.White)
-                                .padding(8.dp)
-                        )
-                    }
-
-                    TextButton(onClick = onDismiss) {
-                        Text(if (lang == "en") "Close" else "إغلاق", color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    }
-                }
-            }
-        }
-    }
-}
-
-private fun copyToClipboard(context: Context, label: String, text: String) {
-    val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-    val clip = ClipData.newPlainText(label, text)
-    clipboard.setPrimaryClip(clip)
-}
-
-private fun openUrlInBrowser(context: Context, url: String) {
-    try {
-        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url)).apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK
-        }
-        context.startActivity(intent)
-    } catch (e: Exception) {
-        e.printStackTrace()
-    }
-}

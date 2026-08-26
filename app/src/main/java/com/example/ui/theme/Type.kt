@@ -2,44 +2,36 @@ package com.example.ui.theme
 
 import androidx.compose.material3.Typography
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.Font as ResourceFont
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.text.googlefonts.GoogleFont
-import androidx.compose.ui.text.googlefonts.Font as GoogleFont
+import androidx.compose.ui.text.googlefonts.Font
 import androidx.compose.ui.unit.em
 import com.example.R
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Google Font Provider
 // ─────────────────────────────────────────────────────────────────────────────
-val fontProvider: GoogleFont.Provider by lazy {
-    GoogleFont.Provider(
-        providerAuthority = "com.google.android.gms.fonts",
-        providerPackage   = "com.google.android.gms",
-        certificates      = R.array.com_google_android_gms_fonts_certs
-    )
-}
+val fontProvider = GoogleFont.Provider(
+    providerAuthority = "com.google.android.gms.fonts",
+    providerPackage   = "com.google.android.gms",
+    certificates      = R.array.com_google_android_gms_fonts_certs
+)
 
-val IosEmojiFontFamily = FontFamily.Default
-
-val AlmaraiFontFamily = FontFamily(
-    ResourceFont(R.font.almarai_light, weight = FontWeight.Light),
-    ResourceFont(R.font.almarai_regular, weight = FontWeight.Normal),
-    ResourceFont(R.font.almarai_regular, weight = FontWeight.Medium),
-    ResourceFont(R.font.almarai_bold, weight = FontWeight.SemiBold),
-    ResourceFont(R.font.almarai_bold, weight = FontWeight.Bold),
-    ResourceFont(R.font.almarai_extrabold, weight = FontWeight.ExtraBold),
+val AlmaraiLocalFontFamily = FontFamily(
+    androidx.compose.ui.text.font.Font(R.font.almarai_light, weight = FontWeight.Light),
+    androidx.compose.ui.text.font.Font(R.font.almarai_regular, weight = FontWeight.Normal),
+    androidx.compose.ui.text.font.Font(R.font.almarai_bold, weight = FontWeight.Bold),
+    androidx.compose.ui.text.font.Font(R.font.almarai_extrabold, weight = FontWeight.ExtraBold)
 )
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Dynamic font family loader
 // ─────────────────────────────────────────────────────────────────────────────
 fun getFontFamily(fontName: String = "Almarai"): FontFamily {
-    if (fontName.equals("Almarai", ignoreCase = true)) {
-        return AlmaraiFontFamily
-    }
+    if (fontName == "Almarai") return AlmaraiLocalFontFamily
+
     val googleFontName = when (fontName) {
         "Cairo"      -> "Cairo"
         "Readex Pro" -> "Readex Pro"
@@ -47,21 +39,15 @@ fun getFontFamily(fontName: String = "Almarai"): FontFamily {
         "Lemonada"   -> "Lemonada"
         else         -> "Almarai"
     }
-    if (googleFontName == "Almarai") return AlmaraiFontFamily
-
-    return try {
-        val font = GoogleFont(googleFontName)
-        FontFamily(
-            GoogleFont(googleFont = font, fontProvider = fontProvider, weight = FontWeight.Light),
-            GoogleFont(googleFont = font, fontProvider = fontProvider, weight = FontWeight.Normal),
-            GoogleFont(googleFont = font, fontProvider = fontProvider, weight = FontWeight.Medium),
-            GoogleFont(googleFont = font, fontProvider = fontProvider, weight = FontWeight.SemiBold),
-            GoogleFont(googleFont = font, fontProvider = fontProvider, weight = FontWeight.Bold),
-            GoogleFont(googleFont = font, fontProvider = fontProvider, weight = FontWeight.ExtraBold),
-        )
-    } catch (e: Exception) {
-        AlmaraiFontFamily  // graceful fallback
-    }
+    val font = GoogleFont(googleFontName)
+    return FontFamily(
+        Font(googleFont = font, fontProvider = fontProvider, weight = FontWeight.Light),
+        Font(googleFont = font, fontProvider = fontProvider, weight = FontWeight.Normal),
+        Font(googleFont = font, fontProvider = fontProvider, weight = FontWeight.Medium),
+        Font(googleFont = font, fontProvider = fontProvider, weight = FontWeight.SemiBold),
+        Font(googleFont = font, fontProvider = fontProvider, weight = FontWeight.Bold),
+        Font(googleFont = font, fontProvider = fontProvider, weight = FontWeight.ExtraBold)
+    )
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

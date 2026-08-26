@@ -24,11 +24,6 @@ import com.example.ui.theme.SoftGold
 import java.text.SimpleDateFormat
 import java.util.*
 
-private data class QuranVerse(
-    val verseText: String,
-    val surahInfo: String
-)
-
 /**
  * Commitment Header Card (Stitch-style)
  * Features:
@@ -80,33 +75,18 @@ fun CommitmentHeaderCard(
         if (name.isNotBlank()) "$timeGreeting، $name 🌿" else "$timeGreeting 🌿"
     }
 
-    // Daily Quran Verse Rotator
-    val todayVerse = remember {
-        val dayOfYear = Calendar.getInstance().get(Calendar.DAY_OF_YEAR)
-        val quranVerses = listOf(
-            QuranVerse(
-                verseText = "﴿وَاتَّقُوا اللَّهَ الَّذِي تَسَاءَلُونَ بِهِ وَالْأَرْحَامَ ۚ إِنَّ اللَّهَ كَانَ عَلَيْكُمْ رَقِيبًا﴾",
-                surahInfo = "سورة النساء – آية ١"
-            ),
-            QuranVerse(
-                verseText = "﴿وَالَّذِينَ يَصِلُونَ مَا أَمَرَ اللَّهُ بِهِ أَن يُوصَلَ وَيَخْشَوْنَ رَبَّهُمْ وَيَخَافُونَ سُوءَ الْحِسَابِ﴾",
-                surahInfo = "سورة الرعد – آية ٢١"
-            ),
-            QuranVerse(
-                verseText = "﴿الَّذِينَ يَنقُضُونَ عَهْدَ اللَّهِ مِن بَعْدِ مِيثَاقِهِ وَيَقْطَعُونَ مَا أَمَرَ اللَّهُ بِهِ أَن يُوصَلَ وَيُفْسِدُونَ فِي الْأَرْضِ ۚ أُولَٰئِكَ هُمُ الْخَاسِرُونَ﴾",
-                surahInfo = "سورة البقرة – آية ٢٧"
-            ),
-            QuranVerse(
-                verseText = "﴿فَهَلْ عَسَيْتُمْ إِن تَوَلَّيْتُمْ أَن تُفْسِدُوا فِي الْأَرْضِ وَتُقَطِّعُوا أَرْحَامَكُمْ ۝ أُولَٰئِكَ الَّذِينَ لَعَنَهُمُ اللَّهُ فَأَصَمَّهُمْ وَأَعْمَىٰ أَبْصَارَهُمْ﴾",
-                surahInfo = "سورة محمد – آية ٢٢-٢٣"
-            ),
-            QuranVerse(
-                verseText = "﴿وَالَّذِينَ يَنقُضُونَ عَهْدَ اللَّهِ مِن بَعْدِ مِيثَاقِهِ وَيَقْطَعُونَ مَا أَمَرَ اللَّهُ بِهِ أَن يُوصَلَ وَيُفْسِدُونَ فِي الْأَرْضِ ۙ أُولَٰئِكَ لَهُمُ اللَّعْنَةُ وَلَهُمْ سُوءُ الدَّارِ﴾",
-                surahInfo = "سورة الرعد – آية ٢٥"
-            )
+    // Quran Ayahs on Kinship Ties (rotates on each app session)
+    val quranAyahs = remember {
+        listOf(
+            "﴿وَاتَّقُوا اللَّهَ الَّذِي تَسَاءَلُونَ بِهِ وَالْأَرْحَامَ ۚ إِنَّ اللَّهَ كَانَ عَلَيْكُمْ رَقِيبًا﴾" to "سورة النساء – آية 1",
+            "﴿وَالَّذِينَ يَصِلُونَ مَا أَمَرَ اللَّهُ بِهِ أَن يُوصَلَ وَيَخْشَوْنَ رَبَّهُمْ وَيَخَافُونَ سُوءَ الْحِسَابِ﴾" to "سورة الرعد – آية 21",
+            "﴿الَّذِينَ يَنقُضُونَ عَهْدَ اللَّهِ مِن بَعْدِ مِيثَاقِهِ وَيَقْطَعُونَ مَا أَمَرَ اللَّهُ بِهِ أَن يُوصَلَ وَيُفْسِدُونَ فِي الْأَرْضِ ۚ أُولَٰئِكَ هُمُ الْخَاسِرُونَ﴾" to "سورة البقرة – آية 27",
+            "﴿فَهَلْ عَسَيْتُمْ إِن تَوَلَّيْتُمْ أَن تُفْسِدُوا فِي الْأَرْضِ وَتُقَطِّعُوا أَرْحَامَكُمْ ۝ أُولَٰئِكَ الَّذِينَ لَعَنَهُمُ اللَّهُ فَأَصَمَّهُمْ وَأَعْمَىٰ أَبْصَارَهُمْ﴾" to "سورة محمد – آية 22-23",
+            "﴿وَالَّذِينَ يَنقُضُونَ عَهْدَ اللَّهِ مِن بَعْدِ مِيثَاقِهِ وَيَقْطَعُونَ مَا أَمَرَ اللَّهُ بِهِ أَن يُوصَلَ وَيُفْسِدُونَ فِي الْأَرْضِ ۙ أُولَٰئِكَ لَهُمُ اللَّعْنَةُ وَلَهُمْ سُوءُ الدَّارِ﴾" to "سورة الرعد – آية 25"
         )
-        quranVerses[(dayOfYear - 1) % quranVerses.size]
     }
+
+    val selectedAyah = remember { quranAyahs.random() }
 
     Card(
         shape = RoundedCornerShape(24.dp),
@@ -134,7 +114,7 @@ fun CommitmentHeaderCard(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.Top
             ) {
-                // Greeting + date + Daily Verse
+                // Greeting + date + Quran Ayah
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = greeting,
@@ -150,32 +130,20 @@ fun CommitmentHeaderCard(
                         fontWeight = FontWeight.Normal
                     )
                     Spacer(modifier = Modifier.height(10.dp))
-
-                    // Daily Verse Container
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(end = 12.dp)
-                            .background(Color.White.copy(alpha = 0.08f), RoundedCornerShape(12.dp))
-                            .padding(horizontal = 10.dp, vertical = 8.dp)
-                    ) {
-                        Column {
-                            Text(
-                                text = todayVerse.verseText,
-                                fontSize = 12.sp,
-                                color = Color.White.copy(alpha = 0.95f),
-                                lineHeight = 18.sp,
-                                fontWeight = FontWeight.Medium
-                            )
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Text(
-                                text = todayVerse.surahInfo,
-                                fontSize = 10.sp,
-                                color = SoftGold,
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
-                    }
+                    Text(
+                        text = selectedAyah.first,
+                        fontSize = 12.5.sp,
+                        color = Color.White.copy(alpha = 0.95f),
+                        lineHeight = 19.sp,
+                        fontWeight = FontWeight.Medium
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = selectedAyah.second,
+                        fontSize = 10.5.sp,
+                        color = SoftGold.copy(alpha = 0.85f),
+                        fontWeight = FontWeight.Normal
+                    )
                 }
 
                 // Circular commitment arc
@@ -236,83 +204,61 @@ fun CommitmentHeaderCard(
                 }
             }
 
-            // ── Glassmorphic Stats Row (Only shown if user has added relatives) ─
-            if (totalRelativesCount > 0) {
-                Spacer(modifier = Modifier.height(16.dp))
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(Color.Black.copy(alpha = 0.22f), RoundedCornerShape(16.dp))
-                        .padding(vertical = 10.dp, horizontal = 6.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    // Stat 1: Connected Relatives
-                    HeaderStatItem(
-                        value = "$uniqueRelativesContacted/$totalRelativesCount",
-                        label = if (lang == "en") "Tied" else "الأقارب الموصولون"
-                    )
+            Spacer(modifier = Modifier.height(16.dp))
+            HorizontalDivider(color = Color.White.copy(alpha = 0.1f), thickness = 0.5.dp)
+            Spacer(modifier = Modifier.height(14.dp))
 
-                    // Vertical Divider
-                    Box(
-                        modifier = Modifier
-                            .height(20.dp)
-                            .width(1.dp)
-                            .background(Color.White.copy(alpha = 0.18f))
-                    )
-
-                    // Stat 2: Total Logs
-                    HeaderStatItem(
-                        value = "$totalLogsCount",
-                        label = if (lang == "en") "Total" else "إجمالي التوصيلات"
-                    )
-
-                    // Vertical Divider
-                    Box(
-                        modifier = Modifier
-                            .height(20.dp)
-                            .width(1.dp)
-                            .background(Color.White.copy(alpha = 0.18f))
-                    )
-
-                    // Stat 3: Active Days
-                    HeaderStatItem(
-                        value = "$uniqueDaysCount",
-                        label = if (lang == "en") "Days" else "أيام التواصل"
-                    )
-                }
+            // ── Stat Chips Row ─────────────────────────────────────────────
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                StatChip(
+                    value = totalLogsCount.toString(),
+                    label = if (lang == "en") "Total Logs" else "إجمالي الصلات",
+                    modifier = Modifier.weight(1f)
+                )
+                StatChip(
+                    value = uniqueDaysCount.toString(),
+                    label = if (lang == "en") "Days Active" else "أيام الصلة",
+                    modifier = Modifier.weight(1f)
+                )
+                StatChip(
+                    value = uniqueRelativesContacted.toString(),
+                    label = if (lang == "en") "Relatives" else "أقارب",
+                    modifier = Modifier.weight(1f)
+                )
             }
         }
     }
 }
 
 @Composable
-private fun RowScope.HeaderStatItem(
+private fun StatChip(
     value: String,
-    label: String
+    label: String,
+    modifier: Modifier = Modifier
 ) {
     Column(
-        modifier = Modifier
-            .weight(1f)
-            .padding(horizontal = 2.dp),
+        modifier = modifier
+            .background(Color(0x20FFFFFF), RoundedCornerShape(14.dp))
+            .padding(vertical = 12.dp, horizontal = 6.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+        verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
         Text(
             text = value,
-            fontSize = 12.sp,
-            fontWeight = FontWeight.Bold,
-            color = SoftGold,
-            maxLines = 1,
-            softWrap = false
+            fontSize = 20.sp,
+            fontWeight = FontWeight.Black,
+            color = Color.White
         )
         Text(
             text = label,
-            fontSize = 9.sp,
-            color = Color.White.copy(alpha = 0.8f),
-            fontWeight = FontWeight.Medium,
-            maxLines = 1,
-            softWrap = false
+            fontSize = 10.sp,
+            color = Color(0xFFD0E0D5),
+            textAlign = TextAlign.Center,
+            lineHeight = 12.sp,
+            fontWeight = FontWeight.Bold
         )
     }
 }

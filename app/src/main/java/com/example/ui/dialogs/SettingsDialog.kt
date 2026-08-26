@@ -14,6 +14,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -22,33 +23,25 @@ import androidx.compose.ui.window.Dialog
 import com.example.ui.theme.SoftGold
 import com.example.viewmodel.RelativeViewModel
 
-import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.ui.platform.LocalLayoutDirection
-import androidx.compose.ui.unit.LayoutDirection
-
 @Composable
 fun SettingsDialog(
     viewModel: RelativeViewModel,
-    onDismiss: () -> Unit,
-    onReplayOnboarding: () -> Unit = {}
+    onDismiss: () -> Unit
 ) {
     val isDarkMode by viewModel.isDarkMode.collectAsState()
     val selectedLanguage by viewModel.selectedLanguage.collectAsState()
     val relatives by viewModel.relatives.collectAsState()
     var showImportConfirm by remember { mutableStateOf(false) }
-    val layoutDirection = if (selectedLanguage == "en") LayoutDirection.Ltr else LayoutDirection.Rtl
-
-    val languages = listOf(
-        Pair("ar", "🇸🇦 العربية (Arabic)"),
-        Pair("en", "🇬🇧 English (الإنجليزية)")
-    )
 
     Dialog(onDismissRequest = onDismiss) {
-        CompositionLocalProvider(LocalLayoutDirection provides layoutDirection) {
+        BoxWithConstraints {
+            val isTablet = maxWidth > 600.dp
+            val dialogWidth = if (isTablet) 540.dp else maxWidth
+
             Card(
                 shape = RoundedCornerShape(24.dp),
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.width(dialogWidth).fillMaxWidth()
             ) {
                 Column(
                     modifier = Modifier
@@ -62,49 +55,6 @@ fun SettingsDialog(
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary
                     )
-
-                    // ── Language Selector Section ────────────────────────────────
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                if (selectedLanguage == "en") "App Language" else "لغة التطبيق (Language)",
-                                fontSize = 14.sp,
-                                fontWeight = FontWeight.Bold
-                            )
-                            Text(
-                                if (selectedLanguage == "en") "Choose display language" else "اختر لغة عرض الواجهة",
-                                fontSize = 11.sp,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-
-                        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                            FilterChip(
-                                selected = selectedLanguage == "ar",
-                                onClick = { viewModel.selectLanguage("ar") },
-                                label = { Text("العربية 🇸🇦", fontSize = 12.sp, fontWeight = FontWeight.Bold) },
-                                colors = FilterChipDefaults.filterChipColors(
-                                    selectedContainerColor = MaterialTheme.colorScheme.primary,
-                                    selectedLabelColor = MaterialTheme.colorScheme.onPrimary
-                                )
-                            )
-                            FilterChip(
-                                selected = selectedLanguage == "en",
-                                onClick = { viewModel.selectLanguage("en") },
-                                label = { Text("English 🇬🇧", fontSize = 12.sp, fontWeight = FontWeight.Bold) },
-                                colors = FilterChipDefaults.filterChipColors(
-                                    selectedContainerColor = MaterialTheme.colorScheme.primary,
-                                    selectedLabelColor = MaterialTheme.colorScheme.onPrimary
-                                )
-                            )
-                        }
-                    }
-
-                    HorizontalDivider()
 
                     // ── Dark Mode Switch ────────────────────────────────────────
                     Row(
@@ -132,141 +82,115 @@ fun SettingsDialog(
 
                     HorizontalDivider()
 
-                    // ── Support Sila Section ────────────────────────────────────
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(16.dp),
-                        colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f)
-                        ),
-                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.3f))
+                    // ── Support Sila Option (Adaptive Card without white background strip) ─────
+                    Surface(
+                        onClick = {
+                            onDismiss()
+                            viewModel.showSupportSilaDialog.value = true
+                        },
+                        shape = RoundedCornerShape(18.dp),
+                        color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f),
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)),
+                        modifier = Modifier.fillMaxWidth()
                     ) {
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(14.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
+                                .padding(horizontal = 18.dp, vertical = 16.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
                         ) {
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    text = if (selectedLanguage == "en") "🤍 Support Sila" else "🤍 ادعم صِلَةِ",
-                                    fontSize = 14.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.primary
-                                )
-                                Text(
-                                    text = if (selectedLanguage == "en")
-                                        "Help developer keep Sila free & ad-free"
-                                    else
-                                        "ساعد المطور في بقاء صِلَة مجاني وبدون إعلانات",
-                                    fontSize = 11.sp,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
-                            Button(
-                                onClick = {
-                                    onDismiss()
-                                    viewModel.openSupportSilaDialog()
-                                },
-                                shape = RoundedCornerShape(12.dp),
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = com.example.ui.theme.SoftGold,
-                                    contentColor = Color(0xFF141816)
-                                )
-                            ) {
-                                Text(
-                                    if (selectedLanguage == "en") "Support" else "ادعم",
-                                    fontSize = 12.sp,
-                                    fontWeight = FontWeight.Bold
-                                )
-                            }
+                            Text(
+                                text = if (selectedLanguage == "en") "Support Sila" else "ادعم صِلَةِ",
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer
+                            )
+                            Icon(
+                                imageVector = Icons.Outlined.Info,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(20.dp)
+                            )
                         }
                     }
 
                     HorizontalDivider()
 
-                    // ── Notifications Preferences Section ────────────────────────
+                    // ── Notification Preferences (Clear High-Contrast Toggles) ─────
+                    val prefNotifyKinReminders by viewModel.prefNotifyKinReminders.collectAsState()
+                    val prefNotifyEncouragement by viewModel.prefNotifyEncouragement.collectAsState()
+                    val prefNotifyMonthly by viewModel.prefNotifyMonthly.collectAsState()
+
                     Text(
-                        if (selectedLanguage == "en") "Notifications Settings 🔔" else "إعدادات التنبيهات 🔔",
+                        text = if (selectedLanguage == "en") "Notification Settings:" else "إعدادات الإشعارات والتنبيهات:",
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Bold
                     )
 
-                    val prefDue by viewModel.prefNotifyDueRelatives.collectAsState()
-                    val prefEncouragement by viewModel.prefNotifyEncouragement.collectAsState()
-                    val prefMonthly by viewModel.prefNotifyMonthly.collectAsState()
-
-                    // Toggle 1: Due Relatives Reminder
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Column(modifier = Modifier.weight(1f)) {
+                    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
                             Text(
                                 if (selectedLanguage == "en") "Kin Tie Reminders" else "تذكير صلة الرحم",
                                 fontSize = 13.sp,
                                 fontWeight = FontWeight.SemiBold
                             )
-                            Text(
-                                if (selectedLanguage == "en") "Notify when relatives are due for contact" else "التنبيه عند حلول موعد التواصل مع الأقارب",
-                                fontSize = 10.sp,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            Switch(
+                                checked = prefNotifyKinReminders,
+                                onCheckedChange = { viewModel.toggleKinReminders(it) },
+                                colors = SwitchDefaults.colors(
+                                    checkedThumbColor = Color.White,
+                                    checkedTrackColor = Color(0xFF0E7075),
+                                    uncheckedTrackColor = Color(0xFFE2E8F0)
+                                )
                             )
                         }
-                        Switch(
-                            checked = prefDue,
-                            onCheckedChange = { viewModel.toggleNotifyDueRelatives(it) }
-                        )
-                    }
 
-                    // Toggle 2: Encouragement Messages
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Column(modifier = Modifier.weight(1f)) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
                             Text(
-                                if (selectedLanguage == "en") "Encouragement Messages" else "رسائل التشجيع",
+                                if (selectedLanguage == "en") "Encouragement Messages" else "رسائل التشجيع والإنجازات",
                                 fontSize = 13.sp,
                                 fontWeight = FontWeight.SemiBold
                             )
-                            Text(
-                                if (selectedLanguage == "en") "Weekly and milestone celebration messages" else "رسائل الإنجازات والتأملات الأسبوعية",
-                                fontSize = 10.sp,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            Switch(
+                                checked = prefNotifyEncouragement,
+                                onCheckedChange = { viewModel.toggleEncouragement(it) },
+                                colors = SwitchDefaults.colors(
+                                    checkedThumbColor = Color.White,
+                                    checkedTrackColor = Color(0xFF0E7075),
+                                    uncheckedTrackColor = Color(0xFFE2E8F0)
+                                )
                             )
                         }
-                        Switch(
-                            checked = prefEncouragement,
-                            onCheckedChange = { viewModel.toggleNotifyEncouragement(it) }
-                        )
-                    }
 
-                    // Toggle 3: Monthly Reminders
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Column(modifier = Modifier.weight(1f)) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
                             Text(
                                 if (selectedLanguage == "en") "Monthly Reminders" else "التذكيرات الشهرية",
                                 fontSize = 13.sp,
                                 fontWeight = FontWeight.SemiBold
                             )
-                            Text(
-                                if (selectedLanguage == "en") "Periodic monthly inspiration reminders" else "تذكيرات إلهامية للتواصل بشكل دوري كل شهر",
-                                fontSize = 10.sp,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            Switch(
+                                checked = prefNotifyMonthly,
+                                onCheckedChange = { viewModel.toggleMonthly(it) },
+                                colors = SwitchDefaults.colors(
+                                    checkedThumbColor = Color.White,
+                                    checkedTrackColor = Color(0xFF0E7075),
+                                    uncheckedTrackColor = Color(0xFFE2E8F0)
+                                )
                             )
                         }
-                        Switch(
-                            checked = prefMonthly,
-                            onCheckedChange = { viewModel.toggleNotifyMonthly(it) }
-                        )
                     }
 
                     HorizontalDivider()
@@ -360,24 +284,6 @@ fun SettingsDialog(
                                 )
                             }
                         }
-
-                        // Replay Onboarding Button
-                        OutlinedButton(
-                            onClick = {
-                                onDismiss()
-                                onReplayOnboarding()
-                            },
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(14.dp),
-                            border = BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)),
-                            colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.primary)
-                        ) {
-                            Text(
-                                if (selectedLanguage == "en") "View Introduction & Onboarding 🚀" else "عرض الشاشة التعريفية للأرحام 🚀",
-                                fontSize = 13.sp,
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
                     }
 
                     // ── Close Button ────────────────────────────────────────────
@@ -403,46 +309,44 @@ fun SettingsDialog(
 
     // ── Import Confirmation Dialog ──────────────────────────────────────────
     if (showImportConfirm) {
-        CompositionLocalProvider(LocalLayoutDirection provides layoutDirection) {
-            AlertDialog(
-                onDismissRequest = { showImportConfirm = false },
-                title = {
+        AlertDialog(
+            onDismissRequest = { showImportConfirm = false },
+            title = {
+                Text(
+                    if (selectedLanguage == "en") "Restore from Backup" else "استعادة من نسخة احتياطية",
+                    fontWeight = FontWeight.Bold
+                )
+            },
+            text = {
+                Text(
+                    if (selectedLanguage == "en")
+                        "New relatives from the backup file will be added. Relatives with the same phone number will not be duplicated.\n\nDo you want to continue?"
+                    else
+                        "سيتم إضافة الأقارب الجدد من ملف النسخة الاحتياطية. الأقارب الذين لديهم نفس رقم الهاتف لن يتكرروا.\n\nهل تريد المتابعة؟",
+                    lineHeight = 20.sp
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showImportConfirm = false
+                        onDismiss()
+                        viewModel.triggerImport()
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = SoftGold, contentColor = Color(0xFF141816))
+                ) {
                     Text(
-                        if (selectedLanguage == "en") "Restore from Backup" else "استعادة من نسخة احتياطية",
+                        if (selectedLanguage == "en") "Yes, Choose File" else "نعم، اختر الملف",
                         fontWeight = FontWeight.Bold
                     )
-                },
-                text = {
-                    Text(
-                        if (selectedLanguage == "en")
-                            "New relatives from the backup file will be added. Relatives with the same phone number will not be duplicated.\n\nDo you want to continue?"
-                        else
-                            "سيتم إضافة الأقارب الجدد من ملف النسخة الاحتياطية. الأقارب الذين لديهم نفس رقم الهاتف لن يتكرروا.\n\nهل تريد المتابعة؟",
-                        lineHeight = 20.sp
-                    )
-                },
-                confirmButton = {
-                    Button(
-                        onClick = {
-                            showImportConfirm = false
-                            onDismiss()
-                            viewModel.triggerImport()
-                        },
-                        colors = ButtonDefaults.buttonColors(containerColor = SoftGold, contentColor = Color(0xFF141816))
-                    ) {
-                        Text(
-                            if (selectedLanguage == "en") "Yes, Choose File" else "نعم، اختر الملف",
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                },
-                dismissButton = {
-                    TextButton(onClick = { showImportConfirm = false }) {
-                        Text(if (selectedLanguage == "en") "Cancel" else "إلغاء")
-                    }
-                },
-                shape = RoundedCornerShape(20.dp)
-            )
-        }
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showImportConfirm = false }) {
+                    Text(if (selectedLanguage == "en") "Cancel" else "إلغاء")
+                }
+            },
+            shape = RoundedCornerShape(20.dp)
+        )
     }
 }

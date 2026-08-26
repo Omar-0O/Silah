@@ -88,29 +88,23 @@ fun HomeTabScreen(viewModel: RelativeViewModel) {
             TopAppBar(
                 title = {
                     Row(
-                        modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(10.dp)
-                        ) {
-                            com.example.ui.components.SilaUserAvatar(
-                                avatarId = userAvatarId,
-                                size = 42.dp,
-                                showBorder = true,
-                                modifier = Modifier.clickableNoRipple { showProfileDialog = true }
+                        com.example.ui.components.SilaUserAvatar(
+                            avatarId = userAvatarId,
+                            size = 38.dp,
+                            showBorder = true,
+                            modifier = Modifier.clickableNoRipple { showProfileDialog = true }
+                        )
+                        Column {
+                            Text(
+                                text = if (userName.isNotBlank()) userName
+                                       else if (lang == "en") "Family Keeper" else "حافظ الأرحام",
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onBackground,
+                                fontSize = 16.sp
                             )
-                            Column {
-                                Text(
-                                    text = if (userName.isNotBlank()) userName
-                                           else if (lang == "en") "Family Keeper" else "حافظ الأرحام",
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.onBackground,
-                                    fontSize = 16.sp
-                                )
-                            }
                         }
                     }
                 },
@@ -153,10 +147,92 @@ fun HomeTabScreen(viewModel: RelativeViewModel) {
             item {
                 DueRelativesCarousel(
                     dueRelatives = dueRelatives,
-                    viewModel = viewModel,
-                    totalRelativesCount = relatives.size
+                    viewModel = viewModel
                 )
             }
+        }
+    }
+}
+
+// ── Quick Stats Row ───────────────────────────────────────────────────────────
+@Composable
+private fun QuickStatsRow(
+    relativesCount: Int,
+    dueCount: Int,
+    logsCount: Int,
+    lang: String
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(10.dp)
+    ) {
+        MiniStatCard(
+            emoji = "👥",
+            value = relativesCount.toString(),
+            label = if (lang == "en") "Relatives" else "أقارب",
+            color = PrimaryGreen,
+            modifier = Modifier.weight(1f)
+        )
+        MiniStatCard(
+            emoji = "🔔",
+            value = dueCount.toString(),
+            label = if (lang == "en") "Due Now" else "بانتظارك",
+            color = if (dueCount > 0) Color(0xFFE53935) else PrimaryGreen,
+            modifier = Modifier.weight(1f)
+        )
+        MiniStatCard(
+            emoji = "🤝",
+            value = logsCount.toString(),
+            label = if (lang == "en") "Total Logs" else "صلات مسجلة",
+            color = Color(0xFF0E7075),
+            modifier = Modifier.weight(1f)
+        )
+    }
+}
+
+@Composable
+private fun MiniStatCard(
+    emoji: String,
+    value: String,
+    label: String,
+    color: Color,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = color.copy(alpha = 0.08f)),
+        modifier = modifier.shadow(2.dp, RoundedCornerShape(16.dp))
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 12.dp, horizontal = 6.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(38.dp)
+                    .background(color.copy(alpha = 0.14f), androidx.compose.foundation.shape.CircleShape),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = emoji,
+                    fontSize = 18.sp
+                )
+            }
+            Text(
+                text = value,
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Black,
+                color = color
+            )
+            Text(
+                text = label,
+                fontSize = 10.sp,
+                color = color.copy(alpha = 0.75f),
+                fontWeight = FontWeight.Bold
+            )
         }
     }
 }
@@ -169,7 +245,7 @@ private fun StreakCard(
     lang: String
 ) {
     val dayLabels = remember(lang) {
-        (6 downTo 0).map { offset ->
+        (0..6).map { offset ->
             val cal = Calendar.getInstance().apply {
                 add(Calendar.DAY_OF_YEAR, -offset)
             }
@@ -186,13 +262,13 @@ private fun StreakCard(
                 }
             } else {
                 when (dayOfWeek) {
-                    Calendar.SUNDAY -> "أحد"
-                    Calendar.MONDAY -> "إثنين"
-                    Calendar.TUESDAY -> "ثلاثاء"
-                    Calendar.WEDNESDAY -> "أربعاء"
-                    Calendar.THURSDAY -> "خميس"
-                    Calendar.FRIDAY -> "جمعة"
-                    else -> "سبت"
+                    Calendar.SUNDAY -> "الأحد"
+                    Calendar.MONDAY -> "الأثنين"
+                    Calendar.TUESDAY -> "الثلاثاء"
+                    Calendar.WEDNESDAY -> "الأربعاء"
+                    Calendar.THURSDAY -> "الخميس"
+                    Calendar.FRIDAY -> "الجمعة"
+                    else -> "السبت"
                 }
             }
         }
@@ -254,51 +330,47 @@ private fun StreakCard(
                 }
             }
 
-            // 7 Days Visual Row (Ltr - week starts from Left side)
-            CompositionLocalProvider(
-                androidx.compose.ui.platform.LocalLayoutDirection provides androidx.compose.ui.unit.LayoutDirection.Ltr
+            // 7 Days Visual Row
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    last7DaysActivity.forEachIndexed { index, isActive ->
-                        val dayLabel = dayLabels.getOrElse(index) { "" }
-                        val isToday = (index == last7DaysActivity.lastIndex)
+                last7DaysActivity.reversed().forEachIndexed { index, isActive ->
+                    val dayLabel = dayLabels.getOrElse(index) { "" }
+                    val isToday = (index == 0)
 
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.spacedBy(6.dp)
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Text(
+                            text = dayLabel,
+                            fontSize = 10.sp,
+                            fontWeight = if (isToday) FontWeight.Bold else FontWeight.Normal,
+                            color = if (isToday) MaterialTheme.colorScheme.primary
+                                    else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                        )
+
+                        Box(
+                            modifier = Modifier
+                                .size(32.dp)
+                                .background(
+                                    color = if (isActive) Color(0xFFFF6D00).copy(alpha = 0.18f)
+                                            else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.06f),
+                                    shape = CircleShape
+                                )
+                                .border(
+                                    width = if (isToday) 1.5.dp else 0.dp,
+                                    color = if (isToday) Color(0xFFFF6D00) else Color.Transparent,
+                                    shape = CircleShape
+                                ),
+                            contentAlignment = Alignment.Center
                         ) {
                             Text(
-                                text = dayLabel,
-                                fontSize = 10.sp,
-                                fontWeight = if (isToday) FontWeight.Bold else FontWeight.Normal,
-                                color = if (isToday) MaterialTheme.colorScheme.primary
-                                        else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.65f)
+                                text = if (isActive) "🔥" else "•",
+                                fontSize = if (isActive) 13.sp else 16.sp,
+                                color = if (isActive) Color.Unspecified else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
                             )
-
-                            Box(
-                                modifier = Modifier
-                                    .size(32.dp)
-                                    .background(
-                                        color = if (isActive) Color(0xFFFF6D00).copy(alpha = 0.18f)
-                                                else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.06f),
-                                        shape = CircleShape
-                                    )
-                                    .border(
-                                        width = if (isToday) 1.5.dp else 0.dp,
-                                        color = if (isToday) Color(0xFFFF6D00) else Color.Transparent,
-                                        shape = CircleShape
-                                    ),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(
-                                    text = if (isActive) "🔥" else "•",
-                                    fontSize = if (isActive) 13.sp else 16.sp,
-                                    color = if (isActive) Color.Unspecified else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
-                                )
-                            }
                         }
                     }
                 }
