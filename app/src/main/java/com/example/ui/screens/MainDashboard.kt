@@ -200,8 +200,7 @@ fun MainDashboardScreen(
             if (showSettingsDialog) {
                 SettingsDialog(
                     viewModel = viewModel,
-                    onDismiss = { viewModel.showSettingsDialog.value = false },
-                    onReplayOnboarding = onReplayOnboarding
+                    onDismiss = { viewModel.showSettingsDialog.value = false }
                 )
             }
             if (showRecordLogDialog != null) {
@@ -239,31 +238,16 @@ fun MainDashboardScreen(
                 )
             }
 
+
+
             if (activeMilestoneDialog != null) {
-                com.example.ui.dialogs.MilestoneDialog(
-                    milestoneCount = activeMilestoneDialog!!,
-                    onSupportClick = { viewModel.showSupportSilaDialog.value = true },
-                    onDismiss = { viewModel.activeMilestoneDialog.value = null }
-                )
-            }
-
-            val showSupportSilaDialog by viewModel.showSupportSilaDialog.collectAsState()
-            val activeMilestone by viewModel.activeMilestone.collectAsState()
-
-            if (showSupportSilaDialog) {
-                SupportSilaDialog(
-                    viewModel = viewModel,
-                    onDismiss = { viewModel.closeSupportSilaDialog() }
-                )
-            }
-
-            if (activeMilestone != null) {
                 MilestoneDialog(
-                    milestone = activeMilestone!!,
-                    lang = selectedLanguage,
-                    onSupportClick = { viewModel.onMilestoneSupportClick() },
-                    onNotNowClick = { viewModel.onMilestoneNotNow() },
-                    onDismiss = { viewModel.activeMilestone.value = null }
+                    milestoneCount = activeMilestoneDialog!!,
+                    onSupportClick = {
+                        viewModel.activeMilestoneDialog.value = null
+                        viewModel.showSupportSilaDialog.value = true
+                    },
+                    onDismiss = { viewModel.activeMilestoneDialog.value = null }
                 )
             }
         }

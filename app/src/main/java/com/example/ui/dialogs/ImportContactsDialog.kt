@@ -84,8 +84,8 @@ fun ImportContactsDialog(
 
     val filteredContacts = remember(contacts, searchQuery) {
         if (searchQuery.isBlank()) contacts
-        else contacts.filter { contact ->
-            contact.name.contains(searchQuery, ignoreCase = true) || contact.phone.contains(searchQuery)
+        else contacts.filter { (cName, cPhone, _) ->
+            cName.contains(searchQuery, ignoreCase = true) || cPhone.contains(searchQuery)
         }
     }
 
@@ -225,10 +225,7 @@ fun ImportContactsDialog(
                             modifier = Modifier.weight(1f),
                             verticalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            items(filteredContacts) { contact ->
-                                val name = contact.name
-                                val phone = contact.phone
-                                val photoUri = contact.photoUri
+                            items(filteredContacts) { (name, phone, _) ->
                                 val normalized = CallLogManager.normalizePhoneNumber(phone)
                                 val isAlreadyAdded = existingNormalizedPhones.contains(normalized)
                                 val isExpanded = selectedContactPhone == phone
@@ -261,7 +258,7 @@ fun ImportContactsDialog(
                                             ) {
                                                 com.example.ui.components.RelativeAvatar(
                                                     name = name,
-                                                    photoUri = photoUri,
+                                                    photoUri = null,
                                                     size = 38.dp,
                                                     fontSize = 15.sp
                                                 )
@@ -316,8 +313,7 @@ fun ImportContactsDialog(
                                                         phone = phone,
                                                         relationshipDegree = degree,
                                                         intervalDays = interval,
-                                                        notes = if (selectedLanguage == "en") "Imported from contacts" else "تم استيراده من جهات الاتصال",
-                                                        photoUri = photoUri
+                                                        notes = if (selectedLanguage == "en") "Imported from contacts" else "تم استيراده من جهات الاتصال"
                                                     )
                                                     val toastMsg = if (selectedLanguage == "en") "$name successfully added to Silah! ✨" else "تمت إضافة $name بنجاح في صِلَةِ! ✨"
                                                     Toast.makeText(context, toastMsg, Toast.LENGTH_SHORT).show()
