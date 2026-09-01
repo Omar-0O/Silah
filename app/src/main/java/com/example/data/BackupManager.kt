@@ -64,7 +64,7 @@ object BackupManager {
             put("backupVersion", BACKUP_VERSION)
             put("appName", "صِلَةِ")
             put("exportedAt", System.currentTimeMillis())
-            put("exportedAtReadable", SimpleDateFormat("yyyy-MM-dd HH:mm", Locale("ar")).format(Date()))
+            put("exportedAtReadable", SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.forLanguageTag("ar")).format(Date()))
 
             // Relatives
             put("relatives", JSONArray().apply {
@@ -136,13 +136,15 @@ object BackupManager {
             var importedRelatives = 0
             var importedLogs = 0
 
-            // Import Relatives
+            // Import Relatives and build ID mapping for logs
             val relativesArray = root.getJSONArray("relatives")
             val existingRelatives = relativeDao.getAllRelativesOnce()
             val existingPhones = existingRelatives.map { it.phone }.toSet()
+            val oldToNewIdMap = mutableMapOf<Int, Int>()
 
             for (i in 0 until relativesArray.length()) {
                 val obj = relativesArray.getJSONObject(i)
+                val oldId = obj.optInt("id", -1)
                 val phone = obj.getString("phone")
 
                 val shouldImport = when (onConflict) {
@@ -151,9 +153,8 @@ object BackupManager {
                 }
 
                 if (shouldImport) {
-                    relativeDao.insertRelative(
+                    val newId = relativeDao.insertRelative(
                         Relative(
-                            // id = 0 so Room auto-generates new IDs
                             name = obj.getString("name"),
                             phone = phone,
                             relationshipDegree = obj.getString("relationshipDegree"),
@@ -162,17 +163,28 @@ object BackupManager {
                             notes = obj.optString("notes", "")
                         )
                     )
+                    if (oldId != -1) {
+                        oldToNewIdMap[oldId] = newId.toInt()
+                    }
                     importedRelatives++
+                } else {
+                    val existing = existingRelatives.firstOrNull { it.phone == phone }
+                    if (existing != null && oldId != -1) {
+                        oldToNewIdMap[oldId] = existing.id
+                    }
                 }
             }
 
-            // Import Logs (only for newly-added relatives)
+            // Import Logs using mapped relative IDs
             val logsArray = root.optJSONArray("communicationLogs") ?: JSONArray()
             for (i in 0 until logsArray.length()) {
                 val obj = logsArray.getJSONObject(i)
+                val oldRelId = obj.getInt("relativeId")
+                // BUG-03 Fix: skip logs with no ID mapping to avoid orphan data
+                val targetRelId = oldToNewIdMap[oldRelId] ?: continue
                 communicationLogDao.insertLog(
                     CommunicationLog(
-                        relativeId = obj.getInt("relativeId"),
+                        relativeId = targetRelId,
                         type = obj.getString("type"),
                         timestamp = obj.getLong("timestamp"),
                         notes = obj.optString("notes", "")
@@ -199,7 +211,7 @@ object BackupManager {
 
     /** Suggested filename for the backup */
     fun suggestedFileName(): String {
-        val date = SimpleDateFormat("yyyy-MM-dd", Locale("ar")).format(Date())
+        val date = SimpleDateFormat("yyyy-MM-dd", Locale.forLanguageTag("ar")).format(Date())
         return "silah_backup_$date.json"
     }
 }

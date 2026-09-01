@@ -42,6 +42,7 @@ fun OnboardingScreen(
     val selectedLanguage by viewModel.selectedLanguage.collectAsState()
     val savedName by viewModel.userName.collectAsState()
     val savedGender by viewModel.userGender.collectAsState()
+    val showImportContactsDialog by viewModel.showImportContactsDialog.collectAsState()
 
     var nameInput by remember { mutableStateOf(savedName) }
     var genderInput by remember { mutableStateOf(savedGender) }
@@ -345,27 +346,31 @@ fun OnboardingScreen(
                             color = Color(0xFF1E293B)
                         )
 
-                        // Quick Add Preset Chips
+                        // BUG-06 Fix: use explicit name field to avoid fragile substringBefore(" ") on labels
                         val presetKin = listOf(
-                            Pair("الأم 🌸", "أم"),
-                            Pair("الأب 👨‍👧", "أب"),
-                            Pair("الأخ 👦", "أخ"),
-                            Pair("الأخت 👧", "أخت"),
-                            Pair("العم 🤝", "عم"),
-                            Pair("الخال 💚", "خال")
+                            Triple("الأم 🌸",  "الأم",  "أم"),
+                            Triple("الأب 👨\u200d👧", "الأب",  "أب"),
+                            Triple("الأخ 👦",  "الأخ",  "أخ"),
+                            Triple("الأخت 👧", "الأخت", "أخت"),
+                            Triple("العم 🤝",  "العم",  "عم"),
+                            Triple("الخال 💚", "الخال", "خال")
                         )
 
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
-                            presetKin.take(3).forEach { (label, rel) ->
+                            presetKin.take(3).forEach { (label, name, rel) ->
                                 FilterChip(
                                     selected = currentRelatives.any { it.relationshipDegree == rel },
                                     onClick = {
-                                        if (!currentRelatives.any { it.relationshipDegree == rel }) {
+                                        // BUG-05 Fix: allow unselecting (deselect = delete)
+                                        val existing = currentRelatives.firstOrNull { it.relationshipDegree == rel }
+                                        if (existing != null) {
+                                            viewModel.deleteRelative(existing)
+                                        } else {
                                             viewModel.addRelative(
-                                                name = label.substringBefore(" "),
+                                                name = name,
                                                 phone = "",
                                                 relationshipDegree = rel,
                                                 intervalDays = 7,
@@ -381,13 +386,17 @@ fun OnboardingScreen(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
-                            presetKin.drop(3).forEach { (label, rel) ->
+                            presetKin.drop(3).forEach { (label, name, rel) ->
                                 FilterChip(
                                     selected = currentRelatives.any { it.relationshipDegree == rel },
                                     onClick = {
-                                        if (!currentRelatives.any { it.relationshipDegree == rel }) {
+                                        // BUG-05 Fix: allow unselecting (deselect = delete)
+                                        val existing = currentRelatives.firstOrNull { it.relationshipDegree == rel }
+                                        if (existing != null) {
+                                            viewModel.deleteRelative(existing)
+                                        } else {
                                             viewModel.addRelative(
-                                                name = label.substringBefore(" "),
+                                                name = name,
                                                 phone = "",
                                                 relationshipDegree = rel,
                                                 intervalDays = 7,
@@ -509,6 +518,7 @@ fun OnboardingScreen(
                         if (currentPage < onboardingItems.size - 1) {
                             currentPage++
                         } else {
+                            viewModel.showImportContactsDialog.value = false
                             onFinished()
                         }
                     },
@@ -566,5 +576,12 @@ fun OnboardingScreen(
                 }
             }
         }
+    }
+
+    if (showImportContactsDialog) {
+        com.example.ui.dialogs.ImportContactsDialog(
+            viewModel = viewModel,
+            onDismiss = { viewModel.showImportContactsDialog.value = false }
+        )
     }
 }

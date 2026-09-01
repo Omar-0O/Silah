@@ -99,7 +99,7 @@ fun AppNavigation(viewModel: RelativeViewModel) {
         showOnboarding -> OnboardingScreen(
             viewModel = viewModel,
             onFinished = {
-                prefs.edit().putBoolean("onboarding_done", true).apply()
+                prefs.edit().putBoolean("onboarding_done", true).commit()
                 onboardingDone = true
                 forceShowOnboarding = false
             }
@@ -177,7 +177,7 @@ fun MainDashboardScreen(
                     when (tab) {
                         SilaTab.DASHBOARD -> HomeTabScreen(viewModel = viewModel)
                         SilaTab.RELATIVES -> RelativesTabScreen(viewModel = viewModel)
-                        SilaTab.SETTINGS  -> RelativesTabScreen(viewModel = viewModel) // fallback
+                        SilaTab.SETTINGS  -> HomeTabScreen(viewModel = viewModel) // BUG-04 Fix: SETTINGS opens dialog, fallback to Dashboard
                     }
                 }
             }
@@ -203,26 +203,28 @@ fun MainDashboardScreen(
                     onDismiss = { viewModel.showSettingsDialog.value = false }
                 )
             }
-            if (showRecordLogDialog != null) {
+            val currentRecordLog = showRecordLogDialog
+            if (currentRecordLog != null) {
                 RecordLogBottomSheet(
-                    relative = showRecordLogDialog!!,
+                    relative = currentRecordLog,
                     viewModel = viewModel,
                     onDismiss = { viewModel.showRecordLogDialog.value = null }
                 )
             }
-            if (showLogsHistoryDialog != null) {
+            val currentLogsHistory = showLogsHistoryDialog
+            if (currentLogsHistory != null) {
                 LogsHistoryDialog(
-                    relative = showLogsHistoryDialog!!,
+                    relative = currentLogsHistory,
                     viewModel = viewModel,
                     onDismiss = { viewModel.showLogsHistoryDialog.value = null }
                 )
             }
             val showSupportSilaDialog by viewModel.showSupportSilaDialog.collectAsState()
             val activeMilestoneDialog by viewModel.activeMilestoneDialog.collectAsState()
+            val logs by viewModel.logs.collectAsState()
 
             if (showSupportSilaDialog) {
                 val contactedCount = relatives.count { it.lastContactDate > 0 }
-                val logs by viewModel.logs.collectAsState()
                 val prefs = androidx.compose.ui.platform.LocalContext.current
                     .getSharedPreferences("silah_prefs", android.content.Context.MODE_PRIVATE)
                 val firstLaunch = prefs.getLong("app_first_launch_time", System.currentTimeMillis())
@@ -238,11 +240,10 @@ fun MainDashboardScreen(
                 )
             }
 
-
-
-            if (activeMilestoneDialog != null) {
+            val currentMilestone = activeMilestoneDialog
+            if (currentMilestone != null) {
                 MilestoneDialog(
-                    milestoneCount = activeMilestoneDialog!!,
+                    milestoneCount = currentMilestone,
                     onSupportClick = {
                         viewModel.activeMilestoneDialog.value = null
                         viewModel.showSupportSilaDialog.value = true
@@ -414,7 +415,10 @@ fun LogsHistoryDialog(
     val logs by viewModel.logs.collectAsState()
     val lang by viewModel.selectedLanguage.collectAsState()
     val layoutDirection = if (lang == "en") LayoutDirection.Ltr else LayoutDirection.Rtl
-    val relativeLogs = logs.filter { it.relativeId == relative.id }.sortedByDescending { it.timestamp }
+    // BUG-10 Fix: collect only this relative's logs directly — avoids loading all logs into memory
+    val relativeLogs by remember(relative.id) {
+        viewModel.getLogsForRelative(relative.id)
+    }.collectAsState(initial = emptyList())
     val dateLocale = if (lang == "en") Locale.ENGLISH else Locale.forLanguageTag("ar")
     val dateFormat = remember(lang) { SimpleDateFormat("yyyy/MM/dd - hh:mm a", dateLocale) }
 
@@ -454,7 +458,7 @@ fun LogsHistoryDialog(
                         modifier = Modifier.weight(1f),
                         verticalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
-                        items(relativeLogs, key = { it.id }) { log ->
+                        items(relativeLogs, key = { log -> "${log.id}_${log.timestamp}" }) { log ->
                             Card(
                                 shape = RoundedCornerShape(14.dp),
                                 colors = CardDefaults.cardColors(

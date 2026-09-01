@@ -11,13 +11,13 @@ class QRCodeUtilsTest {
 
     @Test
     fun testGenerateQRCodeBitmap_ValidContent() {
-        val qrBitmap = QRCodeUtils.generateQRCodeBitmap("https://ipn.eg/S/omar-0o/instapay/1avNS6", 256, 256)
+        val qrBitmap = QRCodeUtils.generateQRCode("https://ipn.eg/S/omar-0o/instapay/1avNS6", 256)
         assertNotNull("Bitmap should be generated for valid string", qrBitmap)
     }
 
     @Test
     fun testGenerateQRCodeBitmap_BlankContent() {
-        val qrBitmap = QRCodeUtils.generateQRCodeBitmap("   ")
+        val qrBitmap = QRCodeUtils.generateQRCode("   ")
         assertNull("Bitmap should be null for blank content", qrBitmap)
     }
 }

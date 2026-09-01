@@ -87,7 +87,7 @@ object DateUtils {
                 1L -> "منذ سنة"
                 2L -> "منذ سنتين"
                 in 3..10 -> "منذ $years سنوات"
-                else -> "منذ أكثر من سنة"
+                else -> "منذ $years سنة" // BUG-13 Fix: was "منذ أكثر من سنة" — now shows exact count
             }
         }
     }
@@ -99,9 +99,18 @@ object DateUtils {
         if (logTimestamps.isEmpty()) return 0
 
         val tz = java.util.TimeZone.getDefault()
+        // BUG-08 Fix: use java.time for DST-safe epoch day calculation
         fun getEpochDay(timestamp: Long): Long {
-            val offset = tz.getOffset(timestamp)
-            return (timestamp + offset) / (24 * 60 * 60 * 1000L)
+            return if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                java.time.Instant.ofEpochMilli(timestamp)
+                    .atZone(java.time.ZoneId.systemDefault())
+                    .toLocalDate()
+                    .toEpochDay()
+            } else {
+                // Fallback for API < 26: use offset (less accurate during DST transitions)
+                val offset = tz.getOffset(timestamp)
+                (timestamp + offset) / (24 * 60 * 60 * 1000L)
+            }
         }
 
         val activeDays = logTimestamps.map { getEpochDay(it) }.toSet()

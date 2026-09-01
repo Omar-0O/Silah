@@ -147,7 +147,8 @@ fun HomeTabScreen(viewModel: RelativeViewModel) {
             item {
                 DueRelativesCarousel(
                     dueRelatives = dueRelatives,
-                    viewModel = viewModel
+                    viewModel = viewModel,
+                    totalRelativesCount = relatives.size
                 )
             }
         }

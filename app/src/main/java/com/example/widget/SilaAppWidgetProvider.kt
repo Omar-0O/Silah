@@ -6,6 +6,7 @@ import android.appwidget.AppWidgetProvider
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
 import android.widget.RemoteViews
 import com.example.MainActivity
 import com.example.R
@@ -18,7 +19,43 @@ class SilaAppWidgetProvider : AppWidgetProvider() {
         }
     }
 
+    override fun onReceive(context: Context, intent: Intent) {
+        super.onReceive(context, intent)
+        if (intent.action == ACTION_WIDGET_CALL) {
+            val phone = intent.getStringExtra("phone") ?: ""
+            if (phone.isNotBlank()) {
+                try {
+                    val dialIntent = Intent(Intent.ACTION_DIAL).apply {
+                        data = Uri.parse("tel:$phone")
+                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    }
+                    context.startActivity(dialIntent)
+                } catch (e: Exception) {
+                    try {
+                        val mainIntent = Intent(context, MainActivity::class.java).apply {
+                            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                        }
+                        context.startActivity(mainIntent)
+                    } catch (ex: Exception) {
+                        ex.printStackTrace()
+                    }
+                }
+            } else {
+                try {
+                    val mainIntent = Intent(context, MainActivity::class.java).apply {
+                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    }
+                    context.startActivity(mainIntent)
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+            }
+        }
+    }
+
     companion object {
+        const val ACTION_WIDGET_CALL = "com.example.silah.ACTION_WIDGET_CALL"
+
         fun updateAppWidget(context: Context, appWidgetManager: AppWidgetManager, appWidgetId: Int) {
             val views = RemoteViews(context.packageName, R.layout.sila_widget)
 
@@ -38,14 +75,14 @@ class SilaAppWidgetProvider : AppWidgetProvider() {
             views.setRemoteAdapter(R.id.widget_list, adapterIntent)
             views.setEmptyView(R.id.widget_list, R.id.widget_empty)
 
-            // Setup PendingIntent template for ListView item clicks (Dialing contact)
-            val callIntent = Intent(context, MainActivity::class.java).apply {
-                action = Intent.ACTION_DIAL
+            // Setup Broadcast PendingIntent template for ListView item clicks
+            val broadcastIntent = Intent(context, SilaAppWidgetProvider::class.java).apply {
+                action = ACTION_WIDGET_CALL
             }
-            val callPendingIntent = PendingIntent.getActivity(
+            val callPendingIntent = PendingIntent.getBroadcast(
                 context,
                 0,
-                callIntent,
+                broadcastIntent,
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE
             )
             views.setPendingIntentTemplate(R.id.widget_list, callPendingIntent)

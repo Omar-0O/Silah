@@ -43,6 +43,10 @@ interface CommunicationLogDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertLog(log: CommunicationLog)
 
+    // BUG-02 Fix: Check for duplicate before inserting auto-synced call logs
+    @Query("SELECT COUNT(*) FROM communication_logs WHERE relativeId = :relativeId AND timestamp = :timestamp")
+    suspend fun existsLogAt(relativeId: Int, timestamp: Long): Int
+
     @Query("DELETE FROM communication_logs WHERE relativeId = :relativeId")
     suspend fun deleteLogsForRelative(relativeId: Int)
 }

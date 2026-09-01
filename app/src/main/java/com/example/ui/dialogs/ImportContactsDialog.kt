@@ -70,10 +70,9 @@ fun ImportContactsDialog(
             Manifest.permission.READ_CONTACTS
         ) == PackageManager.PERMISSION_GRANTED
 
-        if (hasPermission) {
+        // BUG-12 Fix: only fetch if not already loaded — prevents redundant ContentResolver calls
+        if (hasPermission && contacts.isEmpty() && !isLoading) {
             viewModel.fetchDeviceContacts(context)
-        } else {
-            permissionLauncher.launch(Manifest.permission.READ_CONTACTS)
         }
     }
 
@@ -225,7 +224,7 @@ fun ImportContactsDialog(
                             modifier = Modifier.weight(1f),
                             verticalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            items(filteredContacts) { (name, phone, _) ->
+                            items(filteredContacts, key = { "${it.first}_${it.second}" }) { (name, phone, _) ->
                                 val normalized = CallLogManager.normalizePhoneNumber(phone)
                                 val isAlreadyAdded = existingNormalizedPhones.contains(normalized)
                                 val isExpanded = selectedContactPhone == phone

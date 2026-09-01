@@ -54,7 +54,7 @@ fun CommitmentHeaderCard(
     )
 
     // Arabic date
-    val dateLocale = if (lang == "en") Locale.ENGLISH else Locale("ar", "SA")
+    val dateLocale = if (lang == "en") Locale.ENGLISH else Locale.forLanguageTag("ar-SA")
     val arabicDate = remember {
         SimpleDateFormat("EEEE، d MMMM yyyy", dateLocale).format(Date())
     }

@@ -2,6 +2,7 @@ package com.example.ui.screens
 
 import android.content.Intent
 import android.net.Uri
+import android.widget.Toast
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
@@ -53,7 +54,7 @@ fun RelativeDetailScreen(
     val lang by viewModel.selectedLanguage.collectAsState()
     val allLogs by viewModel.logs.collectAsState()
     val status = viewModel.getRelativeStatus(relative)
-    val statusColor = Color(android.graphics.Color.parseColor("#FF${status.colorHex}"))
+    val statusColor = status.color
 
     val relativeLogs = remember(allLogs, relative.id) {
         allLogs.filter { it.relativeId == relative.id }.sortedByDescending { it.timestamp }
@@ -78,14 +79,7 @@ fun RelativeDetailScreen(
     val dateLocale = if (lang == "en") Locale.ENGLISH else Locale.forLanguageTag("ar")
     val dateFormat = remember(lang) { SimpleDateFormat("dd MMM yyyy  •  hh:mm a", dateLocale) }
 
-    // Avatar gradient
-    val avatarPalette = listOf(
-        Pair(Color(0xFF1A5C4A), Color(0xFF2A9D6E)),
-        Pair(Color(0xFF5C3B1A), Color(0xFF9D6A2A)),
-        Pair(Color(0xFF1A3A5C), Color(0xFF2A6A9D)),
-        Pair(Color(0xFF4A1A5C), Color(0xFF7A2A9D)),
-    )
-    val (avatarFrom, avatarTo) = avatarPalette[kotlin.math.abs(relative.name.hashCode()) % avatarPalette.size]
+    // BUG-01 Fix: avatarPalette removed — RelativeAvatar composable handles gradient internally with its own 6-entry palette
 
     Scaffold(
         topBar = {
@@ -248,9 +242,13 @@ fun RelativeDetailScreen(
                         contentColor = Color.White,
                         modifier = Modifier.weight(1f),
                         onClick = {
-                            context.startActivity(Intent(Intent.ACTION_DIAL).apply {
-                                data = Uri.parse("tel:${relative.phone}")
-                            })
+                            try {
+                                context.startActivity(Intent(Intent.ACTION_DIAL).apply {
+                                    data = Uri.parse("tel:${relative.phone}")
+                                })
+                            } catch (e: Exception) {
+                                Toast.makeText(context, if (lang == "en") "Unable to open dialer" else "تعذر فتح لوحة الاتصال", Toast.LENGTH_SHORT).show()
+                            }
                         }
                     )
                     // WhatsApp
@@ -261,19 +259,23 @@ fun RelativeDetailScreen(
                         contentColor = Color.White,
                         modifier = Modifier.weight(1f),
                         onClick = {
-                            var cleanPhone = relative.phone.replace("""[\s\-\(\)]""".toRegex(), "")
-                            val formattedPhone = when {
-                                cleanPhone.startsWith("+") -> cleanPhone.substring(1)
-                                cleanPhone.startsWith("00") -> cleanPhone.substring(2)
-                                cleanPhone.startsWith("01") && cleanPhone.length == 11 -> "20" + cleanPhone.substring(1)
-                                cleanPhone.startsWith("05") && cleanPhone.length == 10 -> "966" + cleanPhone.substring(1)
-                                cleanPhone.startsWith("0") -> cleanPhone.substring(1)
-                                else -> cleanPhone
+                            try {
+                                var cleanPhone = relative.phone.replace("""[\s\-\(\)]""".toRegex(), "")
+                                val formattedPhone = when {
+                                    cleanPhone.startsWith("+") -> cleanPhone.substring(1)
+                                    cleanPhone.startsWith("00") -> cleanPhone.substring(2)
+                                    cleanPhone.startsWith("01") && cleanPhone.length == 11 -> "20" + cleanPhone.substring(1)
+                                    cleanPhone.startsWith("05") && cleanPhone.length == 10 -> "966" + cleanPhone.substring(1)
+                                    cleanPhone.startsWith("0") -> cleanPhone.substring(1)
+                                    else -> cleanPhone
+                                }
+                                context.startActivity(Intent(Intent.ACTION_VIEW).apply {
+                                    data = Uri.parse("https://api.whatsapp.com/send?phone=$formattedPhone")
+                                })
+                                viewModel.recordCommunication(relative.id, "رسالة", "تواصل عبر الواتساب")
+                            } catch (e: Exception) {
+                                Toast.makeText(context, if (lang == "en") "WhatsApp not installed" else "تطبيق الواتساب غير مثبت على الجهاز", Toast.LENGTH_SHORT).show()
                             }
-                            context.startActivity(Intent(Intent.ACTION_VIEW).apply {
-                                data = Uri.parse("https://api.whatsapp.com/send?phone=$formattedPhone")
-                            })
-                            viewModel.recordCommunication(relative.id, "رسالة", "تواصل عبر الواتساب")
                         }
                     )
                     // Log
@@ -381,7 +383,7 @@ fun RelativeDetailScreen(
                     }
                 }
             } else {
-                items(relativeLogs, key = { it.id }) { log ->
+                items(relativeLogs, key = { log -> "${log.id}_${log.timestamp}" }) { log ->
                     TimelineItem(log = log, dateFormat = dateFormat, isLast = log == relativeLogs.last())
                 }
             }

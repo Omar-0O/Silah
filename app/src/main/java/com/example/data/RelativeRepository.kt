@@ -59,6 +59,11 @@ class RelativeRepository(
         }
     }
 
+    // BUG-02 Fix: Check duplicate before inserting auto-synced call log
+    suspend fun existsLogAt(relativeId: Int, timestamp: Long): Boolean {
+        return communicationLogDao.existsLogAt(relativeId, timestamp) > 0
+    }
+
     suspend fun insertTemplate(template: QuickTemplate) {
         quickTemplateDao.insertTemplate(template)
     }

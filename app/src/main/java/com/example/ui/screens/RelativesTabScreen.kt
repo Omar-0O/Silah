@@ -142,17 +142,10 @@ fun RelativesTabScreen(
         contract = ActivityResultContracts.RequestPermission()
     ) { /* نتيجة طلب الصلاحية — لا نحتاج action خاص */ }
 
-    // اطلب صلاحية الإشعارات ومزامنة سجل المكالمات تلقائياً في الخلفية
+    // Safely sync call logs if permission is granted, avoiding concurrent permission launcher calls at startup
     LaunchedEffect(Unit) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-        }
         if (androidx.core.content.ContextCompat.checkSelfPermission(context, Manifest.permission.READ_CALL_LOG) == android.content.pm.PackageManager.PERMISSION_GRANTED) {
             viewModel.syncCallLogsWithRelatives(context)
-        }
-        // إذا كانت قائمة الأقارب فارغة لأول مرة، افتح واجهة استيراد جهات الاتصال مباشرة
-        if (allRelatives.isEmpty()) {
-            launchImportContacts()
         }
     }
 
@@ -175,14 +168,16 @@ fun RelativesTabScreen(
     }
 
     // Navigate to detail screen if a relative is selected
-    if (selectedRelativeForDetail != null) {
+    val currentDetailRelative = selectedRelativeForDetail
+    if (currentDetailRelative != null) {
         RelativeDetailScreen(
-            relative = selectedRelativeForDetail!!,
+            relative = currentDetailRelative,
             viewModel = viewModel,
             onBack = { selectedRelativeForDetail = null }
         )
         return
     }
+
 
     val userAvatarId by viewModel.userAvatarId.collectAsState()
 
@@ -207,7 +202,7 @@ fun RelativesTabScreen(
                         )
 
                         Text(
-                            text = if (userName.isNotBlank()) userName else if (lang == "en") "there" else "عمر",
+                            text = if (userName.isNotBlank()) userName else if (lang == "en") "Family Keeper" else "حافظ الأرحام", // BUG-07 Fix: removed hardcoded "عمر"
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onBackground,
                             fontSize = 20.sp
@@ -357,7 +352,7 @@ fun RelativesTabScreen(
                     }
                 }
             } else {
-                items(filteredRelatives, key = { it.id }) { relative ->
+                items(filteredRelatives, key = { relative -> "${relative.id}_${relative.name}_${relative.phone}" }) { relative ->
                     RelativeCard(
                         relative = relative,
                         viewModel = viewModel,

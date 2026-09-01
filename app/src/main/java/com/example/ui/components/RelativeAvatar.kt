@@ -38,7 +38,8 @@ fun RelativeAvatar(
     fontSize: TextUnit = 20.sp,
     modifier: Modifier = Modifier
 ) {
-    val (avatarFrom, avatarTo) = avatarPalette[abs(name.hashCode()) % avatarPalette.size]
+    val index = kotlin.math.abs(name.hashCode() % avatarPalette.size)
+    val (avatarFrom, avatarTo) = avatarPalette[index]
 
     Box(
         contentAlignment = Alignment.Center,

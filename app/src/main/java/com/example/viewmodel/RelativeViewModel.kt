@@ -264,34 +264,41 @@ class RelativeViewModel(application: Application) : AndroidViewModel(application
                     }
 
                     if (latestMatchingCall != null && latestMatchingCall.dateTimestamp > relative.lastContactDate) {
-                        // Record new communication log automatically
-                        val typeString = when (latestMatchingCall.type) {
-                            CallType.INCOMING -> "مكالمة واردة (تلقائي)"
-                            CallType.OUTGOING -> "مكالمة صادرة (تلقائي)"
-                            CallType.MISSED -> "مكالمة مفقودة"
-                            else -> "مكالمة"
-                        }
-                        val durationMinutes = latestMatchingCall.durationSeconds / 60
-                        val notes = "تم رصد $typeString تلقائياً عبر سجل الهاتف (المدة: $durationMinutes دقيقة)"
+                        // BUG-02 Fix: skip if a log with the exact same timestamp already exists
+                        val alreadyLogged = repository.existsLogAt(relative.id, latestMatchingCall.dateTimestamp)
+                        if (!alreadyLogged) {
+                            val typeString = when (latestMatchingCall.type) {
+                                CallType.INCOMING -> "مكالمة واردة (تلقائي)"
+                                CallType.OUTGOING -> "مكالمة صادرة (تلقائي)"
+                                CallType.MISSED -> "مكالمة مفقودة"
+                                else -> "مكالمة"
+                            }
+                            val durationMinutes = latestMatchingCall.durationSeconds / 60
+                            val notes = "تم رصد $typeString تلقائياً عبر سجل الهاتف (المدة: $durationMinutes دقيقة)"
 
-                        val log = CommunicationLog(
-                            relativeId = relative.id,
-                            type = typeString,
-                            notes = notes,
-                            timestamp = latestMatchingCall.dateTimestamp
-                        )
-                        repository.insertLog(log)
-                        syncedCount++
+                            val log = CommunicationLog(
+                                relativeId = relative.id,
+                                type = typeString,
+                                notes = notes,
+                                timestamp = latestMatchingCall.dateTimestamp
+                            )
+                            repository.insertLog(log)
+                            syncedCount++
+                        }
                     }
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
             } finally {
                 isSyncingCallLogs.value = false
-                if (syncedCount > 0) {
-                    SilaAppWidgetProvider.triggerWidgetUpdate(getApplication())
+                try {
+                    if (syncedCount > 0) {
+                        SilaAppWidgetProvider.triggerWidgetUpdate(getApplication())
+                    }
+                    onComplete?.invoke(syncedCount)
+                } catch (e: Exception) {
+                    e.printStackTrace()
                 }
-                onComplete?.invoke(syncedCount)
             }
         }
     }
@@ -310,21 +317,17 @@ class RelativeViewModel(application: Application) : AndroidViewModel(application
                 val uri = android.provider.ContactsContract.CommonDataKinds.Phone.CONTENT_URI
                 val projection = arrayOf(
                     android.provider.ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME,
-                    android.provider.ContactsContract.CommonDataKinds.Phone.NUMBER,
-                    "account_type"
+                    android.provider.ContactsContract.CommonDataKinds.Phone.NUMBER
                 )
                 contentResolver.query(uri, projection, null, null, null)?.use { cursor ->
                     val nameIndex = cursor.getColumnIndex(android.provider.ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME)
                     val numberIndex = cursor.getColumnIndex(android.provider.ContactsContract.CommonDataKinds.Phone.NUMBER)
-                    val accountTypeIndex = cursor.getColumnIndex("account_type")
                     while (cursor.moveToNext()) {
                         if (nameIndex != -1 && numberIndex != -1) {
                             val name = cursor.getString(nameIndex) ?: ""
                             val number = cursor.getString(numberIndex) ?: ""
-                            val accountType = if (accountTypeIndex != -1) cursor.getString(accountTypeIndex) else null
-                            val isGoogle = accountType?.contains("google", ignoreCase = true) == true
                             if (name.isNotEmpty() && number.isNotEmpty()) {
-                                contactsList.add(Triple(name, number, isGoogle))
+                                contactsList.add(Triple(name, number, true))
                             }
                         }
                     }
@@ -374,8 +377,9 @@ class RelativeViewModel(application: Application) : AndroidViewModel(application
                     .putInt("relative_id", relative.id)
                     .build()
 
+                val intervalDays = maxOf(1, relative.contactIntervalDays).toLong()
                 val workRequest = PeriodicWorkRequestBuilder<ReminderWorker>(
-                    relative.contactIntervalDays.toLong(), TimeUnit.DAYS
+                    intervalDays, TimeUnit.DAYS
                 )
                     .setInputData(data)
                     .build()
@@ -447,8 +451,11 @@ class RelativeViewModel(application: Application) : AndroidViewModel(application
             // Re-trigger due check
             setupDueNotificationsWorker()
 
-            val contactedCount = relatives.value.count { it.lastContactDate > 0 }
-            checkMilestones(contactedCount + 1)
+            // BUG-09 Fix: determine if this relative had never been contacted before this log
+            // to accurately count newly-contacted relatives without relying on stale StateFlow
+            val wasNeverContacted = relatives.value.find { it.id == relativeId }?.lastContactDate == 0L
+            val contactedCount = relatives.value.count { it.lastContactDate > 0 } + if (wasNeverContacted) 1 else 0
+            checkMilestones(contactedCount)
 
             SilaAppWidgetProvider.triggerWidgetUpdate(getApplication())
         }
@@ -498,7 +505,7 @@ class RelativeViewModel(application: Application) : AndroidViewModel(application
         }
         val diffMs = System.currentTimeMillis() - relative.lastContactDate
         val diffDays = (diffMs / (1000 * 60 * 60 * 24)).toInt()
-        val interval = relative.contactIntervalDays
+        val interval = maxOf(1, relative.contactIntervalDays)
 
         return when {
             diffDays >= interval + 7 -> RelativeStatus.OVERDUE_CRITICAL
@@ -563,14 +570,23 @@ class RelativeViewModel(application: Application) : AndroidViewModel(application
             repository.deleteMemory(memory)
         }
     }
+
+    // BUG-10 Fix: expose per-relative log Flow to avoid loading all logs in dialogs
+    fun getLogsForRelative(relativeId: Int) = repository.getLogsForRelative(relativeId)
 }
 
-enum class RelativeStatus(val label: String, val labelEn: String, val colorHex: String) {
-    NEEDS_CONTACT_URGENT("تواصل الآن (لم يتصل قط)", "Contact Now (Never Called)", "E53935"),
-    OVERDUE_CRITICAL("تأخرت كثيراً في الوصل!", "Very Overdue!", "D32F2F"),
-    NEEDS_CONTACT("حان وقت الصلة اليوم", "Time to Connect Today", "EF6C00"),
-    OK_SOON("تواصل معه قريباً", "Connect Soon", "FBC02D"),
-    CONNECTED("أحسنت! متصل مؤخراً", "Great! Recently Connected", "2E7D32");
+enum class RelativeStatus(
+    val label: String,
+    val labelEn: String,
+    val colorHex: String,
+    val color: androidx.compose.ui.graphics.Color
+) {
+    NEEDS_CONTACT_URGENT("تواصل الآن (لم يتصل قط)", "Contact Now (Never Called)", "E53935", androidx.compose.ui.graphics.Color(0xFFE53935)),
+    OVERDUE_CRITICAL("تأخرت كثيراً في الوصل!", "Very Overdue!", "D32F2F", androidx.compose.ui.graphics.Color(0xFFD32F2F)),
+    NEEDS_CONTACT("حان وقت الصلة اليوم", "Time to Connect Today", "EF6C00", androidx.compose.ui.graphics.Color(0xFFEF6C00)),
+    OK_SOON("تواصل معه قريباً", "Connect Soon", "FBC02D", androidx.compose.ui.graphics.Color(0xFFFBC02D)),
+    CONNECTED("أحسنت! متصل مؤخراً", "Great! Recently Connected", "2E7D32", androidx.compose.ui.graphics.Color(0xFF2E7D32));
 
     fun getLabel(lang: String) = if (lang == "en") labelEn else label
 }
+

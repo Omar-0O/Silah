@@ -2,6 +2,7 @@ package com.example.ui.components
 
 import android.content.Intent
 import android.net.Uri
+import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -21,6 +22,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -164,10 +166,11 @@ fun DueRelativesCarousel(
                     modifier = Modifier.fillMaxWidth(),
                     contentPadding = PaddingValues(vertical = 8.dp, horizontal = 4.dp)
                 ) {
-                    items(dueRelatives, key = { it.id }) { relative ->
+                    items(dueRelatives, key = { relative -> "${relative.id}_${relative.name}_${relative.phone}" }) { relative ->
                         val status = viewModel.getRelativeStatus(relative)
-                        val statusBgColor = Color("#15${status.colorHex}".toColorInt())
-                        val statusTextColor = Color("#FF${status.colorHex}".toColorInt())
+                        val statusBgColor = status.color.copy(alpha = 0.15f)
+                        val statusTextColor = status.color
+
 
                         Card(
                             modifier = Modifier
@@ -262,9 +265,13 @@ fun DueRelativesCarousel(
                                     // Call Action
                                     Surface(
                                         onClick = {
-                                            context.startActivity(Intent(Intent.ACTION_DIAL).apply {
-                                                data = Uri.parse("tel:${relative.phone}")
-                                            })
+                                            try {
+                                                context.startActivity(Intent(Intent.ACTION_DIAL).apply {
+                                                    data = Uri.parse("tel:${relative.phone}")
+                                                })
+                                            } catch (e: Exception) {
+                                                Toast.makeText(context, if (lang == "en") "Unable to open dialer" else "تعذر فتح لوحة الاتصال", Toast.LENGTH_SHORT).show()
+                                            }
                                         },
                                         shape = RoundedCornerShape(12.dp),
                                         color = MaterialTheme.colorScheme.primary,
@@ -295,22 +302,26 @@ fun DueRelativesCarousel(
                                     // WhatsApp Action
                                     Surface(
                                         onClick = {
-                                            var cleanPhone = relative.phone.replace("""[\s\-\(\)]""".toRegex(), "")
-                                            val formattedPhone = when {
-                                                cleanPhone.startsWith("+") -> cleanPhone.substring(1)
-                                                cleanPhone.startsWith("00") -> cleanPhone.substring(2)
-                                                cleanPhone.startsWith("01") && cleanPhone.length == 11 -> "20" + cleanPhone.substring(1)
-                                                cleanPhone.startsWith("05") && cleanPhone.length == 10 -> "966" + cleanPhone.substring(1)
-                                                cleanPhone.startsWith("0") -> cleanPhone.substring(1)
-                                                else -> cleanPhone
+                                            try {
+                                                var cleanPhone = relative.phone.replace("""[\s\-\(\)]""".toRegex(), "")
+                                                val formattedPhone = when {
+                                                    cleanPhone.startsWith("+") -> cleanPhone.substring(1)
+                                                    cleanPhone.startsWith("00") -> cleanPhone.substring(2)
+                                                    cleanPhone.startsWith("01") && cleanPhone.length == 11 -> "20" + cleanPhone.substring(1)
+                                                    cleanPhone.startsWith("05") && cleanPhone.length == 10 -> "966" + cleanPhone.substring(1)
+                                                    cleanPhone.startsWith("0") -> cleanPhone.substring(1)
+                                                    else -> cleanPhone
+                                                }
+                                                val intent = Intent(Intent.ACTION_VIEW).apply {
+                                                    data = "https://api.whatsapp.com/send?phone=$formattedPhone".toUri()
+                                                }
+                                                context.startActivity(intent)
+                                                val commType = if (lang == "en") "Message" else "رسالة"
+                                                val note = if (lang == "en") "Quick WhatsApp message" else "تواصل سريع ومباشر عبر الواتساب"
+                                                viewModel.recordCommunication(relative.id, commType, note)
+                                            } catch (e: Exception) {
+                                                Toast.makeText(context, if (lang == "en") "WhatsApp not installed" else "تطبيق الواتساب غير مثبت على الجهاز", Toast.LENGTH_SHORT).show()
                                             }
-                                            val intent = Intent(Intent.ACTION_VIEW).apply {
-                                                data = "https://api.whatsapp.com/send?phone=$formattedPhone".toUri()
-                                            }
-                                            context.startActivity(intent)
-                                            val commType = if (lang == "en") "Message" else "رسالة"
-                                            val note = if (lang == "en") "Quick WhatsApp message" else "تواصل سريع ومباشر عبر الواتساب"
-                                            viewModel.recordCommunication(relative.id, commType, note)
                                         },
                                         shape = RoundedCornerShape(12.dp),
                                         color = Color(0xFF1B8A4A),

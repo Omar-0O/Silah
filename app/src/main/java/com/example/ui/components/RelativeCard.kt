@@ -2,12 +2,14 @@ package com.example.ui.components
 
 import android.content.Intent
 import android.net.Uri
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.Chat
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -42,7 +44,7 @@ private val avatarPalette = listOf(
 )
 
 private fun avatarColors(name: String): Pair<Color, Color> =
-    avatarPalette[abs(name.hashCode()) % avatarPalette.size]
+    avatarPalette[kotlin.math.abs(name.hashCode() % avatarPalette.size)]
 
 @Composable
 fun RelativeCard(
@@ -55,7 +57,7 @@ fun RelativeCard(
     val status = viewModel.getRelativeStatus(relative)
     val lang by viewModel.selectedLanguage.collectAsState()
 
-    val statusColor = Color(android.graphics.Color.parseColor("#FF" + status.colorHex))
+    val statusColor = status.color
     val countdownText = buildCountdownText(relative, lang)
 
     val (avatarFrom, avatarTo) = avatarColors(relative.name)
@@ -210,27 +212,35 @@ fun RelativeCard(
                         containerColor = MaterialTheme.colorScheme.primary,
                         contentColor = Color.White,
                         onClick = {
-                            context.startActivity(Intent(Intent.ACTION_DIAL).apply {
-                                data = Uri.parse("tel:${relative.phone}")
-                            })
+                            try {
+                                context.startActivity(Intent(Intent.ACTION_DIAL).apply {
+                                    data = Uri.parse("tel:${relative.phone}")
+                                })
+                            } catch (e: Exception) {
+                                Toast.makeText(context, if (lang == "en") "Unable to open dialer" else "تعذر فتح لوحة الاتصال", Toast.LENGTH_SHORT).show()
+                            }
                         }
                     )
 
                     // 2. WhatsApp Button
                     ActionButton(
-                        icon = Icons.Outlined.Chat,
+                        icon = Icons.AutoMirrored.Outlined.Chat,
                         label = if (isNarrow) "" else (if (lang == "en") "WhatsApp" else "واتساب"),
                         containerColor = Color(0xFF1B8A4A),
                         contentColor = Color.White,
                         onClick = {
-                            var phone = relative.phone.replace("""[\s\-\(\)]""".toRegex(), "")
-                            if (!phone.startsWith("+") && !phone.startsWith("00")) {
-                                if (phone.startsWith("0")) phone = "966" + phone.substring(1)
+                            try {
+                                var phone = relative.phone.replace("""[\s\-\(\)]""".toRegex(), "")
+                                if (!phone.startsWith("+") && !phone.startsWith("00")) {
+                                    if (phone.startsWith("0")) phone = "966" + phone.substring(1)
+                                }
+                                context.startActivity(Intent(Intent.ACTION_VIEW).apply {
+                                    data = Uri.parse("https://api.whatsapp.com/send?phone=$phone")
+                                })
+                                viewModel.recordCommunication(relative.id, "رسالة", "تواصل سريع عبر الواتساب")
+                            } catch (e: Exception) {
+                                Toast.makeText(context, if (lang == "en") "WhatsApp not installed" else "تطبيق الواتساب غير مثبت على الجهاز", Toast.LENGTH_SHORT).show()
                             }
-                            context.startActivity(Intent(Intent.ACTION_VIEW).apply {
-                                data = Uri.parse("https://api.whatsapp.com/send?phone=$phone")
-                            })
-                            viewModel.recordCommunication(relative.id, "رسالة", "تواصل سريع عبر الواتساب")
                         }
                     )
 

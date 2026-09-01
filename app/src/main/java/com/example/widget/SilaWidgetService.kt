@@ -32,7 +32,11 @@ class SilaWidgetFactory(private val context: Context) : RemoteViewsService.Remot
     private fun loadData() {
         try {
             val db = AppDatabase.getDatabase(context)
-            val rawList = runBlocking { db.relativeDao().getAllRelativesOnce() }
+            val rawList = runBlocking {
+                kotlinx.coroutines.withTimeoutOrNull(3000L) {
+                    db.relativeDao().getAllRelativesOnce()
+                }
+            } ?: emptyList()
 
             // Sort from highest urgency (most overdue / smallest due threshold) to lowest
             relativesList = rawList.sortedWith(
@@ -89,6 +93,7 @@ class SilaWidgetFactory(private val context: Context) : RemoteViewsService.Remot
         // Fill-in Intent for item click (dials relative's number or opens app)
         val fillInIntent = Intent().apply {
             putExtra("relative_id", relative.id)
+            putExtra("phone", relative.phone)
             data = Uri.parse("tel:${relative.phone}")
         }
         views.setOnClickFillInIntent(R.id.widget_item_container, fillInIntent)
