@@ -2,11 +2,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <!-- Notifications only — no INTERNET, no READ_CALL_LOG -->
+    <!-- Notifications only — 100% privacy, zero background contact or call log permissions -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
-
-    <!-- Only request READ_CONTACTS when user explicitly opens contact picker fallback -->
-    <uses-permission android:name="android.permission.READ_CONTACTS" />
 
     <!-- WhatsApp / Dialer deep-links: no network access needed from Sila itself -->
     <queries>

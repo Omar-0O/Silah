@@ -525,7 +525,7 @@ private fun ImportRelativesPage(
     Column(modifier = Modifier.fillMaxSize()) {
         // Import button
         Button(
-            onClick = { viewModel.showImportContactsDialog.value = true },
+            onClick = { viewModel.launchContactPicker() },
             shape = RoundedCornerShape(14.dp),
             colors = ButtonDefaults.buttonColors(
                 containerColor = Color(0xFF0E7075),

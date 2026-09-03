@@ -56,22 +56,8 @@ fun ImportContactsDialog(
     var searchQuery by remember { mutableStateOf("") }
     var selectedContactPhone by remember { mutableStateOf<String?>(null) }
 
-    val permissionLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestPermission()
-    ) { isGranted ->
-        if (isGranted) {
-            viewModel.fetchDeviceContacts(context)
-        }
-    }
-
     LaunchedEffect(Unit) {
-        val hasPermission = ContextCompat.checkSelfPermission(
-            context,
-            Manifest.permission.READ_CONTACTS
-        ) == PackageManager.PERMISSION_GRANTED
-
-        // BUG-12 Fix: only fetch if not already loaded — prevents redundant ContentResolver calls
-        if (hasPermission && contacts.isEmpty() && !isLoading) {
+        if (contacts.isEmpty() && !isLoading) {
             viewModel.fetchDeviceContacts(context)
         }
     }
@@ -160,11 +146,6 @@ fun ImportContactsDialog(
                             }
                         }
                     } else if (filteredContacts.isEmpty()) {
-                        val hasPermission = ContextCompat.checkSelfPermission(
-                            context,
-                            Manifest.permission.READ_CONTACTS
-                        ) == PackageManager.PERMISSION_GRANTED
-
                         Box(
                             modifier = Modifier
                                 .weight(1f)
@@ -176,15 +157,12 @@ fun ImportContactsDialog(
                                 modifier = Modifier.padding(16.dp)
                             ) {
                                 Text(
-                                    text = if (!hasPermission) {
-                                        if (selectedLanguage == "en") "Permission required to access contacts 📱"
-                                        else "يلزم السماح بالوصول لجهات الاتصال لانتخاب أرحامك 📱"
-                                    } else if (searchQuery.isNotEmpty()) {
+                                    text = if (searchQuery.isNotEmpty()) {
                                         if (selectedLanguage == "en") "No matching contacts found"
                                         else "لا يوجد جهات اتصال مطابقة للبحث"
                                     } else {
-                                        if (selectedLanguage == "en") "No contacts found on device"
-                                        else "لم يتم العثور على جهات اتصال في الهاتف"
+                                        if (selectedLanguage == "en") "Select contact via System Picker 📱"
+                                        else "اختر جهات الاتصال عبر منتقي النظام 📱"
                                     },
                                     fontSize = 13.sp,
                                     fontWeight = FontWeight.Bold,
@@ -194,28 +172,19 @@ fun ImportContactsDialog(
 
                                 Spacer(modifier = Modifier.height(12.dp))
 
-                                if (!hasPermission) {
-                                    Button(
-                                        onClick = { permissionLauncher.launch(Manifest.permission.READ_CONTACTS) },
-                                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
-                                        shape = RoundedCornerShape(12.dp)
-                                    ) {
-                                        Text(
-                                            text = if (selectedLanguage == "en") "Grant Contacts Permission 📱" else "منح صلاحية جهات الاتصال 📱",
-                                            fontSize = 12.sp,
-                                            fontWeight = FontWeight.Bold
-                                        )
-                                    }
-                                } else if (contacts.isEmpty()) {
-                                    OutlinedButton(
-                                        onClick = { viewModel.fetchDeviceContacts(context) },
-                                        shape = RoundedCornerShape(12.dp)
-                                    ) {
-                                        Text(
-                                            text = if (selectedLanguage == "en") "Refresh Contacts 🔄" else "تحديث جهات الاتصال 🔄",
-                                            fontSize = 12.sp
-                                        )
-                                    }
+                                Button(
+                                    onClick = {
+                                        onDismiss()
+                                        viewModel.launchContactPicker()
+                                    },
+                                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                                    shape = RoundedCornerShape(12.dp)
+                                ) {
+                                    Text(
+                                        text = if (selectedLanguage == "en") "Open Native Contact Picker 📱" else "فتح منتقي جهات الاتصال النظامي 📱",
+                                        fontSize = 12.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
                                 }
                             }
                         }

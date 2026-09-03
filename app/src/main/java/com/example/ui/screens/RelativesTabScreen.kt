@@ -83,35 +83,8 @@ fun RelativesTabScreen(
 
     val userName by viewModel.userName.collectAsState()
 
-    // Permission launcher for Contacts
-    val contactsPermissionLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestPermission()
-    ) { isGranted ->
-        if (isGranted) {
-            viewModel.fetchDeviceContacts(context)
-            viewModel.showImportContactsDialog.value = true
-        } else {
-            Toast.makeText(
-                context,
-                if (lang == "en") "Contacts permission is required to import relatives"
-                else "صلاحية قراءة جهات الاتصال مطلوبة لاستيراد الأقارب",
-                Toast.LENGTH_LONG
-            ).show()
-        }
-    }
-
     val launchImportContacts: () -> Unit = {
-        val hasPermission = androidx.core.content.ContextCompat.checkSelfPermission(
-            context,
-            Manifest.permission.READ_CONTACTS
-        ) == android.content.pm.PackageManager.PERMISSION_GRANTED
-
-        if (hasPermission) {
-            viewModel.fetchDeviceContacts(context)
-            viewModel.showImportContactsDialog.value = true
-        } else {
-            contactsPermissionLauncher.launch(Manifest.permission.READ_CONTACTS)
-        }
+        viewModel.launchContactPicker()
     }
 
     // Permission launcher for Call Logs

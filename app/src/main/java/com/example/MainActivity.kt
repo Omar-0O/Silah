@@ -106,7 +106,7 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    /** Resolve display name from contact URI using READ_CONTACTS or ContactsContract. */
+    /** Resolve display name from contact URI returned by native contact picker. */
     private fun resolveContactName(uri: Uri): String {
         return try {
             contentResolver.query(
