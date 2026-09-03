@@ -66,6 +66,41 @@ fun AvatarPickerSheet(
                 modifier = Modifier.padding(bottom = 16.dp)
             )
 
+            var genderFilter by remember { mutableStateOf("all") } // "all", "male", "female"
+
+            val filteredAvatars = remember(genderFilter) {
+                when (genderFilter) {
+                    "male" -> ALL_AVATARS.filter { it.gender == "male" }
+                    "female" -> ALL_AVATARS.filter { it.gender == "female" }
+                    else -> ALL_AVATARS
+                }
+            }
+
+            // ── Gender Filter Chips ──────────────────────────────────────────
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier.padding(bottom = 14.dp)
+            ) {
+                FilterChip(
+                    selected = genderFilter == "all",
+                    onClick = { genderFilter = "all" },
+                    label = { Text(if (lang == "en") "All ✨" else "الكل ✨", fontSize = 12.sp) },
+                    shape = RoundedCornerShape(12.dp)
+                )
+                FilterChip(
+                    selected = genderFilter == "male",
+                    onClick = { genderFilter = "male" },
+                    label = { Text(if (lang == "en") "Male 👨" else "ذكور 👨", fontSize = 12.sp) },
+                    shape = RoundedCornerShape(12.dp)
+                )
+                FilterChip(
+                    selected = genderFilter == "female",
+                    onClick = { genderFilter = "female" },
+                    label = { Text(if (lang == "en") "Female 👩" else "إناث 👩", fontSize = 12.sp) },
+                    shape = RoundedCornerShape(12.dp)
+                )
+            }
+
             // ── Avatar Grid ──────────────────────────────────────────────────
             LazyVerticalGrid(
                 columns = GridCells.Fixed(4),
@@ -73,9 +108,9 @@ fun AvatarPickerSheet(
                 verticalArrangement = Arrangement.spacedBy(14.dp),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .heightIn(max = 440.dp)
+                    .heightIn(max = 400.dp)
             ) {
-                items(ALL_AVATARS) { avatar ->
+                items(filteredAvatars) { avatar ->
                     AvatarGridItem(
                         avatar = avatar,
                         isSelected = avatar.id == selectedId,

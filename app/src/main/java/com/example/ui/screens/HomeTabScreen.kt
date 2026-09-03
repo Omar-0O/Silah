@@ -85,31 +85,33 @@ fun HomeTabScreen(viewModel: RelativeViewModel) {
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-                        com.example.ui.components.SilaUserAvatar(
-                            avatarId = userAvatarId,
-                            size = 38.dp,
-                            showBorder = true,
-                            modifier = Modifier.clickableNoRipple { showProfileDialog = true }
-                        )
-                        Column {
-                            Text(
-                                text = if (userName.isNotBlank()) userName
-                                       else if (lang == "en") "Family Keeper" else "حافظ الأرحام",
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onBackground,
-                                fontSize = 16.sp
-                            )
-                        }
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
-            )
+            Surface(
+                color = Color.Transparent,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .statusBarsPadding()
+                        .padding(horizontal = 16.dp, vertical = 6.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    com.example.ui.components.SilaUserAvatar(
+                        avatarId = userAvatarId,
+                        size = 34.dp,
+                        showBorder = true,
+                        modifier = Modifier.clickableNoRipple { showProfileDialog = true }
+                    )
+                    Text(
+                        text = if (userName.isNotBlank()) userName
+                               else if (lang == "en") "Family Keeper" else "حافظ الأرحام",
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onBackground,
+                        fontSize = 15.sp
+                    )
+                }
+            }
         },
         containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->

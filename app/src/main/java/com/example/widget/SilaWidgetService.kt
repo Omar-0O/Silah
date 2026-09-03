@@ -1,5 +1,6 @@
 package com.example.widget
 
+import android.appwidget.AppWidgetManager
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
@@ -13,24 +14,32 @@ import kotlinx.coroutines.runBlocking
 
 class SilaWidgetService : RemoteViewsService() {
     override fun onGetViewFactory(intent: Intent): RemoteViewsFactory {
-        return SilaWidgetFactory(applicationContext)
+        val widgetId = intent.getIntExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, AppWidgetManager.INVALID_APPWIDGET_ID)
+        return SilaWidgetFactory(applicationContext, widgetId)
     }
 }
 
-class SilaWidgetFactory(private val context: Context) : RemoteViewsService.RemoteViewsFactory {
+class SilaWidgetFactory(
+    private val context: Context,
+    private val appWidgetId: Int
+) : RemoteViewsService.RemoteViewsFactory {
 
     private var relativesList: List<Relative> = emptyList()
+    private var maxCount: Int = 5
+    private var sortMode: String = "due"
+    private var showStatus: Boolean = true
 
-    override fun onCreate() {
-        loadData()
-    }
-
-    override fun onDataSetChanged() {
-        loadData()
-    }
+    override fun onCreate() { loadData() }
+    override fun onDataSetChanged() { loadData() }
 
     private fun loadData() {
         try {
+            // Load per-widget settings
+            val prefs = context.getSharedPreferences("sila_widget_prefs", Context.MODE_PRIVATE)
+            maxCount = prefs.getInt("widget_${appWidgetId}_count", 5)
+            sortMode = prefs.getString("widget_${appWidgetId}_sort", "due") ?: "due"
+            showStatus = prefs.getBoolean("widget_${appWidgetId}_show_status", true)
+
             val db = AppDatabase.getDatabase(context)
             val rawList = runBlocking {
                 kotlinx.coroutines.withTimeoutOrNull(3000L) {
@@ -38,20 +47,24 @@ class SilaWidgetFactory(private val context: Context) : RemoteViewsService.Remot
                 }
             } ?: emptyList()
 
-            // Sort from highest urgency (most overdue / smallest due threshold) to lowest
-            relativesList = rawList.sortedWith(
-                compareBy<Relative> { relative ->
-                    if (relative.lastContactDate == 0L) 0L
-                    else relative.lastContactDate + (relative.contactIntervalDays * 86_400_000L)
-                }.thenBy { relative ->
-                    when (relative.relationshipDegree) {
-                        "والدان" -> 1
-                        "أشقاء" -> 2
-                        "أعمام/أخوال" -> 3
-                        else -> 4
+            val sorted = when (sortMode) {
+                "degree" -> rawList.sortedWith(
+                    compareBy {
+                        when (it.relationshipDegree) {
+                            "والدان" -> 1; "أشقاء" -> 2; "أعمام/أخوال" -> 3; else -> 4
+                        }
                     }
-                }.thenBy { it.name }
-            )
+                )
+                "name" -> rawList.sortedBy { it.name }
+                else -> rawList.sortedWith(
+                    compareBy<Relative> {
+                        if (it.lastContactDate == 0L) 0L
+                        else it.lastContactDate + (it.contactIntervalDays * 86_400_000L)
+                    }
+                )
+            }
+
+            relativesList = sorted.take(maxCount)
         } catch (e: Exception) {
             e.printStackTrace()
             relativesList = emptyList()
@@ -76,18 +89,20 @@ class SilaWidgetFactory(private val context: Context) : RemoteViewsService.Remot
         views.setTextViewText(R.id.widget_item_degree, relative.relationshipDegree)
 
         val now = System.currentTimeMillis()
-        val statusText = if (relative.lastContactDate == 0L) {
-            "لم يتصل قط • حان وقت وصله 💚"
-        } else {
-            val dueMs = relative.lastContactDate + (relative.contactIntervalDays * 86_400_000L)
-            if (now >= dueMs) {
-                val overdueDays = ((now - dueMs) / 86_400_000L).toInt()
-                if (overdueDays <= 0) "مستحق التواصل اليوم 🌸"
-                else "مستحق منذ $overdueDays أيام 🔴"
+        val statusText = if (showStatus) {
+            if (relative.lastContactDate == 0L) {
+                "لم يتصل قط • حان وقت وصله 💚"
             } else {
-                "آخر تواصل: ${DateUtils.formatRelativeTimeExact(relative.lastContactDate)}"
+                val dueMs = relative.lastContactDate + (relative.contactIntervalDays * 86_400_000L)
+                if (now >= dueMs) {
+                    val overdueDays = ((now - dueMs) / 86_400_000L).toInt()
+                    if (overdueDays <= 0) "مستحق التواصل اليوم 🌸"
+                    else "مستحق منذ $overdueDays أيام 🔴"
+                } else {
+                    "آخر تواصل: ${DateUtils.formatRelativeTimeExact(relative.lastContactDate)}"
+                }
             }
-        }
+        } else ""
         views.setTextViewText(R.id.widget_item_status, statusText)
 
         // Fill-in Intent for item click (dials relative's number or opens app)

@@ -279,7 +279,7 @@ fun SilaBottomNavigationBar(
             modifier = Modifier
                 .fillMaxWidth()
                 .navigationBarsPadding()
-                .height(64.dp),
+                .height(56.dp),
             horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -336,51 +336,50 @@ private fun RowScope.NavItem(
                 interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
             ) { onClick() }
     ) {
+        // Top indicator line when selected
+        if (isSelected) {
+            Box(
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .width(20.dp)
+                    .height(2.dp)
+                    .clip(RoundedCornerShape(bottomStart = 2.dp, bottomEnd = 2.dp))
+                    .background(PrimaryGreen)
+            )
+        }
+
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
             modifier = Modifier.fillMaxHeight()
         ) {
-            // Icon with pill background when selected
-            Box(contentAlignment = Alignment.Center) {
-                // Pill background (selected only)
-                if (isSelected) {
-                    Box(
-                        modifier = Modifier
-                            .width(48.dp)
-                            .height(28.dp)
-                            .clip(RoundedCornerShape(50.dp))
-                            .background(PrimaryGreen.copy(alpha = 0.12f))
-                    )
-                }
-                // Badge + Icon
-                BadgedBox(
-                    badge = {
-                        if (badge != null && badge > 0) {
-                            Badge(
-                                containerColor = Color(0xFFD32F2F),
-                                contentColor = Color.White,
-                                modifier = Modifier.offset(x = (-2).dp, y = 2.dp)
-                            ) {
-                                Text(
-                                    text = if (badge > 99) "99+" else badge.toString(),
-                                    fontSize = 9.sp,
-                                    fontWeight = FontWeight.Bold
-                                )
-                            }
+            // Badge + Icon
+            BadgedBox(
+                badge = {
+                    if (badge != null && badge > 0) {
+                        Badge(
+                            containerColor = Color(0xFFD32F2F),
+                            contentColor = Color.White,
+                            modifier = Modifier.offset(x = (-2).dp, y = 2.dp)
+                        ) {
+                            Text(
+                                text = if (badge > 99) "99+" else badge.toString(),
+                                fontSize = 9.sp,
+                                fontWeight = FontWeight.Bold
+                            )
                         }
                     }
-                ) {
-                    Icon(
-                        imageVector = if (isSelected) tab.iconFilled else tab.iconOutlined,
-                        contentDescription = tab.label(lang),
-                        tint = animatedColor,
-                        modifier = Modifier.size(22.dp)
-                    )
                 }
+            ) {
+                Icon(
+                    imageVector = if (isSelected) tab.iconFilled else tab.iconOutlined,
+                    contentDescription = tab.label(lang),
+                    tint = animatedColor,
+                    modifier = Modifier.size(22.dp)
+                )
             }
 
-            Spacer(modifier = Modifier.height(3.dp))
+            Spacer(modifier = Modifier.height(2.dp))
 
             // Label
             Text(
@@ -388,18 +387,6 @@ private fun RowScope.NavItem(
                 fontSize = 10.sp,
                 fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
                 color = animatedColor
-            )
-        }
-
-        // Top indicator line when selected
-        if (isSelected) {
-            Box(
-                modifier = Modifier
-                    .align(Alignment.TopCenter)
-                    .width(24.dp)
-                    .height(3.dp)
-                    .clip(RoundedCornerShape(bottomStart = 3.dp, bottomEnd = 3.dp))
-                    .background(PrimaryGreen)
             )
         }
     }

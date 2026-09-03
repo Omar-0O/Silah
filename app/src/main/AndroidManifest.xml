@@ -2,10 +2,24 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="android.permission.READ_CONTACTS" />
-    <uses-permission android:name="android.permission.READ_CALL_LOG" />
+    <!-- Notifications only — no INTERNET, no READ_CALL_LOG -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+    <!-- Only request READ_CONTACTS when user explicitly opens contact picker fallback -->
+    <uses-permission android:name="android.permission.READ_CONTACTS" />
+
+    <!-- WhatsApp / Dialer deep-links: no network access needed from Sila itself -->
+    <queries>
+        <package android:name="com.whatsapp" />
+        <package android:name="com.whatsapp.w4b" />
+        <intent>
+            <action android:name="android.intent.action.DIAL" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="https" />
+        </intent>
+    </queries>
 
     <application
         android:allowBackup="true"
@@ -16,6 +30,7 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.MyApplication">
+
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -23,10 +38,14 @@
             android:theme="@style/Theme.MyApplication">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- Notification action receiver: handles 📞 Call and 💬 WhatsApp directly -->
+        <receiver
+            android:name=".NotificationActionReceiver"
+            android:exported="false" />
 
         <receiver
             android:name=".widget.SilaAppWidgetProvider"
@@ -44,6 +63,15 @@
             android:name=".widget.SilaWidgetService"
             android:permission="android.permission.BIND_REMOTEVIEWS"
             android:exported="false" />
+
+        <activity
+            android:name=".widget.SilaWidgetConfigActivity"
+            android:exported="true"
+            android:theme="@style/Theme.MyApplication">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" />
+            </intent-filter>
+        </activity>
     </application>
 
 </manifest>

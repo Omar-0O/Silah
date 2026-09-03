@@ -1,6 +1,8 @@
 package com.example
 
+import android.net.Uri
 import android.os.Bundle
+import android.provider.ContactsContract
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -31,54 +33,65 @@ class MainActivity : ComponentActivity() {
             val selectedLanguage by viewModel.selectedLanguage.collectAsState()
             val backupResult by viewModel.backupResult.collectAsState()
 
-            // ── Export: Opens Save-File dialog (SAF) ──────────────────────
+            // ── Export backup (SAF) ────────────────────────────────────────
             val exportLauncher = rememberLauncherForActivityResult(
                 contract = ActivityResultContracts.CreateDocument("application/json")
             ) { uri ->
                 uri?.let { viewModel.exportBackup(applicationContext, it) }
             }
 
-            // ── Import: Opens Open-File dialog (SAF) ──────────────────────
+            // ── Import backup (SAF) ────────────────────────────────────────
             val importLauncher = rememberLauncherForActivityResult(
                 contract = ActivityResultContracts.OpenDocument()
             ) { uri ->
                 uri?.let { viewModel.importBackup(applicationContext, it) }
             }
 
-            // ── Immediate Permissions Launcher (Contacts + Call Log) ──────
-            val permissionLauncher = rememberLauncherForActivityResult(
-                contract = ActivityResultContracts.RequestMultiplePermissions()
-            ) { permissions ->
-                val callLogGranted = permissions[android.Manifest.permission.READ_CALL_LOG] ?: false
-                if (callLogGranted) {
-                    viewModel.syncCallLogsWithRelatives(applicationContext)
+            // ── Native Contact Picker (no READ_CONTACTS needed) ───────────
+            val contactPickerLauncher = rememberLauncherForActivityResult(
+                contract = ActivityResultContracts.PickContact()
+            ) { contactUri: Uri? ->
+                contactUri?.let { uri ->
+                    // Resolve display name + phone from the picked contact
+                    val name = resolveContactName(uri)
+                    val phone = resolveContactPhone(uri)
+                    if (name.isNotBlank() || phone.isNotBlank()) {
+                        viewModel.onContactPicked(name, phone)
+                    }
                 }
             }
 
-            // Connect launchers and request startup permissions
+            // ── Notification permission (Android 13+) ──────────────────────
+            val notifPermissionLauncher = rememberLauncherForActivityResult(
+                contract = ActivityResultContracts.RequestPermission()
+            ) { /* granted or not — we'll still show a reminder next time */ }
+
             LaunchedEffect(Unit) {
-                val permissionsList = mutableListOf(
-                    android.Manifest.permission.READ_CONTACTS,
-                    android.Manifest.permission.READ_CALL_LOG
-                )
+                // Request notification permission on first launch (Android 13+)
                 if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
-                    permissionsList.add(android.Manifest.permission.POST_NOTIFICATIONS)
+                    notifPermissionLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS)
                 }
-                permissionLauncher.launch(permissionsList.toTypedArray())
 
-                viewModel.setExportLauncher {
-                    exportLauncher.launch(viewModel.suggestedBackupName())
-                }
-                viewModel.setImportLauncher {
-                    importLauncher.launch(arrayOf("application/json", "*/*"))
-                }
+                // Wire up launchers in ViewModel
+                viewModel.setExportLauncher { exportLauncher.launch(viewModel.suggestedBackupName()) }
+                viewModel.setImportLauncher { importLauncher.launch(arrayOf("application/json", "*/*")) }
+                viewModel.setContactPickerLauncher { contactPickerLauncher.launch(null) }
             }
 
-            // Show Toast on backup/restore result
+            // Show backup/restore result toast
             LaunchedEffect(backupResult) {
                 backupResult?.let { result ->
                     Toast.makeText(applicationContext, result.message, Toast.LENGTH_LONG).show()
                     viewModel.clearBackupResult()
+                }
+            }
+
+            // Handle deep-link from notification "mark_contacted" action
+            val intentAction = intent?.getStringExtra("action")
+            val intentRelativeId = intent?.getIntExtra("relative_id", -1) ?: -1
+            LaunchedEffect(intentAction, intentRelativeId) {
+                if (intentAction == "mark_contacted" && intentRelativeId != -1) {
+                    viewModel.showMarkContactedPrompt(intentRelativeId)
                 }
             }
 
@@ -90,6 +103,48 @@ class MainActivity : ComponentActivity() {
                     AppNavigation(viewModel = viewModel)
                 }
             }
+        }
+    }
+
+    /** Resolve display name from contact URI using READ_CONTACTS or ContactsContract. */
+    private fun resolveContactName(uri: Uri): String {
+        return try {
+            contentResolver.query(
+                uri,
+                arrayOf(ContactsContract.Contacts.DISPLAY_NAME_PRIMARY),
+                null, null, null
+            )?.use { cursor ->
+                if (cursor.moveToFirst()) cursor.getString(0) ?: "" else ""
+            } ?: ""
+        } catch (e: Exception) {
+            ""
+        }
+    }
+
+    /** Resolve first phone number from contact URI. */
+    private fun resolveContactPhone(uri: Uri): String {
+        return try {
+            // Get contact ID first
+            val contactId = contentResolver.query(
+                uri,
+                arrayOf(ContactsContract.Contacts._ID),
+                null, null, null
+            )?.use { cursor ->
+                if (cursor.moveToFirst()) cursor.getString(0) else null
+            } ?: return ""
+
+            // Then query phone numbers
+            contentResolver.query(
+                ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
+                arrayOf(ContactsContract.CommonDataKinds.Phone.NUMBER),
+                "${ContactsContract.CommonDataKinds.Phone.CONTACT_ID} = ?",
+                arrayOf(contactId),
+                null
+            )?.use { cursor ->
+                if (cursor.moveToFirst()) cursor.getString(0) ?: "" else ""
+            } ?: ""
+        } catch (e: Exception) {
+            ""
         }
     }
 }

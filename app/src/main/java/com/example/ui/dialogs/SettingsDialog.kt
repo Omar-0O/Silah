@@ -32,6 +32,7 @@ fun SettingsDialog(
     val selectedLanguage by viewModel.selectedLanguage.collectAsState()
     val relatives by viewModel.relatives.collectAsState()
     var showImportConfirm by remember { mutableStateOf(false) }
+    var showFaqDialog by remember { mutableStateOf(false) }
 
     Dialog(onDismissRequest = onDismiss) {
         BoxWithConstraints {
@@ -193,98 +194,118 @@ fun SettingsDialog(
                         }
                     }
 
-                    HorizontalDivider()
+                    // ── Notification Action Buttons ─────────────────────────
+                    val prefNotifActionCall by viewModel.prefNotifActionCall.collectAsState()
+                    val prefNotifActionWhatsapp by viewModel.prefNotifActionWhatsapp.collectAsState()
+                    val prefNotifActionDone by viewModel.prefNotifActionDone.collectAsState()
 
-                    // ── Backup & Restore Section ────────────────────────────────
-                    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    Text(
+                        text = if (selectedLanguage == "en") "Notification Actions:" else "أزرار الإشعارات:",
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Card(
+                        shape = RoundedCornerShape(14.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
+                        )
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
+                            verticalArrangement = Arrangement.spacedBy(4.dp)
                         ) {
-                            Text(
-                                text = if (selectedLanguage == "en") "Backup & Restore" else "النسخ الاحتياطي والاستعادة",
-                                fontSize = 14.sp,
-                                fontWeight = FontWeight.Bold
-                            )
-                            Icon(
-                                imageVector = Icons.Outlined.Info,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.secondary,
-                                modifier = Modifier.size(14.dp)
-                            )
-                        }
-
-                        // Info Card
-                        Card(
-                            shape = RoundedCornerShape(14.dp),
-                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.4f)),
-                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.secondary.copy(alpha = 0.3f))
-                        ) {
-                            Text(
-                                text = if (selectedLanguage == "en")
-                                    "You can export your relatives list as a JSON file and save it to Google Drive or anywhere else, then restore it later even if you change your phone or reinstall the app."
-                                else
-                                    "يمكنك تصدير قائمة أقاربك كملف JSON وحفظه في Google Drive أو أي مكان آخر، ثم استعادتها لاحقاً حتى لو غيّرت هاتفك أو أعدت تثبيت التطبيق.",
-                                fontSize = 11.sp,
-                                color = MaterialTheme.colorScheme.onSecondaryContainer,
-                                lineHeight = 17.sp,
-                                modifier = Modifier.padding(12.dp)
-                            )
-                        }
-
-                        // Export Button
-                        OutlinedButton(
-                            onClick = {
-                                onDismiss()
-                                viewModel.triggerExport()
-                            },
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(14.dp),
-                            border = BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary),
-                            colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.primary)
-                        ) {
-                            Icon(Icons.Outlined.FileUpload, contentDescription = null, modifier = Modifier.size(18.dp))
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Column {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
                                 Text(
-                                    if (selectedLanguage == "en") "Export Backup 📤" else "تصدير نسخة احتياطية 📤",
-                                    fontSize = 13.sp,
-                                    fontWeight = FontWeight.Bold
+                                    if (selectedLanguage == "en") "📞 Show Call Button" else "📞 زر الاتصال",
+                                    fontSize = 13.sp
                                 )
-                                Text(
-                                    if (selectedLanguage == "en") "${relatives.size} relatives — will be saved as JSON"
-                                    else "${relatives.size} قريب — سيُحفظ كملف JSON",
-                                    fontSize = 10.sp,
-                                    color = MaterialTheme.colorScheme.secondary
+                                Switch(
+                                    checked = prefNotifActionCall,
+                                    onCheckedChange = { viewModel.toggleNotifActionCall(it) },
+                                    colors = SwitchDefaults.colors(
+                                        checkedTrackColor = Color(0xFF0E7075)
+                                    )
                                 )
                             }
-                        }
-
-                        // Import Button
-                        OutlinedButton(
-                            onClick = { showImportConfirm = true },
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(14.dp),
-                            border = BorderStroke(1.5.dp, SoftGold),
-                            colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFB45309))
-                        ) {
-                            Icon(Icons.Outlined.FileDownload, contentDescription = null, modifier = Modifier.size(18.dp))
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Column {
+                            HorizontalDivider(thickness = 0.5.dp)
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
                                 Text(
-                                    if (selectedLanguage == "en") "Restore from Backup 📥" else "استعادة من نسخة احتياطية 📥",
-                                    fontSize = 13.sp,
-                                    fontWeight = FontWeight.Bold
+                                    if (selectedLanguage == "en") "💬 Show WhatsApp Button" else "💬 زر واتساب",
+                                    fontSize = 13.sp
                                 )
+                                Switch(
+                                    checked = prefNotifActionWhatsapp,
+                                    onCheckedChange = { viewModel.toggleNotifActionWhatsapp(it) },
+                                    colors = SwitchDefaults.colors(
+                                        checkedTrackColor = Color(0xFF25D366)
+                                    )
+                                )
+                            }
+                            HorizontalDivider(thickness = 0.5.dp)
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
                                 Text(
-                                    if (selectedLanguage == "en") "Only new entries will be added (no duplicates)"
-                                    else "ستُضاف الأرقام الجديدة فقط (دون تكرار)",
-                                    fontSize = 10.sp,
-                                    color = Color(0xFFB45309)
+                                    if (selectedLanguage == "en") "✅ Show Done Button" else "✅ زر تم التواصل",
+                                    fontSize = 13.sp
+                                )
+                                Switch(
+                                    checked = prefNotifActionDone,
+                                    onCheckedChange = { viewModel.toggleNotifActionDone(it) },
+                                    colors = SwitchDefaults.colors(
+                                        checkedTrackColor = Color(0xFF0E7075)
+                                    )
                                 )
                             }
                         }
                     }
+
+                    HorizontalDivider()
+
+                    // ── Islamic FAQ ────────────────────────────────────────────
+                    Surface(
+                        onClick = { showFaqDialog = true },
+                        shape = RoundedCornerShape(18.dp),
+                        color = Color(0xFF0E7075).copy(alpha = 0.08f),
+                        border = BorderStroke(1.dp, Color(0xFF0E7075).copy(alpha = 0.25f)),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 18.dp, vertical = 14.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Column {
+                                Text(
+                                    text = if (selectedLanguage == "en") "📖 Islamic Q&A" else "📖 أسئلة قرآنية وحديثية",
+                                    fontSize = 15.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color(0xFF0E7075)
+                                )
+                                Text(
+                                    text = if (selectedLanguage == "en") "Why maintain family ties?" else "لماذا صلة الرحم؟",
+                                    fontSize = 11.sp,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                            Text("←", fontSize = 18.sp, color = Color(0xFF0E7075))
+                        }
+                    }
+
+                    HorizontalDivider()
 
                     // ── Close Button ────────────────────────────────────────────
                     Row(
@@ -305,6 +326,10 @@ fun SettingsDialog(
                 }
             }
         }
+    }
+
+    if (showFaqDialog) {
+        IslamicFaqDialog(onDismiss = { showFaqDialog = false })
     }
 
     // ── Import Confirmation Dialog ──────────────────────────────────────────

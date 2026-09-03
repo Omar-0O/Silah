@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Widget Configuration Activity Layout -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="#FFFFFF"
+    android:padding="20dp">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="⚙️ إعداد الودجت"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:textColor="#0E7075"
+        android:gravity="end"
+        android:paddingBottom="16dp" />
+
+    <!-- Max Relatives Count -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="عدد الأقارب المعروضين:"
+        android:textSize="14sp"
+        android:textColor="#334155"
+        android:gravity="end"
+        android:textStyle="bold"
+        android:paddingBottom="8dp" />
+
+    <Spinner
+        android:id="@+id/spinner_count"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:background="@drawable/widget_item_background"
+        android:paddingStart="12dp"
+        android:paddingEnd="12dp"
+        android:layout_marginBottom="16dp" />
+
+    <!-- Sort Order -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="ترتيب العرض:"
+        android:textSize="14sp"
+        android:textColor="#334155"
+        android:gravity="end"
+        android:textStyle="bold"
+        android:paddingBottom="8dp" />
+
+    <RadioGroup
+        android:id="@+id/rg_sort"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layoutDirection="rtl"
+        android:layout_marginBottom="16dp">
+
+        <RadioButton
+            android:id="@+id/rb_sort_due"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:text="الأعلى أولوية (الأكثر تأخراً) 🔴"
+            android:textSize="13sp"
+            android:gravity="center_vertical|end"
+            android:paddingEnd="8dp"
+            android:checked="true" />
+
+        <RadioButton
+            android:id="@+id/rb_sort_degree"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:text="حسب درجة القرابة 👨‍👩‍👧"
+            android:textSize="13sp"
+            android:gravity="center_vertical|end"
+            android:paddingEnd="8dp" />
+
+        <RadioButton
+            android:id="@+id/rb_sort_name"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:text="حسب الاسم أبجدياً 🔤"
+            android:textSize="13sp"
+            android:gravity="center_vertical|end"
+            android:paddingEnd="8dp" />
+    </RadioGroup>
+
+    <!-- Show Status Toggle -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layoutDirection="rtl"
+        android:layout_marginBottom="20dp">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="إظهار حالة التواصل"
+            android:textSize="14sp"
+            android:textColor="#334155"
+            android:textStyle="bold" />
+
+        <Switch
+            android:id="@+id/switch_show_status"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:checked="true"
+            android:thumbTint="#0E7075"
+            android:trackTint="#B2DFDB" />
+    </LinearLayout>
+
+    <!-- Save Button -->
+    <Button
+        android:id="@+id/btn_save_widget"
+        android:layout_width="match_parent"
+        android:layout_height="52dp"
+        android:text="حفظ وإغلاق ✅"
+        android:textSize="15sp"
+        android:textStyle="bold"
+        android:textColor="#FFFFFF"
+        android:backgroundTint="#0E7075"
+        android:stateListAnimator="@null" />
+
+</LinearLayout>

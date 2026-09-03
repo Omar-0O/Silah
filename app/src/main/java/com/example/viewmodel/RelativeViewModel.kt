@@ -115,6 +115,24 @@ class RelativeViewModel(application: Application) : AndroidViewModel(application
     val prefNotifyEncouragement = MutableStateFlow(silahPrefs.getBoolean("pref_notify_encouragement", true))
     val prefNotifyMonthly = MutableStateFlow(silahPrefs.getBoolean("pref_notify_monthly", true))
 
+    // Notification Action Preferences
+    val prefNotifActionCall = MutableStateFlow(silahPrefs.getBoolean("notif_action_call", true))
+    val prefNotifActionWhatsapp = MutableStateFlow(silahPrefs.getBoolean("notif_action_whatsapp", true))
+    val prefNotifActionDone = MutableStateFlow(silahPrefs.getBoolean("notif_action_done", true))
+
+    fun toggleNotifActionCall(enabled: Boolean) {
+        prefNotifActionCall.value = enabled
+        silahPrefs.edit().putBoolean("notif_action_call", enabled).apply()
+    }
+    fun toggleNotifActionWhatsapp(enabled: Boolean) {
+        prefNotifActionWhatsapp.value = enabled
+        silahPrefs.edit().putBoolean("notif_action_whatsapp", enabled).apply()
+    }
+    fun toggleNotifActionDone(enabled: Boolean) {
+        prefNotifActionDone.value = enabled
+        silahPrefs.edit().putBoolean("notif_action_done", enabled).apply()
+    }
+
     fun toggleKinReminders(enabled: Boolean) {
         prefNotifyKinReminders.value = enabled
         silahPrefs.edit().putBoolean("pref_notify_kin_reminders", enabled).apply()
@@ -196,9 +214,41 @@ class RelativeViewModel(application: Application) : AndroidViewModel(application
     // Launchers are set from MainActivity (Compose context)
     private var exportLauncher: (() -> Unit)? = null
     private var importLauncher: (() -> Unit)? = null
+    private var contactPickerLauncher: (() -> Unit)? = null
 
     fun setExportLauncher(launcher: () -> Unit) { exportLauncher = launcher }
     fun setImportLauncher(launcher: () -> Unit) { importLauncher = launcher }
+    fun setContactPickerLauncher(launcher: () -> Unit) { contactPickerLauncher = launcher }
+    fun launchContactPicker() { contactPickerLauncher?.invoke() }
+
+    // Picked contact from native Contact Picker
+    val pickedContactName = MutableStateFlow("")
+    val pickedContactPhone = MutableStateFlow("")
+    val hasPendingPickedContact = MutableStateFlow(false)
+
+    fun onContactPicked(name: String, phone: String) {
+        pickedContactName.value = name
+        pickedContactPhone.value = phone
+        hasPendingPickedContact.value = true
+        // Auto-open add relative dialog pre-filled
+        showAddRelativeDialog.value = true
+    }
+
+    fun clearPickedContact() {
+        pickedContactName.value = ""
+        pickedContactPhone.value = ""
+        hasPendingPickedContact.value = false
+    }
+
+    // Mark contacted prompt (from notification deep-link)
+    val markContactedPromptRelativeId = MutableStateFlow<Int?>(null)
+
+    fun showMarkContactedPrompt(relativeId: Int) {
+        markContactedPromptRelativeId.value = relativeId
+    }
+    fun dismissMarkContactedPrompt() {
+        markContactedPromptRelativeId.value = null
+    }
 
     fun triggerExport() { exportLauncher?.invoke() }
     fun triggerImport() { importLauncher?.invoke() }

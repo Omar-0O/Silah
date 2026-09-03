@@ -16,7 +16,7 @@ data class AvatarDef(
     val diceBearSeed: String = "Felix"
 ) {
     val diceBearUrl: String
-        get() = "https://api.dicebear.com/10.x/critters/svg?seed=$diceBearSeed"
+        get() = "https://api.dicebear.com/10.x/lorelei/svg?seed=$diceBearSeed&backgroundColor=f0f0f2&skinColor=e4e4e6&hairColor=3f4247&outlineColor=3f4247&eyebrowsColor=3f4247&eyesColor=3f4247&noseColor=3f4247&mouthColor=3f4247&frecklesColor=3f4247&glassesColor=3f4247&earringsColor=3f4247&hairAccessoriesColor=3f4247"
 }
 
 val ALL_AVATARS = listOf(
