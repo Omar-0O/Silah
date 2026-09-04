@@ -124,7 +124,7 @@ fun RelativesTabScreen(
 
     val userGender by viewModel.userGender.collectAsState()
     var showProfileDialog by remember { mutableStateOf(false) }
-    var selectedRelativeForDetail by remember { mutableStateOf<com.example.data.Relative?>(null) }
+    val selectedRelativeForDetail by viewModel.selectedRelativeForDetail.collectAsState()
 
     // Internal values stay Arabic (used for filtering stored data)
     val categories = listOf("الكل", "والدان", "أشقاء", "أعمام/أخوال", "أقارب آخرون")
@@ -146,7 +146,7 @@ fun RelativesTabScreen(
         RelativeDetailScreen(
             relative = currentDetailRelative,
             viewModel = viewModel,
-            onBack = { selectedRelativeForDetail = null }
+            onBack = { viewModel.clearSelectedRelative() }
         )
         return
     }
@@ -329,7 +329,7 @@ fun RelativesTabScreen(
                     RelativeCard(
                         relative = relative,
                         viewModel = viewModel,
-                        onCardClick = { selectedRelativeForDetail = relative }
+                        onCardClick = { viewModel.selectRelativeForDetail(relative) }
                     )
                 }
             }

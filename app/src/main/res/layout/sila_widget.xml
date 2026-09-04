@@ -5,43 +5,80 @@
     android:layout_height="match_parent"
     android:background="@drawable/widget_background"
     android:orientation="vertical"
-    android:padding="14dp">
+    android:padding="12dp">
 
     <!-- Widget Header -->
     <RelativeLayout
         android:id="@+id/widget_header"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingBottom="10dp">
+        android:paddingBottom="8dp">
 
-        <TextView
-            android:id="@+id/widget_title"
+        <!-- Title & Sila Logo (Right aligned for RTL) -->
+        <LinearLayout
+            android:id="@+id/widget_brand_layout"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_alignParentEnd="true"
-            android:text="صِلَةِ"
-            android:textColor="#0E7075"
-            android:textSize="15sp"
-            android:textStyle="bold"
-            android:fontFamily="sans-serif-medium" />
-
-        <TextView
-            android:id="@+id/widget_subtitle"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignParentStart="true"
+            android:layout_alignParentRight="true"
             android:layout_centerVertical="true"
-            android:text="أقارب تحتاج تواصلك 🌿"
-            android:textColor="#64748B"
-            android:textSize="10.5sp" />
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
 
-        <View
-            android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:layout_below="@id/widget_title"
-            android:layout_marginTop="8dp"
-            android:background="#E2E8F0"
-            android:id="@+id/widget_divider"/>
+            <TextView
+                android:id="@+id/widget_badge"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/widget_badge_background"
+                android:paddingLeft="8dp"
+                android:paddingRight="8dp"
+                android:paddingTop="3dp"
+                android:paddingBottom="3dp"
+                android:text="صِلَةِ ✨"
+                android:textColor="#926C00"
+                android:textSize="10sp"
+                android:textStyle="bold"
+                android:layout_marginRight="6dp" />
+
+            <TextView
+                android:id="@+id/widget_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="صِلَةِ 🌿"
+                android:textColor="#2D5A3D"
+                android:textSize="15sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <!-- Quick Action Buttons (Left aligned) -->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:layout_centerVertical="true"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <!-- Add Relative Quick Button -->
+            <ImageView
+                android:id="@+id/widget_btn_add"
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:background="@drawable/widget_icon_btn_background"
+                android:src="@drawable/ic_widget_add"
+                android:padding="6dp"
+                android:contentDescription="إضافة قريب"
+                android:layout_marginRight="6dp" />
+
+            <!-- Manual Refresh Quick Button -->
+            <ImageView
+                android:id="@+id/widget_btn_refresh"
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:background="@drawable/widget_icon_btn_background"
+                android:src="@drawable/ic_widget_refresh"
+                android:padding="6dp"
+                android:contentDescription="تحديث القائمة" />
+        </LinearLayout>
     </RelativeLayout>
 
     <!-- Scrollable ListView -->
@@ -52,31 +89,35 @@
         android:layout_weight="1"
         android:divider="@android:color/transparent"
         android:dividerHeight="6dp"
-        android:scrollbars="none" />
+        android:scrollbars="none"
+        android:nestedScrollingEnabled="true" />
 
-    <!-- Empty View -->
+    <!-- Empty View state when list has no due items or empty -->
     <LinearLayout
         android:id="@+id/widget_empty"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="vertical"
         android:gravity="center"
+        android:orientation="vertical"
+        android:padding="16dp"
         android:visibility="gone">
 
         <TextView
+            android:id="@+id/widget_empty_icon"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="🌿"
-            android:textSize="28sp"
-            android:gravity="center" />
+            android:text="🌸"
+            android:textSize="28sp" />
 
         <TextView
+            android:id="@+id/widget_empty_text"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="لا يوجد أقارب بعد&#10;اضغط للفتح والإضافة"
-            android:textColor="#64748B"
-            android:textSize="12sp"
             android:gravity="center"
+            android:text="ما شاء الله! تواصلت مع الجميع اليوم 🌿\nإضغط للفتح أو إضافة قريب جديد"
+            android:textColor="#3F694D"
+            android:textSize="12sp"
+            android:textStyle="bold"
             android:layout_marginTop="6dp" />
     </LinearLayout>
 

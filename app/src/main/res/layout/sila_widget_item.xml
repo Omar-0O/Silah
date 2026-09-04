@@ -5,29 +5,47 @@
     android:layout_height="wrap_content"
     android:orientation="horizontal"
     android:background="@drawable/widget_item_background"
-    android:padding="10dp"
-    android:gravity="center_vertical"
-    android:layout_marginBottom="4dp">
+    android:padding="8dp"
+    android:gravity="center_vertical">
 
-    <!-- Quick Call Button -->
-    <ImageView
-        android:id="@+id/widget_item_call"
-        android:layout_width="36dp"
-        android:layout_height="36dp"
-        android:background="@drawable/widget_button_background"
-        android:src="@android:drawable/ic_menu_call"
-        android:padding="8dp"
-        android:contentDescription="اتصال سريع" />
+    <!-- Quick Action Buttons on Left -->
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginRight="8dp">
 
-    <!-- Relative Information -->
+        <!-- Quick WhatsApp Button -->
+        <ImageView
+            android:id="@+id/widget_item_chat"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:background="@drawable/widget_chat_button_background"
+            android:src="@drawable/ic_widget_chat"
+            android:padding="7dp"
+            android:contentDescription="مراسلة واتساب"
+            android:layout_marginRight="6dp" />
+
+        <!-- Quick Call Button -->
+        <ImageView
+            android:id="@+id/widget_item_call"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:background="@drawable/widget_button_background"
+            android:src="@drawable/ic_widget_call"
+            android:padding="7dp"
+            android:contentDescription="اتصال هاتف" />
+    </LinearLayout>
+
+    <!-- Relative Information (Right Aligned for RTL) -->
     <LinearLayout
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="1"
         android:orientation="vertical"
         android:gravity="right"
-        android:layout_marginRight="8dp"
-        android:layout_marginLeft="8dp">
+        android:layout_marginLeft="4dp">
 
         <LinearLayout
             android:layout_width="wrap_content"
@@ -46,7 +64,8 @@
                 android:paddingBottom="2dp"
                 android:text="والدان"
                 android:textColor="#2D5A3D"
-                android:textSize="10sp"
+                android:textSize="9sp"
+                android:textStyle="bold"
                 android:layout_marginRight="6dp" />
 
             <TextView
@@ -55,8 +74,9 @@
                 android:layout_height="wrap_content"
                 android:text="اسم القريب"
                 android:textColor="#1C221E"
-                android:textSize="14sp"
-                android:textStyle="bold" />
+                android:textSize="13sp"
+                android:textStyle="bold"
+                android:maxLines="1" />
         </LinearLayout>
 
         <TextView
@@ -64,9 +84,10 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="آخر تواصل: منذ ٥ أيام"
-            android:textColor="#6B8775"
-            android:textSize="11sp"
-            android:layout_marginTop="2dp" />
+            android:textColor="#5A7A66"
+            android:textSize="10.5sp"
+            android:layout_marginTop="2dp"
+            android:maxLines="1" />
     </LinearLayout>
 
 </LinearLayout>

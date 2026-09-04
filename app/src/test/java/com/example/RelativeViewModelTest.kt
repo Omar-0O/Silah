@@ -111,4 +111,21 @@ class RelativeViewModelTest {
         viewModel.fetchDeviceContacts(application)
         assertNotNull(viewModel.deviceContacts.value)
     }
+
+    @Test
+    fun testCheckPendingNotifiedRelatives_whenNone_doesNotShowDialog() {
+        val app = ApplicationProvider.getApplicationContext<Application>()
+        com.example.work.ReminderScheduler.clearAllPendingNotifiedRelatives(app)
+
+        viewModel.checkPendingNotifiedRelatives()
+        assertFalse(viewModel.showKinshipCheckInDialog.value)
+        assertTrue(viewModel.pendingNotifiedRelatives.value.isEmpty())
+    }
+
+    @Test
+    fun testDismissKinshipCheckInDialog() {
+        viewModel.showKinshipCheckInDialog.value = true
+        viewModel.dismissKinshipCheckInDialog()
+        assertFalse(viewModel.showKinshipCheckInDialog.value)
+    }
 }

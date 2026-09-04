@@ -13,6 +13,10 @@ class RelativeRepository(
     val allTemplates: Flow<List<QuickTemplate>> = quickTemplateDao.getAllTemplates()
     val allMemories: Flow<List<FamilyMemory>> = familyMemoryDao.getAllMemories()
 
+    suspend fun getAllRelativesOnce(): List<Relative> {
+        return relativeDao.getAllRelativesOnce()
+    }
+
     suspend fun getRelativeById(id: Int): Relative? {
         return relativeDao.getRelativeById(id)
     }

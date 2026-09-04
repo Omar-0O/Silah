@@ -33,6 +33,7 @@ import com.example.data.Relative
 import com.example.ui.components.CallLogBadge
 import com.example.ui.dialogs.AddEditRelativeDialog
 import com.example.ui.dialogs.ImportContactsDialog
+import com.example.ui.dialogs.KinshipCheckInDialog
 import com.example.ui.dialogs.MilestoneDialog
 import com.example.ui.dialogs.RecordLogBottomSheet
 import com.example.ui.dialogs.SettingsDialog
@@ -125,6 +126,12 @@ fun MainDashboardScreen(
     val showLogsHistoryDialog by viewModel.showLogsHistoryDialog.collectAsState()
     val selectedLanguage by viewModel.selectedLanguage.collectAsState()
     val relatives by viewModel.relatives.collectAsState()
+    val showKinshipCheckInDialog by viewModel.showKinshipCheckInDialog.collectAsState()
+    val pendingNotifiedRelatives by viewModel.pendingNotifiedRelatives.collectAsState()
+
+    LaunchedEffect(Unit) {
+        viewModel.checkPendingNotifiedRelatives()
+    }
 
     val layoutDirection = if (selectedLanguage == "en") LayoutDirection.Ltr else LayoutDirection.Rtl
 
@@ -138,6 +145,19 @@ fun MainDashboardScreen(
                            else ((System.currentTimeMillis() - r.lastContactDate) / 86400000).toInt()
             diffDays >= r.contactIntervalDays
         }
+    }
+
+    val selectedRelativeForDetail by viewModel.selectedRelativeForDetail.collectAsState()
+
+    if (selectedRelativeForDetail != null) {
+        CompositionLocalProvider(LocalLayoutDirection provides layoutDirection) {
+            RelativeDetailScreen(
+                relative = selectedRelativeForDetail!!,
+                viewModel = viewModel,
+                onBack = { viewModel.clearSelectedRelative() }
+            )
+        }
+        return
     }
 
     CompositionLocalProvider(LocalLayoutDirection provides layoutDirection) {
@@ -249,6 +269,14 @@ fun MainDashboardScreen(
                         viewModel.showSupportSilaDialog.value = true
                     },
                     onDismiss = { viewModel.activeMilestoneDialog.value = null }
+                )
+            }
+
+            if (showKinshipCheckInDialog && pendingNotifiedRelatives.isNotEmpty()) {
+                KinshipCheckInDialog(
+                    relatives = pendingNotifiedRelatives,
+                    viewModel = viewModel,
+                    onDismiss = { viewModel.dismissKinshipCheckInDialog() }
                 )
             }
         }

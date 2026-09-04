@@ -1,8 +1,6 @@
 package com.example
 
-import android.net.Uri
 import android.os.Bundle
-import android.provider.ContactsContract
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -14,6 +12,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -21,64 +22,100 @@ import com.example.ui.screens.AppNavigation
 import com.example.ui.theme.MyApplicationTheme
 import com.example.viewmodel.RelativeViewModel
 
+import android.content.pm.PackageManager
+import androidx.core.content.ContextCompat
+
 class MainActivity : ComponentActivity() {
 
     private val viewModel: RelativeViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        handleNotificationOrWidgetIntent(intent)
+        Thread.setDefaultUncaughtExceptionHandler { thread, throwable ->
+            android.util.Log.e("SILAH_CRASH", "Uncaught exception in thread ${thread.name}", throwable)
+        }
         enableEdgeToEdge()
         setContent {
             val isDarkMode by viewModel.isDarkMode.collectAsState()
             val selectedLanguage by viewModel.selectedLanguage.collectAsState()
             val backupResult by viewModel.backupResult.collectAsState()
+            val layoutDirection = if (selectedLanguage == "en") LayoutDirection.Ltr else LayoutDirection.Rtl
 
-            // ── Export backup (SAF) ────────────────────────────────────────
+            // ── Export: Opens Save-File dialog (SAF) ──────────────────────
             val exportLauncher = rememberLauncherForActivityResult(
                 contract = ActivityResultContracts.CreateDocument("application/json")
             ) { uri ->
                 uri?.let { viewModel.exportBackup(applicationContext, it) }
             }
 
-            // ── Import backup (SAF) ────────────────────────────────────────
+            // ── Import: Opens Open-File dialog (SAF) ──────────────────────
             val importLauncher = rememberLauncherForActivityResult(
                 contract = ActivityResultContracts.OpenDocument()
             ) { uri ->
                 uri?.let { viewModel.importBackup(applicationContext, it) }
             }
 
-            // ── Native Contact Picker (no READ_CONTACTS needed) ───────────
-            val contactPickerLauncher = rememberLauncherForActivityResult(
-                contract = ActivityResultContracts.PickContact()
-            ) { contactUri: Uri? ->
-                contactUri?.let { uri ->
-                    // Resolve display name + phone from the picked contact
-                    val name = resolveContactName(uri)
-                    val phone = resolveContactPhone(uri)
-                    if (name.isNotBlank() || phone.isNotBlank()) {
-                        viewModel.onContactPicked(name, phone)
-                    }
+            // ── Immediate Permissions Launcher (Contacts + Call Log) ──────
+            val permissionLauncher = rememberLauncherForActivityResult(
+                contract = ActivityResultContracts.RequestMultiplePermissions()
+            ) { permissions ->
+                val callLogGranted = permissions[android.Manifest.permission.READ_CALL_LOG] ?: false
+                if (callLogGranted) {
+                    viewModel.syncCallLogsWithRelatives(applicationContext)
                 }
             }
 
-            // ── Notification permission (Android 13+) ──────────────────────
-            val notifPermissionLauncher = rememberLauncherForActivityResult(
-                contract = ActivityResultContracts.RequestPermission()
-            ) { /* granted or not — we'll still show a reminder next time */ }
-
+            // Connect launchers and request startup permissions if not already granted
             LaunchedEffect(Unit) {
-                // Request notification permission on first launch (Android 13+)
-                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
-                    notifPermissionLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS)
-                }
+                try {
+                    val callLogGranted = ContextCompat.checkSelfPermission(this@MainActivity, android.Manifest.permission.READ_CALL_LOG) == PackageManager.PERMISSION_GRANTED
+                    if (callLogGranted) {
+                        try {
+                            viewModel.syncCallLogsWithRelatives(applicationContext)
+                        } catch (e: Exception) {
+                            e.printStackTrace()
+                        }
+                    }
 
-                // Wire up launchers in ViewModel
-                viewModel.setExportLauncher { exportLauncher.launch(viewModel.suggestedBackupName()) }
-                viewModel.setImportLauncher { importLauncher.launch(arrayOf("application/json", "*/*")) }
-                viewModel.setContactPickerLauncher { contactPickerLauncher.launch(null) }
+                    val ungrantedPermissions = mutableListOf<String>()
+                    if (ContextCompat.checkSelfPermission(this@MainActivity, android.Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED) {
+                        ungrantedPermissions.add(android.Manifest.permission.READ_CONTACTS)
+                    }
+                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+                        if (ContextCompat.checkSelfPermission(this@MainActivity, android.Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                            ungrantedPermissions.add(android.Manifest.permission.POST_NOTIFICATIONS)
+                        }
+                    }
+
+                    if (ungrantedPermissions.isNotEmpty()) {
+                        try {
+                            permissionLauncher.launch(ungrantedPermissions.toTypedArray())
+                        } catch (e: Exception) {
+                            e.printStackTrace()
+                        }
+                    }
+
+                    viewModel.setExportLauncher {
+                        try {
+                            exportLauncher.launch(viewModel.suggestedBackupName())
+                        } catch (e: Exception) {
+                            e.printStackTrace()
+                        }
+                    }
+                    viewModel.setImportLauncher {
+                        try {
+                            importLauncher.launch(arrayOf("application/json", "*/*"))
+                        } catch (e: Exception) {
+                            e.printStackTrace()
+                        }
+                    }
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
             }
 
-            // Show backup/restore result toast
+            // Show Toast on backup/restore result
             LaunchedEffect(backupResult) {
                 backupResult?.let { result ->
                     Toast.makeText(applicationContext, result.message, Toast.LENGTH_LONG).show()
@@ -86,65 +123,38 @@ class MainActivity : ComponentActivity() {
                 }
             }
 
-            // Handle deep-link from notification "mark_contacted" action
-            val intentAction = intent?.getStringExtra("action")
-            val intentRelativeId = intent?.getIntExtra("relative_id", -1) ?: -1
-            LaunchedEffect(intentAction, intentRelativeId) {
-                if (intentAction == "mark_contacted" && intentRelativeId != -1) {
-                    viewModel.showMarkContactedPrompt(intentRelativeId)
-                }
-            }
-
-            MyApplicationTheme(darkTheme = isDarkMode, fontName = "Almarai") {
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background
-                ) {
-                    AppNavigation(viewModel = viewModel)
+            CompositionLocalProvider(LocalLayoutDirection provides layoutDirection) {
+                MyApplicationTheme(darkTheme = isDarkMode, fontName = "Almarai") {
+                    Surface(
+                        modifier = Modifier.fillMaxSize(),
+                        color = MaterialTheme.colorScheme.background
+                    ) {
+                        AppNavigation(viewModel = viewModel)
+                    }
                 }
             }
         }
     }
 
-    /** Resolve display name from contact URI returned by native contact picker. */
-    private fun resolveContactName(uri: Uri): String {
-        return try {
-            contentResolver.query(
-                uri,
-                arrayOf(ContactsContract.Contacts.DISPLAY_NAME_PRIMARY),
-                null, null, null
-            )?.use { cursor ->
-                if (cursor.moveToFirst()) cursor.getString(0) ?: "" else ""
-            } ?: ""
-        } catch (e: Exception) {
-            ""
-        }
+    override fun onStart() {
+        super.onStart()
+        viewModel.checkPendingNotifiedRelatives()
     }
 
-    /** Resolve first phone number from contact URI. */
-    private fun resolveContactPhone(uri: Uri): String {
-        return try {
-            // Get contact ID first
-            val contactId = contentResolver.query(
-                uri,
-                arrayOf(ContactsContract.Contacts._ID),
-                null, null, null
-            )?.use { cursor ->
-                if (cursor.moveToFirst()) cursor.getString(0) else null
-            } ?: return ""
+    override fun onNewIntent(intent: android.content.Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        handleNotificationOrWidgetIntent(intent)
+        viewModel.checkPendingNotifiedRelatives()
+    }
 
-            // Then query phone numbers
-            contentResolver.query(
-                ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
-                arrayOf(ContactsContract.CommonDataKinds.Phone.NUMBER),
-                "${ContactsContract.CommonDataKinds.Phone.CONTACT_ID} = ?",
-                arrayOf(contactId),
-                null
-            )?.use { cursor ->
-                if (cursor.moveToFirst()) cursor.getString(0) ?: "" else ""
-            } ?: ""
-        } catch (e: Exception) {
-            ""
+    private fun handleNotificationOrWidgetIntent(intent: android.content.Intent?) {
+        val relativeId = intent?.getIntExtra("relative_id", -1) ?: -1
+        if (relativeId != -1) {
+            viewModel.selectRelativeById(relativeId)
+        }
+        if (intent?.getBooleanExtra("open_add_dialog", false) == true) {
+            viewModel.openAddRelativeDialog()
         }
     }
 }

@@ -1,9 +1,7 @@
 package com.example.widget
 
-import android.appwidget.AppWidgetManager
 import android.content.Context
 import android.content.Intent
-import android.net.Uri
 import android.widget.RemoteViews
 import android.widget.RemoteViewsService
 import com.example.R
@@ -14,57 +12,41 @@ import kotlinx.coroutines.runBlocking
 
 class SilaWidgetService : RemoteViewsService() {
     override fun onGetViewFactory(intent: Intent): RemoteViewsFactory {
-        val widgetId = intent.getIntExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, AppWidgetManager.INVALID_APPWIDGET_ID)
-        return SilaWidgetFactory(applicationContext, widgetId)
+        return SilaWidgetFactory(applicationContext)
     }
 }
 
-class SilaWidgetFactory(
-    private val context: Context,
-    private val appWidgetId: Int
-) : RemoteViewsService.RemoteViewsFactory {
+class SilaWidgetFactory(private val context: Context) : RemoteViewsService.RemoteViewsFactory {
 
     private var relativesList: List<Relative> = emptyList()
-    private var maxCount: Int = 5
-    private var sortMode: String = "due"
-    private var showStatus: Boolean = true
 
-    override fun onCreate() { loadData() }
-    override fun onDataSetChanged() { loadData() }
+    override fun onCreate() {
+        loadData()
+    }
+
+    override fun onDataSetChanged() {
+        loadData()
+    }
 
     private fun loadData() {
         try {
-            // Load per-widget settings
-            val prefs = context.getSharedPreferences("sila_widget_prefs", Context.MODE_PRIVATE)
-            maxCount = prefs.getInt("widget_${appWidgetId}_count", 5)
-            sortMode = prefs.getString("widget_${appWidgetId}_sort", "due") ?: "due"
-            showStatus = prefs.getBoolean("widget_${appWidgetId}_show_status", true)
-
             val db = AppDatabase.getDatabase(context)
-            val rawList = runBlocking {
-                kotlinx.coroutines.withTimeoutOrNull(3000L) {
-                    db.relativeDao().getAllRelativesOnce()
-                }
-            } ?: emptyList()
+            val rawList = runBlocking { db.relativeDao().getAllRelativesOnce() }
 
-            val sorted = when (sortMode) {
-                "degree" -> rawList.sortedWith(
-                    compareBy {
-                        when (it.relationshipDegree) {
-                            "والدان" -> 1; "أشقاء" -> 2; "أعمام/أخوال" -> 3; else -> 4
-                        }
+            // Sort from highest urgency (most overdue / smallest due threshold) to lowest
+            relativesList = rawList.sortedWith(
+                compareBy<Relative> { relative ->
+                    if (relative.lastContactDate == 0L) 0L
+                    else relative.lastContactDate + (relative.contactIntervalDays * 86_400_000L)
+                }.thenBy { relative ->
+                    when (relative.relationshipDegree) {
+                        "والدان" -> 1
+                        "أشقاء" -> 2
+                        "أعمام/أخوال" -> 3
+                        else -> 4
                     }
-                )
-                "name" -> rawList.sortedBy { it.name }
-                else -> rawList.sortedWith(
-                    compareBy<Relative> {
-                        if (it.lastContactDate == 0L) 0L
-                        else it.lastContactDate + (it.contactIntervalDays * 86_400_000L)
-                    }
-                )
-            }
-
-            relativesList = sorted.take(maxCount)
+                }.thenBy { it.name }
+            )
         } catch (e: Exception) {
             e.printStackTrace()
             relativesList = emptyList()
@@ -89,30 +71,40 @@ class SilaWidgetFactory(
         views.setTextViewText(R.id.widget_item_degree, relative.relationshipDegree)
 
         val now = System.currentTimeMillis()
-        val statusText = if (showStatus) {
-            if (relative.lastContactDate == 0L) {
-                "لم يتصل قط • حان وقت وصله 💚"
+        val statusText = if (relative.lastContactDate == 0L) {
+            "🌸 لم يتصل قط • حان وقت وصله 💚"
+        } else {
+            val dueMs = relative.lastContactDate + (relative.contactIntervalDays * 86_400_000L)
+            if (now >= dueMs) {
+                val overdueDays = ((now - dueMs) / 86_400_000L).toInt()
+                if (overdueDays <= 0) "🌸 موعد التواصل اليوم"
+                else "🔴 متأخر منذ $overdueDays أيام"
             } else {
-                val dueMs = relative.lastContactDate + (relative.contactIntervalDays * 86_400_000L)
-                if (now >= dueMs) {
-                    val overdueDays = ((now - dueMs) / 86_400_000L).toInt()
-                    if (overdueDays <= 0) "مستحق التواصل اليوم 🌸"
-                    else "مستحق منذ $overdueDays أيام 🔴"
-                } else {
-                    "آخر تواصل: ${DateUtils.formatRelativeTimeExact(relative.lastContactDate)}"
-                }
+                "🟢 آخر تواصل: ${DateUtils.formatRelativeTimeExact(relative.lastContactDate)}"
             }
-        } else ""
+        }
         views.setTextViewText(R.id.widget_item_status, statusText)
 
-        // Fill-in Intent for item click (dials relative's number or opens app)
-        val fillInIntent = Intent().apply {
-            putExtra("relative_id", relative.id)
-            putExtra("phone", relative.phone)
-            data = Uri.parse("tel:${relative.phone}")
+        // 1. Fill-in Intent for whole card click (opens Relative Details in App)
+        val viewDetailIntent = Intent().apply {
+            action = SilaAppWidgetProvider.ACTION_WIDGET_VIEW_DETAIL
+            putExtra(SilaAppWidgetProvider.EXTRA_RELATIVE_ID, relative.id)
         }
-        views.setOnClickFillInIntent(R.id.widget_item_container, fillInIntent)
-        views.setOnClickFillInIntent(R.id.widget_item_call, fillInIntent)
+        views.setOnClickFillInIntent(R.id.widget_item_container, viewDetailIntent)
+
+        // 2. Fill-in Intent for Call button (opens phone dialer)
+        val callIntent = Intent().apply {
+            action = SilaAppWidgetProvider.ACTION_WIDGET_CALL
+            putExtra(SilaAppWidgetProvider.EXTRA_PHONE, relative.phone)
+        }
+        views.setOnClickFillInIntent(R.id.widget_item_call, callIntent)
+
+        // 3. Fill-in Intent for WhatsApp / Chat button (opens WhatsApp/SMS)
+        val chatIntent = Intent().apply {
+            action = SilaAppWidgetProvider.ACTION_WIDGET_CHAT
+            putExtra(SilaAppWidgetProvider.EXTRA_PHONE, relative.phone)
+        }
+        views.setOnClickFillInIntent(R.id.widget_item_chat, chatIntent)
 
         return views
     }
