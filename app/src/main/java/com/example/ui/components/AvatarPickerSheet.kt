@@ -90,13 +90,13 @@ fun AvatarPickerSheet(
                 FilterChip(
                     selected = genderFilter == "male",
                     onClick = { genderFilter = "male" },
-                    label = { Text(if (lang == "en") "Male 👨" else "ذكور 👨", fontSize = 12.sp) },
+                    label = { Text(if (lang == "en") "Male" else "ذكور", fontSize = 12.sp) },
                     shape = RoundedCornerShape(12.dp)
                 )
                 FilterChip(
                     selected = genderFilter == "female",
                     onClick = { genderFilter = "female" },
-                    label = { Text(if (lang == "en") "Female 👩" else "إناث 👩", fontSize = 12.sp) },
+                    label = { Text(if (lang == "en") "Female" else "إناث", fontSize = 12.sp) },
                     shape = RoundedCornerShape(12.dp)
                 )
             }

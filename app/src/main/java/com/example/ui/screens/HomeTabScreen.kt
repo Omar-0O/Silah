@@ -136,7 +136,17 @@ fun HomeTabScreen(viewModel: RelativeViewModel) {
                 )
             }
 
-            // 2. Kinship Streak Card
+            // 2. Quick Stats Row
+            item {
+                QuickStatsRow(
+                    relativesCount = relatives.size,
+                    dueCount = dueRelatives.size,
+                    logsCount = totalLogsCount,
+                    lang = lang
+                )
+            }
+
+            // 3. Kinship Streak Card
             item {
                 StreakCard(
                     streakDays = streakDays,
@@ -145,7 +155,7 @@ fun HomeTabScreen(viewModel: RelativeViewModel) {
                 )
             }
 
-            // 3. Due Relatives Carousel
+            // 4. Due Relatives Carousel
             item {
                 DueRelativesCarousel(
                     dueRelatives = dueRelatives,
@@ -180,7 +190,7 @@ private fun QuickStatsRow(
             emoji = "🔔",
             value = dueCount.toString(),
             label = if (lang == "en") "Due Now" else "بانتظارك",
-            color = if (dueCount > 0) Color(0xFFE53935) else PrimaryGreen,
+            color = if (dueCount > 0) Color(0xFFD32F2F) else PrimaryGreen,
             modifier = Modifier.weight(1f)
         )
         MiniStatCard(
@@ -202,9 +212,11 @@ private fun MiniStatCard(
     modifier: Modifier = Modifier
 ) {
     Card(
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = color.copy(alpha = 0.08f)),
-        modifier = modifier.shadow(2.dp, RoundedCornerShape(16.dp))
+        shape = RoundedCornerShape(18.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        border = androidx.compose.foundation.BorderStroke(1.dp, color.copy(alpha = 0.15f)),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        modifier = modifier
     ) {
         Column(
             modifier = Modifier
@@ -216,7 +228,7 @@ private fun MiniStatCard(
             Box(
                 modifier = Modifier
                     .size(38.dp)
-                    .background(color.copy(alpha = 0.14f), androidx.compose.foundation.shape.CircleShape),
+                    .background(color.copy(alpha = 0.12f), CircleShape),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
@@ -226,15 +238,15 @@ private fun MiniStatCard(
             }
             Text(
                 text = value,
-                fontSize = 20.sp,
+                fontSize = 19.sp,
                 fontWeight = FontWeight.Black,
                 color = color
             )
             Text(
                 text = label,
-                fontSize = 10.sp,
-                color = color.copy(alpha = 0.75f),
-                fontWeight = FontWeight.Bold
+                fontSize = 11.sp,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                fontWeight = FontWeight.SemiBold
             )
         }
     }

@@ -150,18 +150,48 @@ class ReminderWorker(
 
     companion object {
         fun buildNotificationMessage(name: String, degree: String, lang: String = "ar"): String {
-            val n = name.trim()
+            val cleanName = name.trim()
             if (lang == "en") {
                 return when (degree) {
+                    "والدان", "Parents" -> "It's been a while since you checked on your parents 💚"
+                    "أشقاء", "Siblings" -> "Time to connect with your siblings 🌸"
+                    "أعمام/أخوال", "Uncles/Aunts" -> "Don't forget to reach out to your uncles/aunts ✨"
                     "أب", "أم" -> "It's been a while — check on your parent 💚"
                     "جد", "جدة" -> "Don't forget your grandparent — they miss you ❤️"
                     "أخ", "أخت" -> "Reach out to your sibling today 🌸"
                     "عم", "عمة" -> "It's time to connect with your uncle/aunt ✨"
                     "خال", "خالة" -> "Stay in touch with your maternal uncle/aunt ✨"
-                    else -> "Reach out to $n today 🌿"
+                    else -> "It's time to connect with $cleanName 🌿"
                 }
             } else {
                 return when (degree) {
+                    "والدان" -> {
+                        when {
+                            cleanName.contains("أم", ignoreCase = true) ||
+                            cleanName.contains("امي", ignoreCase = true) ||
+                            cleanName.contains("أمي", ignoreCase = true) ||
+                            cleanName.contains("والدة", ignoreCase = true) ||
+                            cleanName.contains("والدتي", ignoreCase = true) ->
+                                "بقالك فترة مش بتطمن على والدتك 💚"
+                            else -> "بقالك فترة مش بتطمن على والدك 💚"
+                        }
+                    }
+                    "أشقاء" -> {
+                        when {
+                            cleanName.contains("أخت", ignoreCase = true) ||
+                            cleanName.contains("اخت", ignoreCase = true) ->
+                                "بقالك فترة مش بتطمن على أختك 🌸"
+                            else -> "بقالك فترة مش بتطمن على أخوك 🌸"
+                        }
+                    }
+                    "أعمام/أخوال" -> {
+                        when {
+                            cleanName.contains("خالة", ignoreCase = true) -> "بقالك فترة مش بتطمن على خالتك ✨"
+                            cleanName.contains("خال", ignoreCase = true) -> "بقالك فترة مش بتطمن على خالك ✨"
+                            cleanName.contains("عمة", ignoreCase = true) -> "بقالك فترة مش بتطمن على عمتك ✨"
+                            else -> "بقالك فترة مش بتطمن على عمك ✨"
+                        }
+                    }
                     "أم" -> "بقالك فترة مش بتطمن على أمك 💚"
                     "أب" -> "بقالك فترة مش بتطمن على أبوك 💚"
                     "جدة" -> "بقالك فترة مش بتطمن على جدتك ❤️"
@@ -172,7 +202,7 @@ class ReminderWorker(
                     "عم" -> "بقالك فترة مش بتطمن على عمك ✨"
                     "خالة" -> "بقالك فترة مش بتطمن على خالتك ✨"
                     "خال" -> "بقالك فترة مش بتطمن على خالك ✨"
-                    else -> "بقالك فترة مش بتطمن على $n 🌿"
+                    else -> "بقالك فترة مش بتطمن على $cleanName 🌿"
                 }
             }
         }

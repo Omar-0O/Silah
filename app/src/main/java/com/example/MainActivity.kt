@@ -22,8 +22,12 @@ import com.example.ui.screens.AppNavigation
 import com.example.ui.theme.MyApplicationTheme
 import com.example.viewmodel.RelativeViewModel
 
+import android.app.Activity
+import android.content.Intent
 import android.content.pm.PackageManager
 import androidx.core.content.ContextCompat
+import android.net.Uri
+import android.provider.ContactsContract
 
 class MainActivity : ComponentActivity() {
 
@@ -54,6 +58,20 @@ class MainActivity : ComponentActivity() {
                 contract = ActivityResultContracts.OpenDocument()
             ) { uri ->
                 uri?.let { viewModel.importBackup(applicationContext, it) }
+            }
+
+            // ── Native Contact Picker (no broad READ_CONTACTS needed) ───────────
+            val contactPickerLauncher = rememberLauncherForActivityResult(
+                contract = ActivityResultContracts.StartActivityForResult()
+            ) { result ->
+                if (result.resultCode == Activity.RESULT_OK) {
+                    result.data?.data?.let { uri ->
+                        val (name, phone) = resolveContactData(uri)
+                        if (name.isNotBlank() || phone.isNotBlank()) {
+                            viewModel.onContactPicked(name, phone)
+                        }
+                    }
+                }
             }
 
             // ── Immediate Permissions Launcher (Contacts + Call Log) ──────
@@ -110,6 +128,25 @@ class MainActivity : ComponentActivity() {
                             e.printStackTrace()
                         }
                     }
+                    viewModel.setContactPickerLauncher {
+                        try {
+                            val intent = Intent(
+                                Intent.ACTION_PICK,
+                                ContactsContract.CommonDataKinds.Phone.CONTENT_URI
+                            )
+                            contactPickerLauncher.launch(intent)
+                        } catch (e: Exception) {
+                            try {
+                                val fallbackIntent = Intent(
+                                    Intent.ACTION_PICK,
+                                    ContactsContract.Contacts.CONTENT_URI
+                                )
+                                contactPickerLauncher.launch(fallbackIntent)
+                            } catch (e2: Exception) {
+                                e2.printStackTrace()
+                            }
+                        }
+                    }
                 } catch (e: Exception) {
                     e.printStackTrace()
                 }
@@ -156,5 +193,126 @@ class MainActivity : ComponentActivity() {
         if (intent?.getBooleanExtra("open_add_dialog", false) == true) {
             viewModel.openAddRelativeDialog()
         }
+    }
+
+    /** Resolve display name and phone number from contact URI returned by native contact picker. */
+    private fun resolveContactData(uri: Uri): Pair<String, String> {
+        var name = ""
+        var phone = ""
+
+        // 1. Direct query on the returned URI (works directly for Phone.CONTENT_URI and Data URIs without broad permissions)
+        try {
+            contentResolver.query(uri, null, null, null, null)?.use { cursor ->
+                if (cursor.moveToFirst()) {
+                    val nameCols = arrayOf(
+                        ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME,
+                        ContactsContract.Contacts.DISPLAY_NAME_PRIMARY,
+                        ContactsContract.Contacts.DISPLAY_NAME
+                    )
+                    for (col in nameCols) {
+                        val idx = cursor.getColumnIndex(col)
+                        if (idx >= 0) {
+                            val candidate = cursor.getString(idx)?.trim()
+                            if (!candidate.isNullOrBlank()) {
+                                name = candidate
+                                break
+                            }
+                        }
+                    }
+
+                    val phoneCols = arrayOf(
+                        ContactsContract.CommonDataKinds.Phone.NUMBER,
+                        "data1",
+                        ContactsContract.CommonDataKinds.Phone.NORMALIZED_NUMBER
+                    )
+                    for (col in phoneCols) {
+                        val idx = cursor.getColumnIndex(col)
+                        if (idx >= 0) {
+                            val candidate = cursor.getString(idx)?.trim()
+                            if (!candidate.isNullOrBlank()) {
+                                phone = candidate
+                                break
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            android.util.Log.e("SilahContact", "Error querying contact URI directly", e)
+        }
+
+        // 2. If phone is still empty, and uri might be a Contact URI: query Data subdirectory under that contact URI
+        if (phone.isBlank()) {
+            try {
+                val dataUri = Uri.withAppendedPath(uri, ContactsContract.Contacts.Data.CONTENT_DIRECTORY)
+                contentResolver.query(
+                    dataUri,
+                    arrayOf(
+                        ContactsContract.CommonDataKinds.Phone.NUMBER,
+                        ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME
+                    ),
+                    "${ContactsContract.Data.MIMETYPE} = ?",
+                    arrayOf(ContactsContract.CommonDataKinds.Phone.CONTENT_ITEM_TYPE),
+                    null
+                )?.use { cursor ->
+                    if (cursor.moveToFirst()) {
+                        val numIdx = cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER)
+                        if (numIdx >= 0 && phone.isBlank()) {
+                            phone = cursor.getString(numIdx)?.trim() ?: ""
+                        }
+                        val nameIdx = cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME)
+                        if (nameIdx >= 0 && name.isBlank()) {
+                            name = cursor.getString(nameIdx)?.trim() ?: ""
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                android.util.Log.e("SilahContact", "Error querying contact data subdirectory", e)
+            }
+        }
+
+        // 3. Fallback: If still empty, try resolving ID and querying CommonDataKinds.Phone (if permission allows)
+        if (phone.isBlank()) {
+            try {
+                val contactId = contentResolver.query(
+                    uri,
+                    arrayOf(ContactsContract.Contacts._ID),
+                    null, null, null
+                )?.use { cursor ->
+                    if (cursor.moveToFirst()) {
+                        val idIdx = cursor.getColumnIndex(ContactsContract.Contacts._ID)
+                        if (idIdx >= 0) cursor.getString(idIdx) else cursor.getString(0)
+                    } else null
+                }
+
+                if (!contactId.isNullOrBlank()) {
+                    contentResolver.query(
+                        ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
+                        arrayOf(
+                            ContactsContract.CommonDataKinds.Phone.NUMBER,
+                            ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME
+                        ),
+                        "${ContactsContract.CommonDataKinds.Phone.CONTACT_ID} = ?",
+                        arrayOf(contactId),
+                        null
+                    )?.use { cursor ->
+                        if (cursor.moveToFirst()) {
+                            val numIdx = cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER)
+                            if (numIdx >= 0 && phone.isBlank()) {
+                                phone = cursor.getString(numIdx)?.trim() ?: ""
+                            }
+                            val nameIdx = cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME)
+                            if (nameIdx >= 0 && name.isBlank()) {
+                                name = cursor.getString(nameIdx)?.trim() ?: ""
+                            }
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                android.util.Log.e("SilahContact", "Error querying Phone.CONTENT_URI fallback", e)
+            }
+        }
+
+        return Pair(name.trim(), phone.trim())
     }
 }

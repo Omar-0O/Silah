@@ -33,6 +33,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.example.data.Relative
+import com.example.ui.components.ReminderIntervalSelector
 import com.example.ui.theme.SoftGold
 import com.example.viewmodel.RelativeViewModel
 
@@ -54,24 +55,34 @@ fun AddEditRelativeDialog(
     val isEditMode = relativeToEdit != null
     val lang by viewModel.selectedLanguage.collectAsState()
 
-    var selectedTab by remember { mutableIntStateOf(0) } // 0 = From Contacts, 1 = Manual Entry
-
-    // Manual / Edit mode state
-    var name by remember { mutableStateOf(relativeToEdit?.name ?: "") }
-    var phone by remember { mutableStateOf(relativeToEdit?.phone ?: "") }
-    var relationshipDegree by remember {
-        mutableStateOf(
-            relativeToEdit?.relationshipDegree
-                ?: viewModel.suggestRelationshipDegree(relativeToEdit?.name ?: "")
-        )
-    }
-    var intervalDays by remember { mutableIntStateOf(relativeToEdit?.contactIntervalDays ?: 7) }
-    var notes by remember { mutableStateOf(relativeToEdit?.notes ?: "") }
-
     // Pre-fill from Contact Picker if user picked a contact
     val pickedName by viewModel.pickedContactName.collectAsState()
     val pickedPhone by viewModel.pickedContactPhone.collectAsState()
     val hasPicked by viewModel.hasPendingPickedContact.collectAsState()
+
+    val initialPickedName = remember { viewModel.pickedContactName.value }
+    val initialPickedPhone = remember { viewModel.pickedContactPhone.value }
+    val initialHasPicked = remember { viewModel.hasPendingPickedContact.value }
+
+    var selectedTab by remember {
+        mutableIntStateOf(if (initialHasPicked || initialPickedName.isNotBlank() || initialPickedPhone.isNotBlank()) 1 else 0)
+    }
+
+    // Manual / Edit mode state
+    var name by remember {
+        mutableStateOf(relativeToEdit?.name ?: if (initialHasPicked) initialPickedName else "")
+    }
+    var phone by remember {
+        mutableStateOf(relativeToEdit?.phone ?: if (initialHasPicked) initialPickedPhone else "")
+    }
+    var relationshipDegree by remember {
+        mutableStateOf(
+            relativeToEdit?.relationshipDegree
+                ?: viewModel.suggestRelationshipDegree(relativeToEdit?.name ?: if (initialHasPicked) initialPickedName else "")
+        )
+    }
+    var intervalDays by remember { mutableIntStateOf(relativeToEdit?.contactIntervalDays ?: 7) }
+    var notes by remember { mutableStateOf(relativeToEdit?.notes ?: "") }
 
     // When a contact is picked, switch to manual tab with pre-filled data
     LaunchedEffect(hasPicked) {
@@ -246,19 +257,12 @@ fun AddEditRelativeDialog(
                             }
                         }
 
-                        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                            Text(if (lang == "en") "Reminder Frequency:" else "معدل التذكير الدوري:", fontSize = 12.sp, fontWeight = FontWeight.Bold)
-                            LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                items(intervals) { (days, label) ->
-                                    FilterChip(
-                                        selected = intervalDays == days,
-                                        onClick = { intervalDays = days },
-                                        label = { Text(label, fontSize = 11.sp) },
-                                        shape = RoundedCornerShape(12.dp)
-                                    )
-                                }
-                            }
-                        }
+                        ReminderIntervalSelector(
+                            intervalDays = intervalDays,
+                            onIntervalChange = { intervalDays = it },
+                            relationshipDegree = relationshipDegree,
+                            lang = lang
+                        )
 
                         Spacer(modifier = Modifier.height(6.dp))
 
@@ -283,7 +287,7 @@ fun AddEditRelativeDialog(
                                         return@Button
                                     }
                                     view.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
-                                    if (isEditMode && relativeToEdit != null) {
+                                    if (relativeToEdit != null) {
                                         viewModel.editRelative(relativeToEdit, name, phone, relationshipDegree, intervalDays, notes)
                                         Toast.makeText(
                                             context,
@@ -448,17 +452,12 @@ private fun InlineContactSetupForm(
             }
         }
 
-        Text(if (lang == "en") "Reminder Frequency:" else "معدل التذكيرات الدوري (كل أد ايه؟):", fontSize = 11.sp, fontWeight = FontWeight.Bold)
-        LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            items(intervals) { (days, label) ->
-                FilterChip(
-                    selected = intervalDays == days,
-                    onClick = { intervalDays = days },
-                    label = { Text(label, fontSize = 10.sp) },
-                    shape = RoundedCornerShape(10.dp)
-                )
-            }
-        }
+        ReminderIntervalSelector(
+            intervalDays = intervalDays,
+            onIntervalChange = { intervalDays = it },
+            relationshipDegree = relationshipDegree,
+            lang = lang
+        )
 
         Button(
             onClick = { onSave(relationshipDegree, intervalDays) },

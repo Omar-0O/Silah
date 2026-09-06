@@ -35,6 +35,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.core.content.ContextCompat
 import com.example.data.CallLogManager
+import com.example.ui.components.ReminderIntervalSelector
 import com.example.ui.theme.SoftGold
 import com.example.viewmodel.RelativeViewModel
 
@@ -360,17 +361,12 @@ private fun ContactSetupInlineForm(
             }
         }
 
-        Text(if (lang == "en") "Reminder Interval:" else "موعد التذكير الدوري:", fontSize = 11.sp, fontWeight = FontWeight.Bold)
-        LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            items(intervals) { (days, label) ->
-                FilterChip(
-                    selected = intervalDays == days,
-                    onClick = { intervalDays = days },
-                    label = { Text(label, fontSize = 10.sp) },
-                    shape = RoundedCornerShape(10.dp)
-                )
-            }
-        }
+        ReminderIntervalSelector(
+            intervalDays = intervalDays,
+            onIntervalChange = { intervalDays = it },
+            relationshipDegree = relationshipDegree,
+            lang = lang
+        )
 
         Button(
             onClick = { onSave(relationshipDegree, intervalDays) },

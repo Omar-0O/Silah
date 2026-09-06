@@ -25,6 +25,16 @@ import com.example.ui.theme.SoftGold
 import com.example.viewmodel.RelativeViewModel
 import com.example.work.ReminderScheduler
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.material.icons.outlined.Edit
+import androidx.compose.material.icons.outlined.Schedule
+import androidx.compose.ui.platform.LocalView
+import android.view.HapticFeedbackConstants
+import com.example.ui.theme.PrimaryGreen
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.LayoutDirection
@@ -242,57 +252,232 @@ fun SettingsDialog(
                         )
                     }
 
+                    val view = LocalView.current
+
                     // Daily Reminder Time Picker (shown when Kin Tie Reminders is ON)
-                    if (prefDue) {
+                    AnimatedVisibility(
+                        visible = prefDue,
+                        enter = fadeIn() + expandVertically(),
+                        exit = fadeOut() + shrinkVertically()
+                    ) {
                         Card(
                             modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(12.dp),
+                            shape = RoundedCornerShape(18.dp),
                             colors = CardDefaults.cardColors(
-                                containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.25f)
-                            )
+                                containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.22f)
+                            ),
+                            border = BorderStroke(1.dp, PrimaryGreen.copy(alpha = 0.25f))
                         ) {
-                            Row(
+                            Column(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(horizontal = 12.dp, vertical = 8.dp),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
+                                    .padding(14.dp),
+                                verticalArrangement = Arrangement.spacedBy(10.dp)
                             ) {
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text(
-                                        if (selectedLanguage == "en") "Reminder Time ⏰" else "وقت التذكير اليومي ⏰",
-                                        fontSize = 12.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        color = MaterialTheme.colorScheme.primary
-                                    )
-                                    Text(
-                                        if (selectedLanguage == "en") "Scheduled daily notification time" else "الوقت المحدد لإرسال التنبيهات يومياً",
-                                        fontSize = 10.sp,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
+                                // Header Row with Clock Badge
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(34.dp)
+                                            .background(
+                                                color = PrimaryGreen.copy(alpha = 0.12f),
+                                                shape = RoundedCornerShape(10.dp)
+                                            ),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Outlined.Schedule,
+                                            contentDescription = null,
+                                            tint = PrimaryGreen,
+                                            modifier = Modifier.size(18.dp)
+                                        )
+                                    }
+                                    Column {
+                                        Text(
+                                            text = if (selectedLanguage == "en") "Daily Reminder Time" else "وقت التذكير اليومي",
+                                            fontSize = 13.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = MaterialTheme.colorScheme.onSurface
+                                        )
+                                        Text(
+                                            text = if (selectedLanguage == "en") "Scheduled kinship alert time" else "الوقت المحدد لإرسال تنبيهات الأرحام",
+                                            fontSize = 10.sp,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    }
                                 }
-                                OutlinedButton(
+
+                                // Big Digital Time Card (Clickable to pick exact time)
+                                Surface(
                                     onClick = {
+                                        view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
                                         TimePickerDialog(
                                             context,
-                                            { _, h, m -> viewModel.updateReminderTime(h, m) },
+                                            { _, h, m ->
+                                                view.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
+                                                viewModel.updateReminderTime(h, m)
+                                            },
                                             reminderHour,
                                             reminderMinute,
                                             false
                                         ).show()
                                     },
-                                    shape = RoundedCornerShape(10.dp),
-                                    colors = ButtonDefaults.outlinedButtonColors(
-                                        contentColor = MaterialTheme.colorScheme.primary
-                                    ),
-                                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
+                                    shape = RoundedCornerShape(14.dp),
+                                    color = MaterialTheme.colorScheme.surface,
+                                    border = BorderStroke(1.dp, SoftGold.copy(alpha = 0.35f)),
+                                    shadowElevation = 1.dp,
+                                    modifier = Modifier.fillMaxWidth()
                                 ) {
-                                    Text(
-                                        formattedReminderTime,
-                                        fontSize = 12.sp,
-                                        fontWeight = FontWeight.Bold
-                                    )
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(horizontal = 14.dp, vertical = 10.dp),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                        ) {
+                                            val isAm = reminderHour < 12
+                                            val displayHour = when {
+                                                reminderHour == 0 -> 12
+                                                reminderHour > 12 -> reminderHour - 12
+                                                else -> reminderHour
+                                            }
+                                            val displayMin = String.format("%02d", reminderMinute)
+
+                                            Text(
+                                                text = "$displayHour:$displayMin",
+                                                fontSize = 22.sp,
+                                                fontWeight = FontWeight.ExtraBold,
+                                                color = PrimaryGreen,
+                                                letterSpacing = 1.sp
+                                            )
+
+                                            Surface(
+                                                shape = RoundedCornerShape(6.dp),
+                                                color = if (isAm) SoftGold.copy(alpha = 0.2f) else PrimaryGreen.copy(alpha = 0.15f)
+                                            ) {
+                                                Text(
+                                                    text = if (selectedLanguage == "en") {
+                                                        if (isAm) "AM" else "PM"
+                                                    } else {
+                                                        if (isAm) "صباحاً (ص)" else "مساءً (م)"
+                                                    },
+                                                    fontSize = 11.sp,
+                                                    fontWeight = FontWeight.Bold,
+                                                    color = if (isAm) Color(0xFF946F15) else PrimaryGreen,
+                                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                                )
+                                            }
+                                        }
+
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(4.dp),
+                                            modifier = Modifier
+                                                .background(
+                                                    color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f),
+                                                    shape = RoundedCornerShape(8.dp)
+                                                )
+                                                .padding(horizontal = 8.dp, vertical = 4.dp)
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Outlined.Edit,
+                                                contentDescription = null,
+                                                tint = MaterialTheme.colorScheme.primary,
+                                                modifier = Modifier.size(12.dp)
+                                            )
+                                            Text(
+                                                text = if (selectedLanguage == "en") "Change" else "تعديل",
+                                                fontSize = 11.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                color = MaterialTheme.colorScheme.primary
+                                            )
+                                        }
+                                    }
                                 }
+
+                                // Quick Presets Row
+                                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                    Text(
+                                        text = if (selectedLanguage == "en") "Quick Presets:" else "أوقات مقترحة سريعة:",
+                                        fontSize = 10.sp,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+
+                                    val timePresets = listOf(
+                                        Pair(9, 0),
+                                        Pair(13, 0),
+                                        Pair(17, 0),
+                                        Pair(20, 30)
+                                    )
+
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                    ) {
+                                        timePresets.forEach { (hour, min) ->
+                                            val isPresetActive = reminderHour == hour && reminderMinute == min
+                                            Surface(
+                                                onClick = {
+                                                    view.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
+                                                    viewModel.updateReminderTime(hour, min)
+                                                },
+                                                shape = RoundedCornerShape(8.dp),
+                                                color = if (isPresetActive) PrimaryGreen else MaterialTheme.colorScheme.surface,
+                                                border = BorderStroke(
+                                                    width = 1.dp,
+                                                    color = if (isPresetActive) PrimaryGreen else MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)
+                                                ),
+                                                modifier = Modifier.weight(1f)
+                                            ) {
+                                                Box(
+                                                    modifier = Modifier.padding(vertical = 6.dp, horizontal = 2.dp),
+                                                    contentAlignment = Alignment.Center
+                                                ) {
+                                                    Text(
+                                                        text = if (selectedLanguage == "en") {
+                                                            when (hour) {
+                                                                9 -> "9 AM"
+                                                                13 -> "1 PM"
+                                                                17 -> "5 PM"
+                                                                else -> "8:30 PM"
+                                                            }
+                                                        } else {
+                                                            when (hour) {
+                                                                9 -> "٩ ص"
+                                                                13 -> "١ م"
+                                                                17 -> "٥ م"
+                                                                else -> "٨:٣٠ م"
+                                                            }
+                                                        },
+                                                        fontSize = 11.sp,
+                                                        fontWeight = if (isPresetActive) FontWeight.ExtraBold else FontWeight.Medium,
+                                                        color = if (isPresetActive) Color.White else MaterialTheme.colorScheme.onSurface
+                                                    )
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+
+                                // Note below
+                                Text(
+                                    text = if (selectedLanguage == "en")
+                                        "🔔 Silah will send your daily reminder at $formattedReminderTime, even if the app is closed."
+                                    else
+                                        "🔔 سيصلك تنبيه صلة الرحم يومياً عند الساعة $formattedReminderTime حتى لو كان التطبيق مغلقاً.",
+                                    fontSize = 10.sp,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    lineHeight = 13.sp
+                                )
                             }
                         }
                     }

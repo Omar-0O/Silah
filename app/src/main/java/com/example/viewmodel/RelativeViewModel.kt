@@ -116,7 +116,7 @@ class RelativeViewModel(application: Application) : AndroidViewModel(application
     val showQuickTemplatesDialog = MutableStateFlow<Relative?>(null)
     val showSetReminderDialog = MutableStateFlow<Relative?>(null)
     val showSupportSilaDialog = MutableStateFlow(false)
-    val activeMilestone = MutableStateFlow<com.example.ui.dialogs.MilestoneType?>(null)
+    val activeMilestoneDialog = MutableStateFlow<Int?>(null)
 
     // Deep navigation state (opened from notification or widget)
     val selectedRelativeForDetail = MutableStateFlow<Relative?>(null)
@@ -369,32 +369,32 @@ class RelativeViewModel(application: Application) : AndroidViewModel(application
             contactedCount >= 100 && !achievedSet.contains("milestone_100") -> {
                 if (!isCooldownActive) {
                     markMilestoneAchieved("milestone_100")
-                    activeMilestone.value = com.example.ui.dialogs.MilestoneType.Milestone100
+                    activeMilestoneDialog.value = 100
                 }
                 // If cooldown is active, we leave it un-marked so it shows after cooldown
             }
             contactedCount >= 50 && !achievedSet.contains("milestone_50") -> {
                 if (!isCooldownActive) {
                     markMilestoneAchieved("milestone_50")
-                    activeMilestone.value = com.example.ui.dialogs.MilestoneType.Milestone50
+                    activeMilestoneDialog.value = 50
                 }
             }
             contactedCount >= 25 && !achievedSet.contains("milestone_25") -> {
                 if (!isCooldownActive) {
                     markMilestoneAchieved("milestone_25")
-                    activeMilestone.value = com.example.ui.dialogs.MilestoneType.Milestone25
+                    activeMilestoneDialog.value = 25
                 }
             }
             contactedCount >= 10 && !achievedSet.contains("milestone_10") -> {
                 if (!isCooldownActive) {
                     markMilestoneAchieved("milestone_10")
-                    activeMilestone.value = com.example.ui.dialogs.MilestoneType.Milestone10
+                    activeMilestoneDialog.value = 10
                 }
             }
             contactedCount >= 5 && !achievedSet.contains("milestone_5") -> {
                 // Milestone 5 is celebration-only, no cooldown needed
                 markMilestoneAchieved("milestone_5")
-                activeMilestone.value = com.example.ui.dialogs.MilestoneType.Milestone5
+                activeMilestoneDialog.value = 5
             }
         }
     }
@@ -406,12 +406,12 @@ class RelativeViewModel(application: Application) : AndroidViewModel(application
     }
 
     fun onMilestoneNotNow() {
-        activeMilestone.value = null
+        activeMilestoneDialog.value = null
         prefs.edit().putLong("last_support_prompt_time", System.currentTimeMillis()).apply()
     }
 
     fun onMilestoneSupportClick() {
-        activeMilestone.value = null
+        activeMilestoneDialog.value = null
         prefs.edit().putLong("last_support_prompt_time", System.currentTimeMillis()).apply()
         showSupportSilaDialog.value = true
     }
@@ -472,6 +472,38 @@ class RelativeViewModel(application: Application) : AndroidViewModel(application
 
     fun setExportLauncher(launcher: () -> Unit) { exportLauncher = launcher }
     fun setImportLauncher(launcher: () -> Unit) { importLauncher = launcher }
+    private var contactPickerLauncher: (() -> Unit)? = null
+    fun setContactPickerLauncher(launcher: () -> Unit) { contactPickerLauncher = launcher }
+    fun launchContactPicker() { contactPickerLauncher?.invoke() }
+
+    // Picked contact from native Contact Picker
+    val pickedContactName = MutableStateFlow("")
+    val pickedContactPhone = MutableStateFlow("")
+    val hasPendingPickedContact = MutableStateFlow(false)
+
+    fun onContactPicked(name: String, phone: String) {
+        pickedContactName.value = name
+        pickedContactPhone.value = phone
+        hasPendingPickedContact.value = true
+        // Auto-open add relative dialog pre-filled
+        showAddRelativeDialog.value = true
+    }
+
+    fun clearPickedContact() {
+        pickedContactName.value = ""
+        pickedContactPhone.value = ""
+        hasPendingPickedContact.value = false
+    }
+
+    // Mark contacted prompt (from notification deep-link)
+    val markContactedPromptRelativeId = MutableStateFlow<Int?>(null)
+
+    fun showMarkContactedPrompt(relativeId: Int) {
+        markContactedPromptRelativeId.value = relativeId
+    }
+    fun dismissMarkContactedPrompt() {
+        markContactedPromptRelativeId.value = null
+    }
 
     fun triggerExport() { exportLauncher?.invoke() }
     fun triggerImport() { importLauncher?.invoke() }
@@ -574,7 +606,11 @@ data class DeviceContact(
     val phone: String,
     val isGoogle: Boolean = false,
     val photoUri: String? = null
-)
+) {
+    val first: String get() = name
+    val second: String get() = phone
+    val third: Boolean get() = isGoogle
+}
 
     // Contact importing state
     val deviceContacts = MutableStateFlow<List<DeviceContact>>(emptyList())
@@ -881,14 +917,21 @@ data class DeviceContact(
             repository.deleteMemory(memory)
         }
     }
+
+    fun getLogsForRelative(relativeId: Int) = repository.getLogsForRelative(relativeId)
 }
 
-enum class RelativeStatus(val label: String, val labelEn: String, val colorHex: String) {
-    NEEDS_CONTACT_URGENT("لم تتواصل معه بعد.. ابدأ اليوم 🌿", "Contact Now (Never Called)", "E53935"),
-    OVERDUE_CRITICAL("شخص عزيز مشتاق لسماع صوتك! ❤️", "Very Overdue!", "D32F2F"),
-    NEEDS_CONTACT("اليوم فرصة جميلة لتطمئن عليه 🌸", "Time to Connect Today", "EF6C00"),
-    OK_SOON("طمئنه قريبًا 🌿", "Connect Soon", "FBC02D"),
-    CONNECTED("تواصل مبارك ومستمر ✨", "Great! Recently Connected", "2E7D32");
+enum class RelativeStatus(
+    val label: String,
+    val labelEn: String,
+    val colorHex: String,
+    val color: androidx.compose.ui.graphics.Color
+) {
+    NEEDS_CONTACT_URGENT("لم تتواصل معه بعد.. ابدأ اليوم 🌿", "Contact Now (Never Called)", "E53935", androidx.compose.ui.graphics.Color(0xFFE53935)),
+    OVERDUE_CRITICAL("شخص عزيز مشتاق لسماع صوتك! ❤️", "Very Overdue!", "D32F2F", androidx.compose.ui.graphics.Color(0xFFD32F2F)),
+    NEEDS_CONTACT("اليوم فرصة جميلة لتطمئن عليه 🌸", "Time to Connect Today", "EF6C00", androidx.compose.ui.graphics.Color(0xFFEF6C00)),
+    OK_SOON("طمئنه قريبًا 🌿", "Connect Soon", "FBC02D", androidx.compose.ui.graphics.Color(0xFFFBC02D)),
+    CONNECTED("تواصل مبارك ومستمر ✨", "Great! Recently Connected", "2E7D32", androidx.compose.ui.graphics.Color(0xFF2E7D32));
 
     fun getLabel(lang: String) = if (lang == "en") labelEn else label
 }

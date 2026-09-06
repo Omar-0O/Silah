@@ -329,8 +329,12 @@ private fun ActionButton(
     contentColor: Color,
     onClick: () -> Unit
 ) {
+    val view = androidx.compose.ui.platform.LocalView.current
     Button(
-        onClick = onClick,
+        onClick = {
+            view.performHapticFeedback(android.view.HapticFeedbackConstants.VIRTUAL_KEY)
+            onClick()
+        },
         colors = ButtonDefaults.buttonColors(
             containerColor = containerColor,
             contentColor = contentColor
@@ -367,8 +371,12 @@ private fun ActionIconChip(
     bgColor: Color,
     onClick: () -> Unit
 ) {
+    val view = androidx.compose.ui.platform.LocalView.current
     IconButton(
-        onClick = onClick,
+        onClick = {
+            view.performHapticFeedback(android.view.HapticFeedbackConstants.VIRTUAL_KEY)
+            onClick()
+        },
         modifier = Modifier
             .size(36.dp)
             .clip(RoundedCornerShape(10.dp))

@@ -2,9 +2,12 @@ package com.example.ui.screens
 
 import android.content.Intent
 import android.net.Uri
+import android.view.HapticFeedbackConstants
 import android.widget.Toast
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -35,6 +38,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.CommunicationLog
 import com.example.data.Relative
+import com.example.ui.components.ReminderIntervalSelector
 import com.example.ui.theme.PrimaryGreen
 import com.example.ui.theme.SoftGold
 import com.example.utils.DateUtils
@@ -51,21 +55,25 @@ fun RelativeDetailScreen(
     onBack: () -> Unit
 ) {
     val context = LocalContext.current
+    val view = LocalView.current
     val lang by viewModel.selectedLanguage.collectAsState()
     val allLogs by viewModel.logs.collectAsState()
-    val status = viewModel.getRelativeStatus(relative)
+    val relatives by viewModel.relatives.collectAsState()
+    val currentRelative = relatives.find { it.id == relative.id } ?: relative
+    val status = viewModel.getRelativeStatus(currentRelative)
     val statusColor = status.color
+    var showIntervalSheet by remember { mutableStateOf(false) }
 
-    val relativeLogs = remember(allLogs, relative.id) {
-        allLogs.filter { it.relativeId == relative.id }.sortedByDescending { it.timestamp }
+    val relativeLogs = remember(allLogs, currentRelative.id) {
+        allLogs.filter { it.relativeId == currentRelative.id }.sortedByDescending { it.timestamp }
     }
 
     // Urgency score 0..100
-    val urgencyScore = remember(relative) {
-        if (relative.lastContactDate == 0L) 100f
+    val urgencyScore = remember(currentRelative) {
+        if (currentRelative.lastContactDate == 0L) 100f
         else {
-            val diff = (System.currentTimeMillis() - relative.lastContactDate) / 86400000.0
-            ((diff / relative.contactIntervalDays) * 100).toFloat().coerceIn(0f, 100f)
+            val diff = (System.currentTimeMillis() - currentRelative.lastContactDate) / 86400000.0
+            ((diff / currentRelative.contactIntervalDays) * 100).toFloat().coerceIn(0f, 100f)
         }
     }
 
@@ -81,35 +89,14 @@ fun RelativeDetailScreen(
 
     // BUG-01 Fix: avatarPalette removed — RelativeAvatar composable handles gradient internally with its own 6-entry palette
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {},
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "رجوع",
-                            tint = Color.White
-                        )
-                    }
-                },
-                actions = {
-                    IconButton(onClick = { viewModel.showEditRelativeDialog.value = relative }) {
-                        Icon(Icons.Outlined.Edit, contentDescription = "تعديل", tint = SoftGold)
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent),
-                modifier = Modifier.statusBarsPadding()
-            )
-        },
-        containerColor = MaterialTheme.colorScheme.background
-    ) { innerPadding ->
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
+    ) {
         LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(top = innerPadding.calculateTopPadding()),
-            contentPadding = PaddingValues(bottom = 32.dp)
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(bottom = 36.dp)
         ) {
 
             // ── Hero Header ──────────────────────────────────────────────────
@@ -122,7 +109,8 @@ fun RelativeDetailScreen(
                                 colors = listOf(PrimaryGreen, Color(0xFF0D3324))
                             )
                         )
-                        .padding(top = 56.dp, bottom = 32.dp, start = 24.dp, end = 24.dp)
+                        .statusBarsPadding()
+                        .padding(top = 58.dp, bottom = 32.dp, start = 24.dp, end = 24.dp)
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
 
@@ -195,15 +183,20 @@ fun RelativeDetailScreen(
 
                         Spacer(modifier = Modifier.height(8.dp))
 
-                        // Reminder Badge — matches Stitch "تذكير كل 3 أيام"
+                        // Reminder Badge — Interactive to customize interval directly
                         Surface(
+                            onClick = {
+                                view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
+                                showIntervalSheet = true
+                            },
                             shape = RoundedCornerShape(50.dp),
-                            color = Color.White.copy(alpha = 0.12f)
+                            color = Color.White.copy(alpha = 0.16f),
+                            border = BorderStroke(0.5.dp, SoftGold.copy(alpha = 0.45f))
                         ) {
                             Row(
-                                modifier = Modifier.padding(horizontal = 14.dp, vertical = 5.dp),
+                                modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
                                 verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(5.dp)
+                                horizontalArrangement = Arrangement.spacedBy(6.dp)
                             ) {
                                 Icon(
                                     Icons.Outlined.NotificationsActive,
@@ -213,12 +206,18 @@ fun RelativeDetailScreen(
                                 )
                                 Text(
                                     text = if (lang == "en")
-                                        "Reminder every ${relative.contactIntervalDays} days"
+                                        "Reminder every ${currentRelative.contactIntervalDays} days"
                                     else
-                                        "تذكير كل ${relative.contactIntervalDays} ${if (relative.contactIntervalDays == 1) "يوم" else "أيام"}",
+                                        "تذكير كل ${currentRelative.contactIntervalDays} ${if (currentRelative.contactIntervalDays <= 10) "أيام" else "يوماً"}",
                                     fontSize = 11.sp,
                                     color = SoftGold,
-                                    fontWeight = FontWeight.Medium
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                                Icon(
+                                    Icons.Outlined.Edit,
+                                    contentDescription = null,
+                                    tint = SoftGold.copy(alpha = 0.8f),
+                                    modifier = Modifier.size(11.dp)
                                 )
                             }
                         }
@@ -310,8 +309,8 @@ fun RelativeDetailScreen(
                         InfoRow(
                             icon = Icons.Outlined.Schedule,
                             label = if (lang == "en") "Reminder every" else "تذكير كل",
-                            value = if (lang == "en") "${relative.contactIntervalDays} days"
-                                    else "${relative.contactIntervalDays} يوم"
+                            value = if (lang == "en") "${currentRelative.contactIntervalDays} days"
+                                    else "${currentRelative.contactIntervalDays} يوم"
                         )
                         HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
                         InfoRow(
@@ -388,6 +387,125 @@ fun RelativeDetailScreen(
                 }
             }
         }
+
+        // ── Floating Glass Top Bar ───────────────────────────────────────────
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .statusBarsPadding()
+                .padding(horizontal = 14.dp, vertical = 8.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            IconButton(
+                onClick = {
+                    onBack()
+                },
+                modifier = Modifier
+                    .size(42.dp)
+                    .clip(CircleShape)
+                    .background(Color.Black.copy(alpha = 0.25f))
+            ) {
+                Icon(
+                    Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = if (lang == "en") "Back" else "رجوع",
+                    tint = Color.White,
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+
+            IconButton(
+                onClick = {
+                    viewModel.showEditRelativeDialog.value = relative
+                },
+                modifier = Modifier
+                    .size(42.dp)
+                    .clip(CircleShape)
+                    .background(Color.Black.copy(alpha = 0.25f))
+            ) {
+                Icon(
+                    Icons.Outlined.Edit,
+                    contentDescription = if (lang == "en") "Edit" else "تعديل",
+                    tint = SoftGold,
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+        }
+
+        if (showIntervalSheet) {
+            var tempInterval by remember(currentRelative.contactIntervalDays) {
+                mutableIntStateOf(currentRelative.contactIntervalDays)
+            }
+            ModalBottomSheet(
+                onDismissRequest = { showIntervalSheet = false },
+                containerColor = MaterialTheme.colorScheme.surface,
+                shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .navigationBarsPadding()
+                        .padding(horizontal = 20.dp, vertical = 12.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    Column {
+                        Text(
+                            text = if (lang == "en") "Custom Reminder Frequency ⏰" else "تخصيص وقت وفترة التذكير ⏰",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Text(
+                            text = if (lang == "en")
+                                "Set how often you want to be reminded to connect with ${currentRelative.name}"
+                            else
+                                "حدد معدل التذكير الأنسب لك للتواصل مع ${currentRelative.name}",
+                            fontSize = 11.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+
+                    ReminderIntervalSelector(
+                        intervalDays = tempInterval,
+                        onIntervalChange = { tempInterval = it },
+                        relationshipDegree = currentRelative.relationshipDegree,
+                        lang = lang
+                    )
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        OutlinedButton(
+                            onClick = { showIntervalSheet = false },
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Text(if (lang == "en") "Cancel" else "إلغاء")
+                        }
+
+                        Button(
+                            onClick = {
+                                view.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
+                                viewModel.updateRelativeInterval(currentRelative, tempInterval)
+                                Toast.makeText(
+                                    context,
+                                    if (lang == "en") "Reminder frequency updated ✨" else "تم تحديث موعد التذكير بنجاح ✨",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                                showIntervalSheet = false
+                            },
+                            modifier = Modifier.weight(1.5f),
+                            colors = ButtonDefaults.buttonColors(containerColor = PrimaryGreen),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Text(if (lang == "en") "Save Changes" else "حفظ التعديل", fontWeight = FontWeight.Bold)
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(10.dp))
+                }
+            }
+        }
     }
 }
 
@@ -400,12 +518,16 @@ private fun DetailActionButton(
     modifier: Modifier = Modifier,
     onClick: () -> Unit
 ) {
+    val view = LocalView.current
     Button(
-        onClick = onClick,
+        onClick = {
+            view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
+            onClick()
+        },
         colors = ButtonDefaults.buttonColors(containerColor = containerColor, contentColor = contentColor),
         shape = RoundedCornerShape(14.dp),
         contentPadding = PaddingValues(horizontal = 12.dp, vertical = 10.dp),
-        modifier = modifier.height(44.dp)
+        modifier = modifier.height(46.dp)
     ) {
         Icon(icon, contentDescription = label, modifier = Modifier.size(16.dp))
         Spacer(modifier = Modifier.width(6.dp))

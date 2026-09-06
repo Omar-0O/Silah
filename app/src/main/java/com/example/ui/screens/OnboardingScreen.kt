@@ -6,6 +6,9 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -48,6 +51,7 @@ fun OnboardingScreen(
     val selectedLanguage by viewModel.selectedLanguage.collectAsState()
     val savedName by viewModel.userName.collectAsState()
     val savedGender by viewModel.userGender.collectAsState()
+    val showAddRelativeDialog by viewModel.showAddRelativeDialog.collectAsState()
     val showImportContactsDialog by viewModel.showImportContactsDialog.collectAsState()
 
     var nameInput by remember { mutableStateOf(savedName) }
@@ -75,7 +79,6 @@ fun OnboardingScreen(
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(240.dp)
                         .background(
                             Brush.verticalGradient(
                                 listOf(Color(0xFF0A5C60), Color(0xFF0E7075), Color(0xFF1A9499))
@@ -86,7 +89,9 @@ fun OnboardingScreen(
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Center,
-                        modifier = Modifier.padding(horizontal = 24.dp)
+                        modifier = Modifier
+                            .statusBarsPadding()
+                            .padding(horizontal = 24.dp, vertical = 20.dp)
                     ) {
                         // Logo / emoji illustration
                         Box(
@@ -154,7 +159,7 @@ fun OnboardingScreen(
                 }
             }
 
-            // ── Page content ───────────────────────────────────────────────────
+            // ── Page content (only the form/page body slides) ──────────────────
             AnimatedContent(
                 targetState = currentPage,
                 transitionSpec = {
@@ -173,147 +178,165 @@ fun OnboardingScreen(
                     .fillMaxWidth()
                     .weight(1f)
             ) { page ->
-                Column(
+                Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(horizontal = 24.dp, vertical = 20.dp),
-                    verticalArrangement = Arrangement.SpaceBetween
+                        .padding(horizontal = 24.dp, vertical = 16.dp)
                 ) {
-                    // Content for each page
-                    Box(modifier = Modifier.weight(1f)) {
-                        when (page) {
-                            // ── Page 0: Language ─────────────────────────────
-                            0 -> LanguagePage(selectedLanguage, viewModel)
-                            // ── Page 1: Name & Gender ────────────────────────
-                            1 -> NameGenderPage(
-                                nameInput = nameInput,
-                                genderInput = genderInput,
-                                showNameError = showNameError,
-                                selectedLanguage = selectedLanguage,
-                                onNameChange = {
-                                    nameInput = it
-                                    if (it.trim().isNotEmpty()) showNameError = false
-                                },
-                                onGenderChange = { genderInput = it }
+                    when (page) {
+                        // ── Page 0: Language ─────────────────────────────
+                        0 -> LanguagePage(selectedLanguage, viewModel)
+                        // ── Page 1: Name & Gender ────────────────────────
+                        1 -> NameGenderPage(
+                            nameInput = nameInput,
+                            genderInput = genderInput,
+                            showNameError = showNameError,
+                            selectedLanguage = selectedLanguage,
+                            onNameChange = {
+                                nameInput = it
+                                if (it.trim().isNotEmpty()) showNameError = false
+                            },
+                            onGenderChange = { genderInput = it }
+                        )
+                        // ── Page 2: Import contacts ───────────────────────
+                        2 -> ImportRelativesPage(
+                            viewModel = viewModel,
+                            selectedLanguage = selectedLanguage,
+                            showRelativeError = showRelativeError
+                        )
+                        // ── Page 3: Summary ───────────────────────────────
+                        else -> SummaryPage(selectedLanguage)
+                    }
+                }
+            }
+
+            // ── Fixed Bottom Controls (Dots + Navigation Buttons) ──────────────
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(Color(0xFFF5F7FA))
+                    .navigationBarsPadding()
+                    .padding(horizontal = 24.dp, vertical = 16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                // Dot indicators
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    repeat(pages) { index ->
+                        val isActive = index == currentPage
+                        Box(
+                            modifier = Modifier
+                                .animateContentSize()
+                                .height(8.dp)
+                                .width(if (isActive) 24.dp else 8.dp)
+                                .clip(CircleShape)
+                                .background(
+                                    if (isActive) Color(0xFF0E7075) else Color(0xFFCBD5E1)
+                                )
+                        )
+                    }
+                }
+
+                // Navigation buttons
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    // Back button with smooth enter/exit animation
+                    AnimatedVisibility(
+                        visible = currentPage > 0,
+                        enter = fadeIn(tween(200)) + expandHorizontally(tween(200)),
+                        exit = fadeOut(tween(150)) + shrinkHorizontally(tween(150))
+                    ) {
+                        OutlinedButton(
+                            onClick = { currentPage-- },
+                            shape = RoundedCornerShape(16.dp),
+                            border = BorderStroke(1.5.dp, Color(0xFFCBD5E1)),
+                            colors = ButtonDefaults.outlinedButtonColors(
+                                containerColor = Color.White
+                            ),
+                            modifier = Modifier.size(52.dp),
+                            contentPadding = PaddingValues(0.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = if (selectedLanguage == "en") "Back" else "رجوع",
+                                tint = Color(0xFF475569),
+                                modifier = Modifier.size(20.dp)
                             )
-                            // ── Page 2: Import contacts ───────────────────────
-                            2 -> ImportRelativesPage(
-                                viewModel = viewModel,
-                                selectedLanguage = selectedLanguage,
-                                showRelativeError = showRelativeError
-                            )
-                            // ── Page 3: Summary ───────────────────────────────
-                            else -> SummaryPage(selectedLanguage)
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    // ── Dots + Navigation ──────────────────────────────────────
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(14.dp)
-                    ) {
-                        // Dot indicators
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            repeat(pages) { index ->
-                                val isActive = index == page
-                                Box(
-                                    modifier = Modifier
-                                        .animateContentSize()
-                                        .height(8.dp)
-                                        .width(if (isActive) 24.dp else 8.dp)
-                                        .clip(CircleShape)
-                                        .background(
-                                            if (isActive) Color(0xFF0E7075) else Color(0xFFCBD5E1)
-                                        )
-                                )
-                            }
-                        }
-
-                        // Navigation buttons
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(12.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            // Back button
-                            if (page > 0) {
-                                OutlinedButton(
-                                    onClick = { currentPage-- },
-                                    shape = RoundedCornerShape(14.dp),
-                                    border = androidx.compose.foundation.BorderStroke(1.5.dp, Color(0xFFCBD5E1)),
-                                    modifier = Modifier.size(50.dp),
-                                    contentPadding = PaddingValues(0.dp)
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                        contentDescription = null,
-                                        tint = Color(0xFF64748B),
-                                        modifier = Modifier.size(20.dp)
-                                    )
-                                }
-                            }
-
-                            // Next / Finish button
-                            Button(
-                                onClick = {
-                                    when (page) {
-                                        1 -> {
-                                            if (nameInput.trim().isEmpty()) {
-                                                showNameError = true
-                                                return@Button
-                                            }
-                                            viewModel.saveUserProfile(nameInput.trim(), genderInput)
-                                            currentPage++
-                                        }
-                                        2 -> {
-                                            if (viewModel.relatives.value.isEmpty()) {
-                                                showRelativeError = true
-                                                return@Button
-                                            }
-                                            showRelativeError = false
-                                            currentPage++
-                                        }
-                                        pages - 1 -> {
-                                            viewModel.showImportContactsDialog.value = false
-                                            onFinished()
-                                        }
-                                        else -> currentPage++
+                    // Next / Finish button
+                    Button(
+                        onClick = {
+                            when (currentPage) {
+                                1 -> {
+                                    if (nameInput.trim().isEmpty()) {
+                                        showNameError = true
+                                        return@Button
                                     }
-                                },
-                                shape = RoundedCornerShape(14.dp),
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = Color(0xFF0E7075),
-                                    contentColor = Color.White
-                                ),
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .height(50.dp)
-                            ) {
-                                Text(
-                                    text = if (page < pages - 1) {
-                                        if (selectedLanguage == "en") "Continue" else "التالي"
-                                    } else {
-                                        if (selectedLanguage == "en") "Get Started 🌸" else "ابدأ الآن 🌸"
-                                    },
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 15.sp
-                                )
-                                if (page < pages - 1) {
-                                    Spacer(modifier = Modifier.width(6.dp))
-                                    Icon(
-                                        imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                                        contentDescription = null,
-                                        modifier = Modifier.size(16.dp)
-                                    )
+                                    viewModel.saveUserProfile(nameInput.trim(), genderInput)
+                                    currentPage++
                                 }
+                                2 -> {
+                                    if (viewModel.relatives.value.isEmpty()) {
+                                        showRelativeError = true
+                                        return@Button
+                                    }
+                                    showRelativeError = false
+                                    currentPage++
+                                }
+                                pages - 1 -> {
+                                    viewModel.showImportContactsDialog.value = false
+                                    onFinished()
+                                }
+                                else -> currentPage++
                             }
+                        },
+                        shape = RoundedCornerShape(16.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFF0E7075),
+                            contentColor = Color.White
+                        ),
+                        elevation = ButtonDefaults.buttonElevation(
+                            defaultElevation = 2.dp,
+                            pressedElevation = 6.dp
+                        ),
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(52.dp)
+                    ) {
+                        Text(
+                            text = if (currentPage < pages - 1) {
+                                if (selectedLanguage == "en") "Continue" else "التالي"
+                            } else {
+                                if (selectedLanguage == "en") "Get Started 🌸" else "ابدأ الآن 🌸"
+                            },
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 15.sp
+                        )
+                        if (currentPage < pages - 1) {
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                                contentDescription = null,
+                                modifier = Modifier.size(18.dp)
+                            )
                         }
                     }
                 }
             }
         }
+    }
+
+    if (showAddRelativeDialog) {
+        com.example.ui.dialogs.AddEditRelativeDialog(
+            viewModel = viewModel,
+            relativeToEdit = null,
+            onDismiss = { viewModel.showAddRelativeDialog.value = false }
+        )
     }
 
     if (showImportContactsDialog) {
@@ -409,8 +432,10 @@ private fun NameGenderPage(
     onGenderChange: (String) -> Unit
 ) {
     Column(
-        modifier = Modifier.fillMaxSize(),
-        verticalArrangement = Arrangement.spacedBy(18.dp)
+        modifier = Modifier
+            .fillMaxWidth()
+            .verticalScroll(rememberScrollState()),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         OutlinedTextField(
             value = nameInput,
@@ -452,7 +477,6 @@ private fun NameGenderPage(
             horizontalArrangement = Arrangement.spacedBy(14.dp)
         ) {
             GenderCard(
-                emoji = "👨",
                 label = if (selectedLanguage == "en") "Male" else "ذكر",
                 selected = genderInput == "male",
                 color = Color(0xFF0E7075),
@@ -461,11 +485,10 @@ private fun NameGenderPage(
             ) { onGenderChange("male") }
 
             GenderCard(
-                emoji = "👩",
                 label = if (selectedLanguage == "en") "Female" else "أنثى",
                 selected = genderInput == "female",
-                color = Color(0xFFE91E63),
-                bgColor = Color(0xFFFCE4EC),
+                color = Color(0xFF0E7075),
+                bgColor = Color(0xFFE0F2F1),
                 modifier = Modifier.weight(1f)
             ) { onGenderChange("female") }
         }
@@ -474,7 +497,6 @@ private fun NameGenderPage(
 
 @Composable
 private fun GenderCard(
-    emoji: String,
     label: String,
     selected: Boolean,
     color: Color,
@@ -484,29 +506,25 @@ private fun GenderCard(
 ) {
     Card(
         onClick = onClick,
-        modifier = modifier,
+        modifier = modifier.height(56.dp),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
             containerColor = if (selected) bgColor else Color.White
         ),
-        border = androidx.compose.foundation.BorderStroke(
+        border = BorderStroke(
             if (selected) 2.dp else 1.dp,
-            if (selected) color else Color(0xFFE2E8F0)
+            if (selected) color else Color(0xFFCBD5E1)
         ),
-        elevation = CardDefaults.cardElevation(if (selected) 4.dp else 1.dp)
+        elevation = CardDefaults.cardElevation(if (selected) 3.dp else 0.dp)
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(18.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
         ) {
-            Text(emoji, fontSize = 32.sp)
             Text(
-                label,
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Bold,
+                text = label,
+                fontSize = 16.sp,
+                fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
                 color = if (selected) color else Color(0xFF334155)
             )
         }
@@ -523,25 +541,50 @@ private fun ImportRelativesPage(
     val currentRelatives by viewModel.relatives.collectAsState()
 
     Column(modifier = Modifier.fillMaxSize()) {
-        // Import button
-        Button(
-            onClick = { viewModel.launchContactPicker() },
-            shape = RoundedCornerShape(14.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = Color(0xFF0E7075),
-                contentColor = Color.White
-            ),
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(50.dp)
+        // Action buttons: Contact Picker + Manual Entry
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(
-                if (selectedLanguage == "en") "Import from Contacts 📱" else "استيراد من جهات الاتصال 📱",
-                fontWeight = FontWeight.Bold,
-                fontSize = 14.sp
-            )
+            // Import from contacts button
+            Button(
+                onClick = { viewModel.launchContactPicker() },
+                shape = RoundedCornerShape(14.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFF0E7075),
+                    contentColor = Color.White
+                ),
+                modifier = Modifier
+                    .weight(1.3f)
+                    .height(50.dp)
+            ) {
+                Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
+                Spacer(modifier = Modifier.width(6.dp))
+                Text(
+                    if (selectedLanguage == "en") "From Contacts 📱" else "من جهات الاتصال 📱",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 13.sp
+                )
+            }
+
+            // Manual Entry button
+            OutlinedButton(
+                onClick = { viewModel.openAddRelativeDialog() },
+                shape = RoundedCornerShape(14.dp),
+                border = BorderStroke(1.5.dp, Color(0xFF0E7075)),
+                colors = ButtonDefaults.outlinedButtonColors(
+                    contentColor = Color(0xFF0E7075)
+                ),
+                modifier = Modifier
+                    .weight(1f)
+                    .height(50.dp)
+            ) {
+                Text(
+                    if (selectedLanguage == "en") "Manual ✍️" else "إدخال يدوي ✍️",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 13.sp
+                )
+            }
         }
 
         Spacer(modifier = Modifier.height(14.dp))

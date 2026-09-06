@@ -1,6 +1,8 @@
 package com.example.ui.screens
 
 import android.annotation.SuppressLint
+import android.view.HapticFeedbackConstants
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
@@ -354,6 +356,8 @@ private fun RowScope.NavItem(
         label = "nav_bg"
     )
 
+    val view = LocalView.current
+
     Box(
         contentAlignment = Alignment.TopCenter,
         modifier = Modifier
@@ -362,7 +366,10 @@ private fun RowScope.NavItem(
             .clickable(
                 indication = null,
                 interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
-            ) { onClick() }
+            ) {
+                view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
+                onClick()
+            }
     ) {
         // Top indicator line when selected
         if (isSelected) {

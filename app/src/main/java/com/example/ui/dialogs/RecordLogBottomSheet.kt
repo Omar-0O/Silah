@@ -58,8 +58,11 @@ fun RecordLogBottomSheet(
     ) {
         Column(
             modifier = Modifier
-                .padding(24.dp)
-                .fillMaxWidth(),
+                .fillMaxWidth()
+                .navigationBarsPadding()
+                .imePadding()
+                .padding(horizontal = 24.dp)
+                .padding(top = 8.dp, bottom = 20.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             Text(
@@ -122,8 +125,10 @@ fun RecordLogBottomSheet(
                 },
                 colors = ButtonDefaults.buttonColors(containerColor = SoftGold, contentColor = Color(0xFF141816)),
                 shape = RoundedCornerShape(16.dp),
-                modifier = Modifier.fillMaxWidth(),
-                contentPadding = PaddingValues(vertical = 12.dp)
+                elevation = ButtonDefaults.buttonElevation(defaultElevation = 2.dp, pressedElevation = 4.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(50.dp)
             ) {
                 Text(
                     if (lang == "en") "Save & Confirm Contact 🌸" else "حفظ وتأكيد التواصل 🌸",
