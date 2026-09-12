@@ -34,7 +34,12 @@ object ReminderScheduler {
     private const val KEY_NOTIFY_DUE = "pref_notify_due_relatives"
     private const val NOTIFIED_PREFIX = "notified_relatives_"
 
-    const val DEFAULT_REMINDER_HOUR = 10
+    /**
+     * Default reminder hour: 19 (7:00 PM / ٧:٠٠ مساءً).
+     * التوقيت الذهبي: الإرسال في أوقات الفراغ الاجتماعي (٦:٠٠ إلى ٨:٠٠ مساءً)
+     * وتجنب ساعات العمل الصباحية أو أوقات النوم.
+     */
+    const val DEFAULT_REMINDER_HOUR = 19
     const val DEFAULT_REMINDER_MINUTE = 0
 
     /**

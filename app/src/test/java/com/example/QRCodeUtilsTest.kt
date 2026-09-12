@@ -11,7 +11,7 @@ class QRCodeUtilsTest {
 
     @Test
     fun testGenerateQRCodeBitmap_ValidContent() {
-        val qrBitmap = QRCodeUtils.generateQRCode("https://ipn.eg/S/omar-0o/instapay/1avNS6", 256)
+        val qrBitmap = QRCodeUtils.generateQRCode("https://ipn.eg/S/aather/instapay", 256)
         assertNotNull("Bitmap should be generated for valid string", qrBitmap)
     }
 

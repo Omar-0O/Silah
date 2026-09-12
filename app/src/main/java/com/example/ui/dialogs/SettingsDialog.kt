@@ -413,9 +413,9 @@ fun SettingsDialog(
                                     )
 
                                     val timePresets = listOf(
-                                        Pair(9, 0),
                                         Pair(13, 0),
-                                        Pair(17, 0),
+                                        Pair(18, 0),
+                                        Pair(19, 0),
                                         Pair(20, 30)
                                     )
 
@@ -445,16 +445,16 @@ fun SettingsDialog(
                                                     Text(
                                                         text = if (selectedLanguage == "en") {
                                                             when (hour) {
-                                                                9 -> "9 AM"
                                                                 13 -> "1 PM"
-                                                                17 -> "5 PM"
+                                                                18 -> "6 PM"
+                                                                19 -> "7 PM ✨"
                                                                 else -> "8:30 PM"
                                                             }
                                                         } else {
                                                             when (hour) {
-                                                                9 -> "٩ ص"
                                                                 13 -> "١ م"
-                                                                17 -> "٥ م"
+                                                                18 -> "٦ م"
+                                                                19 -> "٧ م ✨"
                                                                 else -> "٨:٣٠ م"
                                                             }
                                                         },
@@ -466,6 +466,19 @@ fun SettingsDialog(
                                             }
                                         }
                                     }
+
+                                    // Golden Hour Guidance Hint
+                                    Text(
+                                        text = if (selectedLanguage == "en")
+                                            "✨ Golden Hour (6:00 - 8:00 PM): Ideal social leisure time after work and before sleep."
+                                        else
+                                            "✨ التوقيت الذهبي (٦:٠٠ - ٨:٠٠ م): أفضل أوقات الفراغ الاجتماعي وتجنب ساعات العمل والنوم.",
+                                        fontSize = 11.sp,
+                                        color = PrimaryGreen,
+                                        fontWeight = FontWeight.Medium,
+                                        lineHeight = 15.sp,
+                                        modifier = Modifier.padding(top = 4.dp)
+                                    )
                                 }
 
                                 // Note below

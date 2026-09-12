@@ -130,16 +130,19 @@ object SilaNotificationHelper {
             }
 
             // ── النمط 2: لمسة وجدانية ──
-            // Buttons: 📱 تواصل الآن · ⏳ بعد 6 ساعات
+            // Buttons: 📞 اتصال مباشر · 💬 واتساب · ⏳ بعد 6 ساعات
             NotificationStyle.GENTLE_EMOTIONAL -> {
-                addOpenRelativeAction(context, builder, relative, lang)
+                addCallAction(context, builder, relative, lang)
+                addWhatsAppAction(context, builder, relative, lang)
                 addSnoozeAction(context, builder, relative, notificationId, lang,
                     labelAr = "⏳ بعد 6 ساعات", labelEn = "⏳ In 6 Hours")
             }
 
             // ── النمط 3: الجمعة ──
-            // Button: 📇 فتح قائمة الأقارب
+            // Buttons: 📞 اتصال مباشر · 💬 واتساب · 📇 فتح قائمة الأقارب
             NotificationStyle.FRIDAY -> {
+                addCallAction(context, builder, relative, lang)
+                addWhatsAppAction(context, builder, relative, lang)
                 addOpenRelativesListAction(context, builder, lang)
             }
 

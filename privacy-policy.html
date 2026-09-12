@@ -1,204 +1,2357 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="ar" dir="rtl" data-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>سياسة الخصوصية — تطبيق صِلَةِ | Privacy Policy — Sila App</title>
+    <meta name="description" content="ميثاق الخصوصية والأمان الإنساني لتطبيق صِلَةِ — تطبيق تعزيز صلة الرحم والتواصل العائلي. بياناتك وذكرياتك مقدسة ومحفوظة في بيتك وعلى هاتفك فقط.">
+    <meta name="author" content="عمر وفريق تطبيق صِلَةِ - Sila App">
+    <meta name="theme-color" content="#1E5A35">
+    <title>ميثاق الخصوصية وحفظ الأمانة — تطبيق صِلَةِ | Privacy & Human Pledge — Sila App</title>
+
+    <!-- Google Fonts: Cairo for Arabic, Plus Jakarta Sans for English -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            /* Sila Design System Palette */
+            --primary: #1E5A35;
+            --primary-rgb: 30, 90, 53;
+            --primary-light: #94DAB2;
+            --primary-dark: #143F24;
+            --primary-surface: #F0F6F2;
+            --secondary-muted: #4C6B56;
+            --accent-gold: #E9CE79;
+            --accent-gold-dark: #A98628;
+            --accent-gold-soft: #FDF8EC;
+            --accent-rose: #E68A8A;
+            --accent-rose-soft: #FDF2F2;
+            
+            --bg-body: #FAF9F5;
+            --bg-card: #FFFFFF;
+            --bg-card-elevated: #FFFFFF;
+            --border-card: rgba(30, 90, 53, 0.12);
+            --border-hover: rgba(30, 90, 53, 0.28);
+            
+            --text-main: #141816;
+            --text-muted: #4C6B56;
+            --text-subtle: #6D8274;
+            
+            --shadow-sm: 0 2px 8px rgba(20, 40, 28, 0.04);
+            --shadow-md: 0 10px 30px rgba(20, 40, 28, 0.07);
+            --shadow-lg: 0 20px 50px rgba(20, 40, 28, 0.1);
+            
+            --nav-bg: rgba(250, 249, 245, 0.9);
+            --badge-green-bg: #EAF4EE;
+            --badge-green-text: #1E5A35;
+            --badge-gold-bg: #FDF6E2;
+            --badge-gold-text: #8C6A12;
+
+            --pill-active-bg: #1E5A35;
+            --pill-active-text: #FFFFFF;
+            
+            --radius-sm: 12px;
+            --radius-md: 18px;
+            --radius-lg: 24px;
+            --radius-xl: 32px;
+            
+            --font-ar: 'Cairo', system-ui, -apple-system, sans-serif;
+            --font-en: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+            --font-current: var(--font-ar);
+            --transition-smooth: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        [data-theme="dark"] {
+            --primary: #94DAB2;
+            --primary-rgb: 148, 218, 178;
+            --primary-light: #C2F0D7;
+            --primary-dark: #1E5A35;
+            --primary-surface: #1B2921;
+            --secondary-muted: #8EAE9B;
+            --accent-gold: #F2DA91;
+            --accent-gold-dark: #E9CE79;
+            --accent-gold-soft: #27241A;
+            --accent-rose: #F8A5A5;
+            --accent-rose-soft: #2E1B1E;
+            
+            --bg-body: #141816;
+            --bg-card: #1B221E;
+            --bg-card-elevated: #212A25;
+            --border-card: rgba(148, 218, 178, 0.16);
+            --border-hover: rgba(148, 218, 178, 0.35);
+            
+            --text-main: #F3F7F4;
+            --text-muted: #A3BAAC;
+            --text-subtle: #799484;
+            
+            --shadow-sm: 0 2px 10px rgba(0, 0, 0, 0.3);
+            --shadow-md: 0 12px 36px rgba(0, 0, 0, 0.45);
+            --shadow-lg: 0 24px 60px rgba(0, 0, 0, 0.6);
+            
+            --nav-bg: rgba(20, 24, 22, 0.92);
+            --badge-green-bg: #1B3326;
+            --badge-green-text: #94DAB2;
+            --badge-gold-bg: #302A16;
+            --badge-gold-text: #F2DA91;
+
+            --pill-active-bg: #94DAB2;
+            --pill-active-text: #141816;
+        }
+
+        /* Base Resets */
+        *, *::before, *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+            font-size: 16px;
+        }
+
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #F7F4EF;
-            color: #0F1E15;
-            line-height: 1.8;
-            padding: 2rem 1rem;
+            font-family: var(--font-current);
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            line-height: 1.85;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            transition: background-color 0.35s ease, color 0.35s ease;
+            -webkit-font-smoothing: antialiased;
+            overflow-x: hidden;
+            position: relative;
         }
-        .container {
-            max-width: 720px;
+
+        html[dir="ltr"] {
+            --font-current: var(--font-en);
+        }
+
+        /* Ambient Warm Atmosphere Glow */
+        .ambient-glow {
+            position: fixed;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
+        }
+        .ambient-glow::before {
+            content: '';
+            position: absolute;
+            top: -100px;
+            right: 10%;
+            width: 550px;
+            height: 550px;
+            background: radial-gradient(circle, rgba(30, 90, 53, 0.09) 0%, rgba(233, 206, 121, 0.05) 50%, transparent 70%);
+            border-radius: 50%;
+            filter: blur(70px);
+        }
+        .ambient-glow::after {
+            content: '';
+            position: absolute;
+            bottom: 5%;
+            left: 5%;
+            width: 450px;
+            height: 450px;
+            background: radial-gradient(circle, rgba(233, 206, 121, 0.06) 0%, rgba(30, 90, 53, 0.04) 60%, transparent 70%);
+            border-radius: 50%;
+            filter: blur(80px);
+        }
+
+        /* Top Sticky Navigation */
+        .top-nav {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: var(--nav-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-bottom: 1px solid var(--border-card);
+            transition: var(--transition-smooth);
+        }
+
+        .nav-container {
+            max-width: 1020px;
             margin: 0 auto;
-            background: white;
-            border-radius: 20px;
-            padding: 2.5rem;
-            box-shadow: 0 4px 24px rgba(0,0,0,0.06);
+            padding: 0.85rem 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
         }
-        h1 {
-            color: #16503A;
-            font-size: 1.8rem;
-            margin-bottom: 0.5rem;
-        }
-        h2 {
-            color: #16503A;
-            font-size: 1.2rem;
-            margin-top: 2rem;
-            margin-bottom: 0.5rem;
-            border-bottom: 2px solid #E8F3ED;
-            padding-bottom: 0.3rem;
-        }
-        p, li {
-            font-size: 1rem;
-            margin-bottom: 0.8rem;
-        }
-        ul { padding-right: 1.5rem; }
-        .badge {
-            display: inline-block;
-            background: #E8F3ED;
-            color: #16503A;
-            padding: 0.3rem 0.8rem;
-            border-radius: 8px;
-            font-size: 0.85rem;
-            font-weight: 600;
-            margin-bottom: 1.5rem;
-        }
-        .highlight {
-            background: #F0F6F2;
-            border-right: 4px solid #16503A;
-            padding: 1rem 1.2rem;
-            border-radius: 8px;
-            margin: 1rem 0;
-        }
-        .lang-switch {
-            text-align: center;
-            margin-bottom: 2rem;
-        }
-        .lang-switch a {
-            color: #16503A;
+
+        .brand-logo {
+            display: flex;
+            align-items: center;
+            gap: 0.85rem;
             text-decoration: none;
+            color: inherit;
+        }
+
+        .logo-icon-wrap {
+            width: 44px;
+            height: 44px;
+            border-radius: var(--radius-sm);
+            background: linear-gradient(135deg, #1E5A35 0%, #2D7A4B 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #FFFFFF;
+            box-shadow: 0 4px 14px rgba(30, 90, 53, 0.25);
+            position: relative;
+            flex-shrink: 0;
+        }
+
+        .logo-text-wrap {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .logo-title {
+            font-size: 1.3rem;
+            font-weight: 800;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            line-height: 1.2;
+        }
+
+        .logo-subtitle {
+            font-size: 0.76rem;
+            color: var(--text-subtle);
             font-weight: 600;
-            padding: 0.4rem 1rem;
-            border: 1px solid #16503A;
-            border-radius: 10px;
-            transition: all 0.2s;
         }
-        .lang-switch a:hover {
-            background: #16503A;
-            color: white;
+
+        .nav-actions {
+            display: flex;
+            align-items: center;
+            gap: 0.55rem;
         }
-        .section-en { display: none; direction: ltr; text-align: left; }
-        .footer {
-            text-align: center;
-            margin-top: 2rem;
-            color: #7FA890;
+
+        .btn-action {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.45rem;
+            padding: 0.5rem 0.95rem;
+            font-family: inherit;
             font-size: 0.85rem;
+            font-weight: 700;
+            border-radius: 999px;
+            border: 1px solid var(--border-card);
+            background: var(--bg-card);
+            color: var(--text-main);
+            cursor: pointer;
+            transition: var(--transition-smooth);
+            text-decoration: none;
+            box-shadow: var(--shadow-sm);
+            user-select: none;
+        }
+
+        .btn-action:hover {
+            border-color: var(--border-hover);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
+            color: var(--primary);
+        }
+
+        .btn-action svg {
+            width: 16px;
+            height: 16px;
+            flex-shrink: 0;
+            stroke-width: 2.2;
+        }
+
+        .btn-primary-action {
+            background: var(--primary);
+            color: #FFFFFF !important;
+            border-color: transparent;
+        }
+        [data-theme="dark"] .btn-primary-action {
+            color: #141816 !important;
+        }
+        .btn-primary-action:hover {
+            opacity: 0.92;
+        }
+
+        /* Page Layout */
+        .page-container {
+            max-width: 960px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 2.5rem 1.25rem 4rem 1.25rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Warm Human Hero Header */
+        .hero-section {
+            text-align: center;
+            margin-bottom: 2.5rem;
+            padding: 2.8rem 1.8rem;
+            border-radius: var(--radius-xl);
+            background: linear-gradient(180deg, var(--bg-card) 0%, var(--primary-surface) 100%);
+            border: 1px solid var(--border-card);
+            box-shadow: var(--shadow-md);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-section::before {
+            content: '';
+            position: absolute;
+            top: -40%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 120%;
+            height: 180%;
+            background: radial-gradient(circle at center top, rgba(var(--primary-rgb), 0.08) 0%, rgba(233, 206, 121, 0.04) 50%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .hero-badges-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 0.55rem;
+            margin-bottom: 1.3rem;
+        }
+
+        .hero-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.45rem;
+            padding: 0.38rem 0.9rem;
+            border-radius: 999px;
+            font-size: 0.82rem;
+            font-weight: 700;
+            background: var(--badge-green-bg);
+            color: var(--badge-green-text);
+            border: 1px solid rgba(var(--primary-rgb), 0.15);
+        }
+
+        .hero-pill-gold {
+            background: var(--badge-gold-bg);
+            color: var(--badge-gold-text);
+            border: 1px solid rgba(233, 206, 121, 0.35);
+        }
+
+        .hero-title {
+            font-size: 2.35rem;
+            font-weight: 900;
+            line-height: 1.3;
+            color: var(--text-main);
+            margin-bottom: 1.15rem;
+            letter-spacing: -0.02em;
+        }
+
+        @media (max-width: 640px) {
+            .hero-title {
+                font-size: 1.8rem;
+            }
+        }
+
+        .hero-subtitle {
+            max-width: 740px;
+            margin: 0 auto 1.6rem auto;
+            font-size: 1.12rem;
+            color: var(--text-muted);
+            line-height: 1.8;
+            font-weight: 500;
+        }
+
+        .hero-quote {
+            max-width: 660px;
+            margin: 0 auto 1.5rem auto;
+            padding: 0.9rem 1.4rem;
+            background: rgba(255, 255, 255, 0.6);
+            border-radius: var(--radius-md);
+            border: 1px dashed rgba(var(--primary-rgb), 0.2);
+            font-size: 0.96rem;
+            color: var(--primary);
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.6rem;
+        }
+
+        [data-theme="dark"] .hero-quote {
+            background: rgba(0, 0, 0, 0.25);
+        }
+
+        .hero-meta-bar {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 1.25rem;
+            font-size: 0.86rem;
+            color: var(--text-subtle);
+            padding-top: 1.1rem;
+            border-top: 1px dashed var(--border-card);
+        }
+
+        /* Warm Heartfelt Letter Card (The Human Touch) */
+        .human-letter-card {
+            background: linear-gradient(135deg, var(--bg-card) 0%, var(--accent-gold-soft) 100%);
+            border: 1px solid rgba(233, 206, 121, 0.4);
+            border-radius: var(--radius-lg);
+            padding: 2.2rem;
+            margin-bottom: 2.5rem;
+            box-shadow: var(--shadow-sm);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .human-letter-card::before {
+            content: '💌';
+            position: absolute;
+            top: 1.5rem;
+            left: 2rem;
+            font-size: 3rem;
+            opacity: 0.2;
+            transform: rotate(12deg);
+        }
+
+        html[dir="ltr"] .human-letter-card::before {
+            left: auto;
+            right: 2rem;
+            transform: rotate(-12deg);
+        }
+
+        .letter-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .letter-title {
+            font-size: 1.25rem;
+            font-weight: 800;
+            color: var(--text-main);
+        }
+
+        .letter-body {
+            font-size: 1.02rem;
+            color: var(--text-main);
+            line-height: 1.85;
+        }
+
+        .letter-body p {
+            margin-bottom: 0.85rem;
+        }
+
+        .letter-signature {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-top: 1.25rem;
+            font-weight: 700;
+            color: var(--primary);
+            font-size: 0.95rem;
+        }
+
+        /* Highlights Grid */
+        .highlights-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(215px, 1fr));
+            gap: 1.1rem;
+            margin-bottom: 2.5rem;
+        }
+
+        .highlight-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-card);
+            border-radius: var(--radius-lg);
+            padding: 1.5rem;
+            box-shadow: var(--shadow-sm);
+            transition: var(--transition-smooth);
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .highlight-card:hover {
+            transform: translateY(-4px);
+            border-color: var(--border-hover);
+            box-shadow: var(--shadow-md);
+        }
+
+        .highlight-icon-wrap {
+            width: 48px;
+            height: 48px;
+            border-radius: var(--radius-sm);
+            background: var(--primary-surface);
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+            flex-shrink: 0;
+            border: 1px solid rgba(var(--primary-rgb), 0.12);
+        }
+
+        .highlight-card h3 {
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: var(--text-main);
+            line-height: 1.35;
+        }
+
+        .highlight-card p {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            line-height: 1.6;
+            margin: 0;
+        }
+
+        /* Sticky Navigation Pills */
+        .category-nav-wrap {
+            position: sticky;
+            top: 68px;
+            z-index: 90;
+            margin-bottom: 2.2rem;
+            background: var(--nav-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            padding: 0.65rem 0;
+            margin-left: -0.5rem;
+            margin-right: -0.5rem;
+            border-radius: 999px;
+        }
+
+        .category-nav {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            overflow-x: auto;
+            padding: 0.25rem 0.5rem;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+
+        .category-nav::-webkit-scrollbar {
+            display: none;
+        }
+
+        .nav-pill {
+            flex-shrink: 0;
+            padding: 0.45rem 1.05rem;
+            font-size: 0.86rem;
+            font-weight: 700;
+            border-radius: 999px;
+            background: var(--bg-card);
+            color: var(--text-muted);
+            text-decoration: none;
+            border: 1px solid var(--border-card);
+            transition: var(--transition-smooth);
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+        }
+
+        .nav-pill:hover {
+            color: var(--primary);
+            border-color: var(--primary);
+            background: var(--primary-surface);
+        }
+
+        .nav-pill.active {
+            background: var(--pill-active-bg);
+            color: var(--pill-active-text);
+            border-color: transparent;
+            box-shadow: 0 4px 12px rgba(var(--primary-rgb), 0.25);
+        }
+
+        /* Policy Section Cards */
+        .policy-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-card);
+            border-radius: var(--radius-lg);
+            padding: 2.4rem;
+            margin-bottom: 2rem;
+            box-shadow: var(--shadow-sm);
+            transition: var(--transition-smooth);
+            scroll-margin-top: 140px;
+        }
+
+        .policy-card:hover {
+            box-shadow: var(--shadow-md);
+            border-color: var(--border-hover);
+        }
+
+        @media (max-width: 640px) {
+            .policy-card {
+                padding: 1.6rem 1.25rem;
+                border-radius: var(--radius-md);
+            }
+        }
+
+        .section-header {
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+            margin-bottom: 1.4rem;
+            padding-bottom: 1.15rem;
+            border-bottom: 1px solid var(--border-card);
+        }
+
+        .section-number {
+            width: 40px;
+            height: 40px;
+            border-radius: var(--radius-sm);
+            background: var(--primary);
+            color: #FFFFFF;
+            font-weight: 800;
+            font-size: 1.05rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            box-shadow: 0 4px 10px rgba(var(--primary-rgb), 0.25);
+        }
+        [data-theme="dark"] .section-number {
+            color: #141816;
+        }
+
+        .section-title-wrap {
+            flex: 1;
+        }
+
+        .section-title {
+            font-size: 1.38rem;
+            font-weight: 800;
+            color: var(--text-main);
+            line-height: 1.35;
+            margin-bottom: 0.25rem;
+        }
+
+        .section-tagline {
+            font-size: 0.88rem;
+            color: var(--text-subtle);
+            font-weight: 600;
+        }
+
+        .policy-card p {
+            font-size: 1.02rem;
+            color: var(--text-muted);
+            margin-bottom: 1.2rem;
+            line-height: 1.8;
+        }
+
+        .policy-card p:last-child {
+            margin-bottom: 0;
+        }
+
+        /* Features / Warm List */
+        .feature-list {
+            list-style: none;
+            padding: 0;
+            margin: 1.3rem 0;
+            display: flex;
+            flex-direction: column;
+            gap: 0.85rem;
+        }
+
+        .feature-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.95rem;
+            padding: 0.95rem 1.15rem;
+            background: var(--primary-surface);
+            border-radius: var(--radius-sm);
+            border: 1px solid rgba(var(--primary-rgb), 0.08);
+            font-size: 0.98rem;
+            color: var(--text-main);
+            line-height: 1.65;
+        }
+
+        .feature-icon {
+            font-size: 1.25rem;
+            margin-top: 0.1rem;
+            flex-shrink: 0;
+        }
+
+        /* Prohibition List */
+        .prohibition-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 0.85rem;
+            list-style: none;
+            margin: 1.3rem 0;
+        }
+
+        .prohibition-item {
+            display: flex;
+            align-items: center;
+            gap: 0.85rem;
+            padding: 0.9rem 1.1rem;
+            background: #FFF7F7;
+            border: 1px solid rgba(220, 53, 69, 0.15);
+            border-radius: var(--radius-sm);
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: #8C1D24;
+        }
+
+        [data-theme="dark"] .prohibition-item {
+            background: #2A181A;
+            border-color: rgba(235, 87, 87, 0.25);
+            color: #FCA5A5;
+        }
+
+        /* Permission Table */
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto;
+            margin: 1.3rem 0;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border-card);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .permission-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.94rem;
+            text-align: right;
+        }
+
+        html[dir="ltr"] .permission-table {
+            text-align: left;
+        }
+
+        .permission-table th {
+            background: var(--primary-surface);
+            color: var(--text-main);
+            font-weight: 800;
+            padding: 0.95rem 1.15rem;
+            border-bottom: 1px solid var(--border-card);
+        }
+
+        .permission-table td {
+            padding: 0.95rem 1.15rem;
+            border-bottom: 1px solid var(--border-card);
+            color: var(--text-muted);
+            vertical-align: top;
+            line-height: 1.65;
+        }
+
+        .permission-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .status-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            padding: 0.25rem 0.65rem;
+            border-radius: 999px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .status-required {
+            background: #EAF4EE;
+            color: #1E5A35;
+        }
+        [data-theme="dark"] .status-required {
+            background: #193325;
+            color: #94DAB2;
+        }
+
+        .status-optional {
+            background: #FEF6E4;
+            color: #8C6A12;
+        }
+        [data-theme="dark"] .status-optional {
+            background: #332B18;
+            color: #F2DA91;
+        }
+
+        /* Callout Box */
+        .callout-box {
+            padding: 1.3rem 1.5rem;
+            border-radius: var(--radius-md);
+            margin: 1.3rem 0;
+            display: flex;
+            align-items: flex-start;
+            gap: 0.95rem;
+            background: var(--primary-surface);
+            border: 1px solid rgba(var(--primary-rgb), 0.16);
+            border-right: 4px solid var(--primary);
+        }
+
+        html[dir="ltr"] .callout-box {
+            border-right: 1px solid rgba(var(--primary-rgb), 0.16);
+            border-left: 4px solid var(--primary);
+        }
+
+        .callout-box svg {
+            width: 24px;
+            height: 24px;
+            flex-shrink: 0;
+            color: var(--primary);
+            margin-top: 0.2rem;
+        }
+
+        .callout-content {
+            font-size: 0.98rem;
+            color: var(--text-main);
+            line-height: 1.7;
+        }
+
+        /* FAQ Accordion */
+        .faq-accordion {
+            display: flex;
+            flex-direction: column;
+            gap: 0.85rem;
+            margin-top: 1.3rem;
+        }
+
+        .faq-item {
+            border: 1px solid var(--border-card);
+            border-radius: var(--radius-md);
+            background: var(--bg-card);
+            overflow: hidden;
+            transition: var(--transition-smooth);
+        }
+
+        .faq-item:hover {
+            border-color: var(--border-hover);
+        }
+
+        .faq-question {
+            width: 100%;
+            padding: 1.15rem 1.35rem;
+            text-align: inherit;
+            background: transparent;
+            border: none;
+            font-family: inherit;
+            font-size: 1.02rem;
+            font-weight: 700;
+            color: var(--text-main);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+        }
+
+        .faq-chevron {
+            transition: transform 0.3s ease;
+            color: var(--primary);
+            flex-shrink: 0;
+        }
+
+        .faq-item.open .faq-chevron {
+            transform: rotate(180deg);
+        }
+
+        .faq-answer {
+            padding: 0 1.35rem 1.35rem 1.35rem;
+            font-size: 0.97rem;
+            color: var(--text-muted);
+            line-height: 1.75;
+            display: none;
+            border-top: 1px dashed var(--border-card);
+            padding-top: 0.95rem;
+        }
+
+        .faq-item.open .faq-answer {
+            display: block;
+        }
+
+        /* Sincere Contact Developer Section */
+        .contact-card {
+            background: linear-gradient(135deg, var(--bg-card) 0%, var(--primary-surface) 100%);
+            border: 1px solid var(--border-card);
+            border-radius: var(--radius-lg);
+            padding: 2.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .contact-info-block {
+            display: flex;
+            align-items: center;
+            gap: 1.1rem;
+        }
+
+        .contact-avatar {
+            width: 58px;
+            height: 58px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary) 0%, #2E7D50 100%);
+            color: #FFFFFF;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.6rem;
+            box-shadow: 0 6px 18px rgba(var(--primary-rgb), 0.28);
+            flex-shrink: 0;
+        }
+        [data-theme="dark"] .contact-avatar {
+            color: #141816;
+        }
+
+        .contact-text h4 {
+            font-size: 1.18rem;
+            font-weight: 800;
+            color: var(--text-main);
+            margin-bottom: 0.2rem;
+        }
+
+        .contact-note {
+            font-size: 0.84rem;
+            color: var(--text-subtle);
+        }
+
+        .contact-email {
+            font-size: 0.98rem;
+            color: var(--primary);
+            font-weight: 800;
+            direction: ltr;
+            display: inline-block;
+            margin-top: 0.25rem;
+        }
+
+        .contact-buttons-row {
+            display: flex;
+            align-items: center;
+            gap: 0.65rem;
+            flex-wrap: wrap;
+        }
+
+        /* Support Sila Section & Cards */
+        .support-card {
+            background: linear-gradient(135deg, var(--bg-card) 0%, var(--accent-gold-soft) 100%);
+            border: 1px solid rgba(233, 206, 121, 0.45);
+            border-radius: var(--radius-lg);
+            padding: 2.4rem;
+            margin-bottom: 2rem;
+            box-shadow: var(--shadow-sm);
+            position: relative;
+            overflow: hidden;
+            scroll-margin-top: 140px;
+        }
+
+        .support-card:hover {
+            box-shadow: var(--shadow-md);
+            border-color: rgba(233, 206, 121, 0.7);
+        }
+
+        .support-free-banner {
+            background: var(--primary-surface);
+            border: 1px solid rgba(var(--primary-rgb), 0.18);
+            border-radius: var(--radius-md);
+            padding: 1.2rem 1.4rem;
+            margin: 1.2rem 0;
+            display: flex;
+            align-items: flex-start;
+            gap: 0.85rem;
+        }
+
+        .support-methods-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.2rem;
+            margin: 1.5rem 0;
+        }
+
+        .support-method-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-card);
+            border-radius: var(--radius-md);
+            padding: 1.4rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            gap: 1.1rem;
+            transition: var(--transition-smooth);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .support-method-card:hover {
+            transform: translateY(-3px);
+            border-color: var(--border-hover);
+            box-shadow: var(--shadow-md);
+        }
+
+        .support-method-top {
+            display: flex;
+            align-items: center;
+            gap: 0.85rem;
+        }
+
+        .support-method-icon {
+            width: 46px;
+            height: 46px;
+            border-radius: var(--radius-sm);
+            background: var(--primary-surface);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+            flex-shrink: 0;
+            border: 1px solid rgba(var(--primary-rgb), 0.15);
+        }
+
+        .support-method-meta h4 {
+            font-size: 1.05rem;
+            font-weight: 800;
+            color: var(--text-main);
+            margin-bottom: 0.15rem;
+        }
+
+        .support-method-meta span {
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: var(--text-subtle);
+        }
+
+        .support-value-box {
+            background: var(--primary-surface);
+            border: 1px dashed rgba(var(--primary-rgb), 0.25);
+            border-radius: var(--radius-sm);
+            padding: 0.75rem 1rem;
+            font-family: monospace, inherit;
+            font-size: 1.02rem;
+            font-weight: 800;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            direction: ltr;
+        }
+
+        .support-appreciation-banner {
+            background: linear-gradient(135deg, rgba(var(--primary-rgb), 0.08) 0%, rgba(233, 206, 121, 0.16) 100%);
+            border: 1px solid rgba(233, 206, 121, 0.5);
+            border-radius: var(--radius-md);
+            padding: 1.1rem 1.4rem;
+            text-align: center;
+            font-weight: 800;
+            color: var(--text-main);
+            margin-top: 1.4rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.6rem;
+            font-size: 1rem;
+        }
+
+        .btn-support-nav {
+            background: var(--badge-gold-bg);
+            color: var(--badge-gold-text) !important;
+            border-color: rgba(233, 206, 121, 0.4);
+        }
+        .btn-support-nav:hover {
+            border-color: var(--accent-gold);
+            background: #FEF0CB;
+            color: #7A5B0B !important;
+        }
+        [data-theme="dark"] .btn-support-nav {
+            background: #302A16;
+            color: #F2DA91 !important;
+            border-color: rgba(233, 206, 121, 0.25);
+        }
+
+        /* Toast Notification */
+        .toast-notification {
+            position: fixed;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: var(--text-main);
+            color: var(--bg-body);
+            padding: 0.8rem 1.5rem;
+            border-radius: 999px;
+            font-size: 0.92rem;
+            font-weight: 700;
+            box-shadow: var(--shadow-lg);
+            z-index: 999;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+            display: flex;
+            align-items: center;
+            gap: 0.55rem;
+        }
+
+        .toast-notification.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+
+        /* Footer */
+        .page-footer {
+            margin-top: auto;
+            border-top: 1px solid var(--border-card);
+            background: var(--bg-card);
+            padding: 2.8rem 1.5rem;
+            text-align: center;
+            position: relative;
+            z-index: 1;
+        }
+
+        .footer-content {
+            max-width: 780px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.95rem;
+        }
+
+        .footer-logo {
+            font-size: 1.35rem;
+            font-weight: 900;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .footer-tagline {
+            font-size: 0.95rem;
+            color: var(--text-muted);
+            max-width: 580px;
+            line-height: 1.7;
+        }
+
+        .footer-copyright {
+            font-size: 0.84rem;
+            color: var(--text-subtle);
+            margin-top: 0.6rem;
+        }
+
+        /* Back to top button */
+        .back-to-top {
+            position: fixed;
+            bottom: 1.8rem;
+            right: 1.8rem;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: var(--bg-card);
+            color: var(--primary);
+            border: 1px solid var(--border-card);
+            box-shadow: var(--shadow-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 95;
+            opacity: 0;
+            visibility: hidden;
+            transform: scale(0.85);
+            transition: var(--transition-smooth);
+        }
+
+        html[dir="ltr"] .back-to-top {
+            right: auto;
+            left: 1.8rem;
+        }
+
+        .back-to-top.visible {
+            opacity: 1;
+            visibility: visible;
+            transform: scale(1);
+        }
+
+        .back-to-top:hover {
+            background: var(--primary);
+            color: #FFFFFF;
+            transform: translateY(-3px);
+        }
+
+        [data-theme="dark"] .back-to-top:hover {
+            color: #141816;
+        }
+
+        .lang-content {
+            transition: opacity 0.25s ease-in-out;
+        }
+
+        .lang-hidden {
+            display: none !important;
+        }
+
+        @media print {
+            .top-nav, .ambient-glow, .category-nav-wrap, .btn-action, .back-to-top, .toast-notification {
+                display: none !important;
+            }
+            body {
+                background: white !important;
+                color: black !important;
+            }
+            .policy-card, .hero-section, .human-letter-card {
+                box-shadow: none !important;
+                border: 1px solid #ccc !important;
+                break-inside: avoid;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="lang-switch">
-            <a href="#" onclick="toggleLang(); return false;" id="langBtn">English Version</a>
+
+    <!-- Ambient Glow -->
+    <div class="ambient-glow" aria-hidden="true"></div>
+
+    <!-- Sticky Navigation Bar -->
+    <header class="top-nav" id="topNav">
+        <div class="nav-container">
+            <a href="#" class="brand-logo" id="brandLink" title="تطبيق صِلَةِ">
+                <div class="logo-icon-wrap" aria-hidden="true">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 2L12 22"/>
+                        <path d="M12 8C10 5.5 6 5.5 4 8C2 10.5 3 14 6 15C9 16 12 14 12 14"/>
+                        <path d="M12 8C14 5.5 18 5.5 20 8C22 10.5 21 14 18 15C15 16 12 14 12 14"/>
+                        <path d="M12 15C9.5 17 7 19 8 21"/>
+                        <path d="M12 15C14.5 17 17 19 16 21"/>
+                    </svg>
+                </div>
+                <div class="logo-text-wrap">
+                    <span class="logo-title">
+                        <span>صِلَةِ</span>
+                        <span style="color: var(--accent-gold); font-size: 1.1em;">•</span>
+                        <span style="font-weight: 500; font-size: 0.9em; opacity: 0.85;">Silah</span>
+                    </span>
+                    <span class="logo-subtitle" id="navSubtitle">تطبيق تعزيز صلة الرحم والتواصل العائلي</span>
+                </div>
+            </a>
+
+            <div class="nav-actions">
+                <!-- Language Toggle Button -->
+                <button class="btn-action" id="langSwitchBtn" onclick="toggleLanguage()" aria-label="Switch language">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="2" y1="12" x2="22" y2="12"></line>
+                        <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+                    </svg>
+                    <span id="langBtnText">English</span>
+                </button>
+
+                <!-- Theme Toggle Button -->
+                <button class="btn-action" id="themeToggleBtn" onclick="toggleTheme()" aria-label="Toggle dark/light mode">
+                    <svg id="themeIconSun" class="lang-hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                    <svg id="themeIconMoon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                </button>
+
+                <!-- Print / Save PDF -->
+                <button class="btn-action" onclick="window.print()" title="طباعة أو حفظ كملف PDF" aria-label="Print policy">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="6 9 6 2 18 2 18 9"></polyline>
+                        <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+                        <rect x="6" y="14" width="12" height="8"></rect>
+                    </svg>
+                </button>
+
+                <!-- Support Sila Button -->
+                <a href="#ar-support" class="btn-action btn-support-nav" id="navSupportBtn" title="ادعم صِلَةِ 🤍">
+                    <span>🤍</span>
+                    <span id="navSupportText">ادعم صِلَةِ</span>
+                </a>
+            </div>
         </div>
+    </header>
 
-        <!-- Arabic -->
-        <div id="ar-section">
-            <h1>سياسة الخصوصية 🤍</h1>
-            <span class="badge">تطبيق صِلَةِ — Sila App</span>
-            <p>آخر تحديث: سبتمبر 2026</p>
+    <main class="page-container">
 
-            <div class="highlight">
-                <strong>خلاصة:</strong> تطبيق صِلَةِ لا يجمع أي بيانات شخصية ولا يشاركها مع أي طرف ثالث. كل بياناتك مخزنة على جهازك فقط.
+        <!-- ==================== ARABIC VERSION ==================== -->
+        <div id="arContent" class="lang-content">
+            
+            <!-- Hero Header -->
+            <section class="hero-section">
+                <div class="hero-badges-row">
+                    <span class="hero-pill">
+                        🌿 أمانة قبل أن تكون تطبيقاً
+                    </span>
+                    <span class="hero-pill hero-pill-gold">
+                        🤍 صُمّم ليقرّب القلوب لا ليجمع البيانات
+                    </span>
+                    <span class="hero-pill">
+                        🔒 مشفر على جهازك 100%
+                    </span>
+                </div>
+
+                <h1 class="hero-title">ميثاق الخصوصية وحفظ أمانة الأرحام</h1>
+                <p class="hero-subtitle">
+                    في عالم مليء بالتطبيقات التي تقتات على بيع الانتباه وبيانات الناس، صُمم <strong>تطبيق صِلَةِ</strong> ليكون واحة هادئة، أمينة، وخالصة لصلة الرحم وبر الأهل دون أي أطماع تجارية أو خوارزميات فضولية.
+                </p>
+
+                <div class="hero-quote">
+                    <span>✨ «الرَّحِمُ مُعَلَّقَةٌ بِالْعَرْشِ تَقُولُ: مَنْ وَصَلَنِي وَصَلَهُ اللَّهُ»</span>
+                </div>
+
+                <div class="hero-meta-bar">
+                    <div class="hero-meta-item">
+                        <span>📅 <strong>تاريخ السريان:</strong> سبتمبر 2026</span>
+                    </div>
+                    <div class="hero-meta-item">
+                        <span>🕊️ <strong>مبدأ العمل:</strong> بدون إنترنت وبدون خوادم (Offline First)</span>
+                    </div>
+                    <div class="hero-meta-item">
+                        <span>📱 <strong>متوافق مع:</strong> معايير Google Play 2026</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- A Letter from the Heart (The Human Touch) -->
+            <div class="human-letter-card">
+                <div class="letter-header">
+                    <span style="font-size: 1.5rem;">🌿</span>
+                    <h2 class="letter-title">رسالة صادقة من القلب: لماذا بنينا "صِلَةِ" بهذه الطريقة؟</h2>
+                </div>
+                <div class="letter-body">
+                    <p>
+                        حين بدأنا كتابة أول سطر برمجي في <strong>تطبيق صِلَةِ</strong>، وضعنا أمام أعيننا قاعدة لا تنازل عنها: <em>"بيانات أسرتك وأرقام هواتف أجدادك وأمهاتك وأطفالك، وذكرياتك العائلية، لها حرمة كحرمة بيتك تماماً."</em>
+                    </p>
+                    <p>
+                        نحن لا نرى فيك "مستخدماً" يُستهدف بالإعلانات، ولا نرى في قائمة أقاربك "بيانات ضخمة" للتحليل والتسويق. صلة هو بمثابة <strong>مفكرة عائلية دافئة</strong>، كالدفتر الورقي الصغير الذي كان آباؤنا يدونون فيه أسماء الأحباب ومناسباتهم ويضعونه في درج غرفتهم الخاص؛ لا يفتحه أحد سواهم، ولا يخرج من بيتهم أبداً.
+                    </p>
+                    <p>
+                        لذلك، صممنا التطبيق ليكون <strong>مستقلاً تماماً على هاتفك</strong>، لا يحتاج سيرفراتنا، ولا يرسل نبضة بيانات واحدة لأي خادم في العالم.
+                    </p>
+                </div>
+                <div class="letter-signature">
+                    <span>— أخوكم عمر ومطورو تطبيق صِلَةِ 🤍</span>
+                </div>
             </div>
 
-            <h2>١. ما هي البيانات التي يخزنها التطبيق؟</h2>
-            <ul>
-                <li><strong>أسماء وأرقام الأقارب</strong> التي تضيفها يدوياً</li>
-                <li><strong>سجلات التواصل</strong> التي تسجلها أنت</li>
-                <li><strong>الإعدادات المفضلة</strong> (اللغة، الوضع الداكن، مواعيد التذكير)</li>
-                <li><strong>الذكريات العائلية</strong> التي تضيفها (نصوص وصور)</li>
-            </ul>
-            <p>كل هذه البيانات مخزنة <strong>محلياً على جهازك فقط</strong> في قاعدة بيانات مشفرة.</p>
-
-            <h2>٢. ما الذي لا يفعله التطبيق؟</h2>
-            <ul>
-                <li>❌ لا يرسل بياناتك لأي خادم أو سيرفر</li>
-                <li>❌ لا يتتبع موقعك</li>
-                <li>❌ لا يعرض إعلانات</li>
-                <li>❌ لا يشارك بياناتك مع أطراف ثالثة</li>
-                <li>❌ لا يقرأ رسائلك أو محادثاتك</li>
-                <li>❌ لا يحتوي على أي أدوات تحليل أو تتبع</li>
-            </ul>
-
-            <h2>٣. الصلاحيات المطلوبة</h2>
-            <ul>
-                <li><strong>الإشعارات:</strong> لتذكيرك بالتواصل مع أقاربك</li>
-                <li><strong>جهات الاتصال:</strong> (اختياري) لاستيراد أسماء وأرقام الأقارب بسهولة</li>
-                <li><strong>سجل المكالمات:</strong> (اختياري) لتسجيل التواصل تلقائياً عند الاتصال بقريب</li>
-            </ul>
-            <p>يمكنك رفض أي صلاحية والتطبيق سيعمل بشكل طبيعي.</p>
-
-            <h2>٤. النسخ الاحتياطي</h2>
-            <p>يمكنك تصدير بياناتك كملف JSON وحفظه في أي مكان تختاره (Google Drive، ملفاتك المحلية، إلخ). هذه العملية تتم بالكامل على جهازك بدون أي اتصال بالإنترنت.</p>
-
-            <h2>٥. حذف البيانات</h2>
-            <p>يمكنك حذف أي قريب أو سجل تواصل من داخل التطبيق. عند إزالة التطبيق من جهازك، تُحذف جميع البيانات نهائياً.</p>
-
-            <h2>٦. التواصل</h2>
-            <p>لأي استفسار حول الخصوصية، تواصل معنا عبر البريد الإلكتروني:</p>
-            <p><strong>omar.silah.app@gmail.com</strong></p>
-        </div>
-
-        <!-- English -->
-        <div id="en-section" class="section-en">
-            <h1>Privacy Policy 🤍</h1>
-            <span class="badge">Sila App — صِلَةِ</span>
-            <p>Last updated: September 2026</p>
-
-            <div class="highlight" style="border-right: none; border-left: 4px solid #16503A;">
-                <strong>Summary:</strong> Sila does not collect, store, or share any personal data with third parties. All your data stays on your device only.
+            <!-- 4 Executive Highlights -->
+            <div class="highlights-grid">
+                <div class="highlight-card">
+                    <div class="highlight-icon-wrap" aria-hidden="true">🏡</div>
+                    <h3>في بيتك وعلى هاتفك فقط</h3>
+                    <p>أسماء أهلك، أرقامهم، وتواريخ ميلادهم لا تغادر هاتفك إطلاقاً. قاعدة بياناتك محبوسة بأمان في جهازك.</p>
+                </div>
+                <div class="highlight-card">
+                    <div class="highlight-icon-wrap" aria-hidden="true">🌱</div>
+                    <h3>صفر إعلانات وصفر تتبع</h3>
+                    <p>لا إعلانات مزعجة ولا برمجيات تتبع أو تحليلات (No Analytics SDKs). وقتك مكرس لأهلك فقط.</p>
+                </div>
+                <div class="highlight-card">
+                    <div class="highlight-icon-wrap" aria-hidden="true">🕊️</div>
+                    <h3>يعمل بالكامل بدون إنترنت</h3>
+                    <p>التطبيق يعمل في البر والبحر وبدون شبكة. لا يحتاج أي اتصال ليعمل بكامل كفاءته وسلاسته.</p>
+                </div>
+                <div class="highlight-card">
+                    <div class="highlight-icon-wrap" aria-hidden="true">🔑</div>
+                    <h3>أنت السيد على بياناتك</h3>
+                    <p>تستطيع أخذ نسخة احتياطية محلية بضغطة زر، أو حذف أي اسم أو سجل بلمسة واحدة دون قيد أو شرط.</p>
+                </div>
             </div>
 
-            <h2>1. What data does the app store?</h2>
-            <ul>
-                <li><strong>Relative names and phone numbers</strong> that you manually add</li>
-                <li><strong>Communication logs</strong> that you record</li>
-                <li><strong>Preferences</strong> (language, dark mode, reminder times)</li>
-                <li><strong>Family memories</strong> you add (text and photos)</li>
-            </ul>
-            <p>All data is stored <strong>locally on your device only</strong> in an encrypted database.</p>
+            <!-- Jump Navigation -->
+            <div class="category-nav-wrap">
+                <nav class="category-nav" aria-label="أقسام ميثاق الخصوصية">
+                    <a href="#ar-data" class="nav-pill active">ما في دفتر صلة</a>
+                    <a href="#ar-noserver" class="nav-pill">عهد الأمانة</a>
+                    <a href="#ar-permissions" class="nav-pill">الصلاحيات بأمانة</a>
+                    <a href="#ar-backup" class="nav-pill">نسختك معك</a>
+                    <a href="#ar-deletion" class="nav-pill">حق النسيان</a>
+                    <a href="#ar-family" class="nav-pill">أمان الأسرة</a>
+                    <a href="#ar-faq" class="nav-pill">الأسئلة الشائعة</a>
+                    <a href="#ar-support" class="nav-pill">ادعم صِلَةِ 🤍</a>
+                    <a href="#ar-contact" class="nav-pill">تواصل معنا</a>
+                </nav>
+            </div>
 
-            <h2>2. What the app does NOT do</h2>
-            <ul>
-                <li>❌ Does not send your data to any server</li>
-                <li>❌ Does not track your location</li>
-                <li>❌ Does not show advertisements</li>
-                <li>❌ Does not share data with third parties</li>
-                <li>❌ Does not read your messages or conversations</li>
-                <li>❌ Does not include any analytics or tracking tools</li>
-            </ul>
+            <!-- Section 1 -->
+            <article class="policy-card" id="ar-data">
+                <div class="section-header">
+                    <span class="section-number">١</span>
+                    <div class="section-title-wrap">
+                        <h2 class="section-title">ما هي البيانات التي تدخل في دفتر "صِلَةِ"؟</h2>
+                        <span class="section-tagline">فقط ما تدونه بنفسك حباً ورغبةً في برّ أقاربك والسؤال عنهم</span>
+                    </div>
+                </div>
+                <p>
+                    تطبيق صِلَةِ لا يسترق السمع، ولا يفتش في هاتفك خلسة. البيانات الوحيدة التي يتعامل معها هي التي تضعها أنت بإرادتك:
+                </p>
+                <ul class="feature-list">
+                    <li class="feature-item">
+                        <span class="feature-icon">🌿</span>
+                        <div><strong>أسماء وأرقام الأقارب:</strong> الأسماء التي تحب أن تناديهم بها، درجات قرابتهم، أرقام هواتفهم، وتواريخ ميلادهم أو مناسباتهم الخاصة حتى لا يفوتك تهنئتهم والبر بهم.</div>
+                    </li>
+                    <li class="feature-item">
+                        <span class="feature-icon">☕</span>
+                        <div><strong>سجلات التواصل والملاحظات الودية:</strong> تاريخ آخر فنجان قهوة شربته مع عمك، أو آخر مكالمة مع والدتك، والملاحظات الإنسانية الصغيرة التي تود تذكرها (مثل: "جدتي تحتاج زيارة"، "نجاح ابن خالي في الاختبارات").</div>
+                    </li>
+                    <li class="feature-item">
+                        <span class="feature-icon">🖼️</span>
+                        <div><strong>الذكريات العائلية المصورة:</strong> إن أحببت إرفاق صورة تذكارية مع قريبك، تبقى الصورة داخل مساحة تخزين صلة الخاصة بجهازك ولا ترفع لسحابة أو خادم.</div>
+                    </li>
+                    <li class="feature-item">
+                        <span class="feature-icon">⏰</span>
+                        <div><strong>تفضيلات راحتك:</strong> المواعيد التي تفضل فيها أن يذكرك التطبيق بالسؤال عن أهلك (صباحاً أم مساءً)، واختيارك للوضع الليلي أو اللغات.</div>
+                    </li>
+                </ul>
 
-            <h2>3. Permissions</h2>
-            <ul>
-                <li><strong>Notifications:</strong> To remind you to connect with your relatives</li>
-                <li><strong>Contacts:</strong> (Optional) To easily import relative names and numbers</li>
-                <li><strong>Call Log:</strong> (Optional) To automatically log communication when you call a relative</li>
-            </ul>
-            <p>You can deny any permission and the app will work normally.</p>
+                <div class="callout-box">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                    <div class="callout-content">
+                        <strong>أمان معزول:</strong> كل حرف تسجله يُحفظ في قاعدة بيانات SQLite/Room المحلية الآمنة، داخل بيئة أندرويد المعزولة (Sandboxed). لا يمكن لأي تطبيق آخر في هاتفك الاطلاع عليها.
+                    </div>
+                </div>
+            </article>
 
-            <h2>4. Backup</h2>
-            <p>You can export your data as a JSON file and save it anywhere you choose (Google Drive, local files, etc.). This process is entirely on-device with no internet connection required.</p>
+            <!-- Section 2 -->
+            <article class="policy-card" id="ar-noserver">
+                <div class="section-header">
+                    <span class="section-number">٢</span>
+                    <div class="section-title-wrap">
+                        <h2 class="section-title">عهد الأمانة: ما الذي لا نفعله أبداً احتراماً لك</h2>
+                        <span class="section-tagline">خطوط حمراء ثابتة التزمنا بها أمام الله وأمامكم</span>
+                    </div>
+                </div>
+                <p>لقد صممنا التطبيق بحيث يكون عاجزاً برمجياً عن انتهاك خصوصيتك. إليك عهدنا القاطع:</p>
+                <ul class="prohibition-list">
+                    <li class="prohibition-item">❌ لا نملك خوادم ترفع إليها أرقام أو أسماء عائلتك</li>
+                    <li class="prohibition-item">❌ لا نتتبع موقعك الجغرافي (GPS) بأي شكل</li>
+                    <li class="prohibition-item">❌ لا نقرأ محادثاتك أو رسائلك الخاصة على الإطلاق</li>
+                    <li class="prohibition-item">❌ لا نعرض إعلانات ولا نبيع مساحات للمعلنين</li>
+                    <li class="prohibition-item">❌ لا نشارك أو نتاجر ببياناتك مع أي شركة في الأرض</li>
+                    <li class="prohibition-item">❌ لا نطلب إذناً دائماً لنسخ كامل سجل جهات اتصالك</li>
+                    <li class="prohibition-item">❌ لا نطلب إذناً لقراءة سجل مكالمات هاتفك العامة</li>
+                    <li class="prohibition-item">❌ لا نضع أي أدوات لتتبع سلوكك اليومي (Zero Trackers)</li>
+                </ul>
+            </article>
 
-            <h2>5. Data Deletion</h2>
-            <p>You can delete any relative or log from within the app. When you uninstall the app, all data is permanently deleted.</p>
+            <!-- Section 3 -->
+            <article class="policy-card" id="ar-permissions">
+                <div class="section-header">
+                    <span class="section-number">٣</span>
+                    <div class="section-title-wrap">
+                        <h2 class="section-title">الصلاحيات: لماذا نستأذن هاتفك أحياناً؟</h2>
+                        <span class="section-tagline">بكل شفافية وصدق: الحد الأدنى الذي يعينك على تذكر أهلك</span>
+                    </div>
+                </div>
+                <p>لا نطلب إذناً إلا لخدمتك أنت. إليك بيان الصلاحيات التي قد يطلبها النظام وسببها:</p>
 
-            <h2>6. Contact</h2>
-            <p>For any privacy inquiries, contact us at:</p>
-            <p><strong>omar.silah.app@gmail.com</strong></p>
+                <div class="table-responsive">
+                    <table class="permission-table">
+                        <thead>
+                            <tr>
+                                <th>الصلاحية</th>
+                                <th>طبيعتها</th>
+                                <th>لماذا يحتاجها التطبيق؟</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>إرسال الإشعارات</strong><br><small style="color:var(--text-subtle);">POST_NOTIFICATIONS</small></td>
+                                <td><span class="status-chip status-required">موصى بها</span></td>
+                                <td>ليرسل لك التطبيق رسالة رقيقة في موعدك المفضل: <em>"حان وقت الاطمئنان على خالتك اليوم 🤍"</em>.</td>
+                            </tr>
+                            <tr>
+                                <td><strong>المنبه الدقيق</strong><br><small style="color:var(--text-subtle);">SCHEDULE_EXACT_ALARM</small></td>
+                                <td><span class="status-chip status-required">أساسية للمواعيد</span></td>
+                                <td>لتصلك التذكيرات في الدقيقة التي اخترتها أنت دون أن يؤخرها نظام توفير الطاقة بالهاتف.</td>
+                            </tr>
+                            <tr>
+                                <td><strong>إعادة التشغيل</strong><br><small style="color:var(--text-subtle);">RECEIVE_BOOT_COMPLETED</small></td>
+                                <td><span class="status-chip status-required">تلقائية</span></td>
+                                <td>لإعادة ترتيب منبهات تذكير الأرحام تلقائياً إذا قمت بإعادة تشغيل الهاتف حتى لا يفوتك أي تواصل.</td>
+                            </tr>
+                            <tr>
+                                <td><strong>اختيار صورة</strong><br><small style="color:var(--text-subtle);">READ_MEDIA_IMAGES</small></td>
+                                <td><span class="status-chip status-optional">اختيارية تماماً</span></td>
+                                <td>تُفتح فقط إذا نقرت أنت على إضافة صورة شخصية لقريبك أو ذكرى عائلية جميلة تود رؤيتها.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="callout-box">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                    <div class="callout-content">
+                        <strong>لك مطلق الحرية:</strong> تستطيع رفض أي إذن وسيعمل التطبيق بأعلى ما يمكن من وظائفه. أنت صاحب القرار دائماً.
+                    </div>
+                </div>
+            </article>
+
+            <!-- Section 4 -->
+            <article class="policy-card" id="ar-backup">
+                <div class="section-header">
+                    <span class="section-number">٤</span>
+                    <div class="section-title-wrap">
+                        <h2 class="section-title">بياناتك معك أينما حللت وارتحلت</h2>
+                        <span class="section-tagline">ملف نسختك الاحتياطية في يدك وحدك بدون وسيط سحابي</span>
+                    </div>
+                </div>
+                <p>
+                    نحن لا نحتفظ بنسخة من بياناتك على سيرفراتنا؛ لأننا نؤمن أن السيرفر الحقيقي هو هاتفك. لكننا وفرنا لك ميزة <strong>النسخ الاحتياطي المحلي</strong>:
+                </p>
+                <ul class="feature-list">
+                    <li class="feature-item">
+                        <span class="feature-icon">📦</span>
+                        <div><strong>تصدير فوري وبسيط:</strong> بضغطة زر واحدة في الإعدادات، يتم توليد ملف <code>JSON</code> مرتب يحتوي على كافة أقاربك وتواريخهم وملاحظاتك، تحفظه في ملفات هاتفك أو ترسله لبريدك الشخصي.</div>
+                    </li>
+                    <li class="feature-item">
+                        <span class="feature-icon">✨</span>
+                        <div><strong>استعادة سلسة:</strong> إذا اشتريت هاتفاً جديداً، كل ما عليك هو استيراد ذلك الملف ليعود بستان أقاربك مزهراً كما كان، دون الحاجة لإنشاء حساب ولا تسجيل دخول.</div>
+                    </li>
+                </ul>
+            </article>
+
+            <!-- Section 5 -->
+            <article class="policy-card" id="ar-deletion">
+                <div class="section-header">
+                    <span class="section-number">٥</span>
+                    <div class="section-title-wrap">
+                        <h2 class="section-title">حق النسيان والمسح الفوري</h2>
+                        <span class="section-tagline">لا شروط، لا تعقيدات، ولا أرشيفات خفية</span>
+                    </div>
+                </div>
+                <p>
+                    في أي وقت تشاء، يمكنك مسح أي قريب أو سجل اتصال من داخل التطبيق ليختفي في التو واللحظة من ذاكرة الهاتف. وإذا قررت إزالة التطبيق (Uninstall)، يقوم نظام هاتفك بمسح قاعدة البيانات كلياً، ولا يتبقى منها ذرة واحدة في أي مكان في العالم؛ ببساطة لأننا لم نرفعها أصلاً لأي خادم.
+                </p>
+            </article>
+
+            <!-- Section 6 -->
+            <article class="policy-card" id="ar-family">
+                <div class="section-header">
+                    <span class="section-number">٦</span>
+                    <div class="section-title-wrap">
+                        <h2 class="section-title">واحة نقية للأسرة والأطفال (COPPA)</h2>
+                        <span class="section-tagline">بيئة خالية من سموم الإنترنت وشبهات الاستغلال التجاري</span>
+                    </div>
+                </div>
+                <p>
+                    تطبيق صِلَةِ وُجد ليعلم الصغار بر آبائهم وأجدادهم، ويعين الكبار على صلة أرحامهم. التطبيق يخلو تماماً من المشتريات المباغتة، ومن الإعلانات، ومن الروابط الخارجية المشبوهة، وهو آمن بنسبة 100% لاستخدام الأطفال واليافعين وكبار السن، متوافقاً مع أرقى معايير حماية الطفل وسياسة الأسرة في Google Play.
+                </p>
+            </article>
+
+            <!-- Section 7 (FAQ) -->
+            <article class="policy-card" id="ar-faq">
+                <div class="section-header">
+                    <span class="section-number">٧</span>
+                    <div class="section-title-wrap">
+                        <h2 class="section-title">أسئلة تدور في خاطرك</h2>
+                        <span class="section-tagline">إجابات صريحة ومباشرة بكل محبة ووضوح</span>
+                    </div>
+                </div>
+
+                <div class="faq-accordion">
+                    <div class="faq-item">
+                        <button class="faq-question" onclick="toggleFaq(this)">
+                            <span>هل يستطيع مطور التطبيق معرفة من هم أقاربي أو أرقامهم؟</span>
+                            <svg class="faq-chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                        </button>
+                        <div class="faq-answer">
+                            <strong>أبداً ومستحيل تقنياً.</strong> التطبيق لا يملك أي قناة اتصال (API) تربط هاتفك بنا. كل ما تضعه يظل حبيس جهازك، ولا نستطيع رؤيته حتى لو أردنا ذلك!
+                        </div>
+                    </div>
+
+                    <div class="faq-item">
+                        <button class="faq-question" onclick="toggleFaq(this)">
+                            <span>هل يرسل التطبيق رسائل في واتساب من تلقاء نفسه دون علمي؟</span>
+                            <svg class="faq-chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                        </button>
+                        <div class="faq-answer">
+                            <strong>لا على الإطلاق.</strong> عند ضغطك على زر الاتصال أو المراسلة، يفتح لك التطبيق تطبيق WhatsApp أو شاشة الهاتف الرسمية برقم قريبك فقط، لتقوم أنت بمراجعة الرسالة والضغط على إرسال بيدك وبإرادتك التامة.
+                        </div>
+                    </div>
+
+                    <div class="faq-item">
+                        <button class="faq-question" onclick="toggleFaq(this)">
+                            <span>لماذا لا تتطلب "صلة" إنشاء حساب أو تسجيل بالبريد الإلكتروني؟</span>
+                            <svg class="faq-chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                        </button>
+                        <div class="faq-answer">
+                            لأننا نؤمن بأن صلة الرحم عبادة ووفاء إنساني، لا تحتاج كلمة سر ولا بريداً إلكترونياً. أردنا أن تفتح التطبيق فوراً وتبدأ بالاطمئنان على أحبابك بكل خفة وبدون جمع أي بيانات تعريفية عنك.
+                        </div>
+                    </div>
+                </div>
+            </article>
+
+            <!-- Section 8 (Support Sila) -->
+            <article class="support-card" id="ar-support">
+                <div class="section-header" style="border-bottom: 1px solid rgba(233, 206, 121, 0.35);">
+                    <div class="section-number" style="background: var(--accent-gold); color: #433207;">🤍</div>
+                    <div class="section-title-wrap">
+                        <h2 class="section-title">ادعم استمرار وتطوير صِلَةِ 🤍</h2>
+                        <span class="section-tagline">مشروع عائلي لوجه الله — مساهمتك الاختيارية تُبقي هذا الوقف حياً ونامياً</span>
+                    </div>
+                </div>
+
+                <div class="support-free-banner">
+                    <span style="font-size: 1.6rem; flex-shrink: 0;">✨</span>
+                    <div style="font-size: 0.98rem; color: var(--text-main); line-height: 1.75;">
+                        <strong>تطبيق صِلَةِ مجاني 100% وبدون أي إعلانات أو اشتراكات:</strong>
+                        لا نضع إعلانات تشتت انتباهك، ولا نبيع بيانات أهلك، ولا نطلب اشتراكات شهرية. دعمك الاختياري يساهم مباشرة في دفع تكاليف حسابات المطورين، وتحديثات التطبيق، وإضافة مميزات جديدة تعين المسلمين على بر أرحامهم.
+                    </div>
+                </div>
+
+                <div class="support-methods-grid">
+                    <!-- InstaPay Card -->
+                    <div class="support-method-card">
+                        <div>
+                            <div class="support-method-top">
+                                <div class="support-method-icon">📲</div>
+                                <div class="support-method-meta">
+                                    <h4>InstaPay (إنستا باي)</h4>
+                                    <span>تحويل فوري وسريع عبر عنوان IPA (مصر والخليج)</span>
+                                </div>
+                            </div>
+                            <div style="margin-top: 1rem;">
+                                <div class="support-value-box">
+                                    <span id="arInstapayVal">aather@instapay</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="contact-buttons-row" style="margin-top: 0.5rem;">
+                            <button class="btn-action btn-primary-action" onclick="copyText('aather@instapay', 'تم نسخ عنوان InstaPay بنجاح ✨ جزاك الله خيراً')">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                                <span>نسخ عنوان الدفع</span>
+                            </button>
+                            <a href="https://ipn.eg/S/aather/instapay" target="_blank" rel="noopener noreferrer" class="btn-action">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+                                <span>فتح رابط الدفع</span>
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Vodafone Cash / Wallets Card -->
+                    <div class="support-method-card">
+                        <div>
+                            <div class="support-method-top">
+                                <div class="support-method-icon">📱</div>
+                                <div class="support-method-meta">
+                                    <h4>المحفظة الإلكترونية (فودافون كاش)</h4>
+                                    <span>تحويل من فودافون/اتصالات/أورنج كاش أو أي محفظة بنكية</span>
+                                </div>
+                            </div>
+                            <div style="margin-top: 1rem;">
+                                <div class="support-value-box">
+                                    <span id="arVodafoneVal">01068888907</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="contact-buttons-row" style="margin-top: 0.5rem;">
+                            <button class="btn-action btn-primary-action" onclick="copyText('01068888907', 'تم نسخ رقم المحفظة بنجاح ✨ جزاك الله خيراً')">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                                <span>نسخ رقم المحفظة</span>
+                            </button>
+                            <a href="tel:01068888907" class="btn-action">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+                                <span>طلب الرقم مباشرة</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="support-appreciation-banner">
+                    <span>✨ شكرًا لدعمك لصِلَةِ! جزاك الله خيراً وبارك في رزقك وأهلك ومالك ✨</span>
+                </div>
+            </article>
+
+            <!-- Section 9 (Contact) -->
+            <article class="policy-card" id="ar-contact">
+                <div class="section-header">
+                    <span class="section-number">٩</span>
+                    <div class="section-title-wrap">
+                        <h2 class="section-title">نحن هنا لنسمعك ونتعلم منك</h2>
+                        <span class="section-tagline">بابنا مفتوح دائماً لأي استفسار، دعوة طيبة، أو اقتراح يطور صلة</span>
+                    </div>
+                </div>
+                <p>
+                    إذا كان يراودك أي سؤال حول الأمان، أو واجهتك صعوبة، أو كان لديك اقتراح يزيد التطبيق دفئاً ونفعاً للمسلمين والعائلات، راسلنا مباشرة وسيسعدنا الرد عليك كأخ وصديق:
+                </p>
+
+                <div class="contact-card">
+                    <div class="contact-info-block">
+                        <div class="contact-avatar" aria-hidden="true">🌱</div>
+                        <div class="contact-text">
+                            <h4>مطور تطبيق صِلَةِ (عمر)</h4>
+                            <span class="contact-note">نسعد برسائلكم ونتشرف بخدمتكم</span>
+                            <div>
+                                <span class="contact-email" id="arEmailText">omar.silah.app@gmail.com</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="contact-buttons-row">
+                        <button class="btn-action btn-primary-action" onclick="copyEmail('omar.silah.app@gmail.com')">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                            <span>نسخ البريد الإلكتروني</span>
+                        </button>
+                        <a href="mailto:omar.silah.app@gmail.com?subject=رسالة%20من%20مستخدم%20تطبيق%20صلة" class="btn-action">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                            <span>إرسال رسالة بريدية</span>
+                        </a>
+                    </div>
+                </div>
+            </article>
+
         </div>
 
-        <div class="footer">
-            <p>صِلَةِ — تطبيق صلة الرحم 🌿</p>
-            <p>© 2026 Sila App. All rights reserved.</p>
+
+        <!-- ==================== ENGLISH VERSION ==================== -->
+        <div id="enContent" class="lang-content lang-hidden">
+
+            <!-- Hero Header (EN) -->
+            <section class="hero-section">
+                <div class="hero-badges-row">
+                    <span class="hero-pill">
+                        🌿 A Sacred Trust, Not Just an App
+                    </span>
+                    <span class="hero-pill hero-pill-gold">
+                        🤍 Built to Bridge Hearts, Never Harvest Data
+                    </span>
+                    <span class="hero-pill">
+                        🔒 100% On-Device & Encrypted
+                    </span>
+                </div>
+
+                <h1 class="hero-title">Privacy Pledge & Guardianship of Kinship</h1>
+                <p class="hero-subtitle">
+                    In a digital world driven by selling attention and monetizing personal relationships, <strong>Sila (صِلَةِ)</strong> was crafted as a serene, pure, and private sanctuary dedicated entirely to family connection — with zero commercial ads and zero surveillance.
+                </p>
+
+                <div class="hero-quote">
+                    <span>✨ "Kinship is a bond of affection rooted in mercy; cherish it with love and care."</span>
+                </div>
+
+                <div class="hero-meta-bar">
+                    <div class="hero-meta-item">
+                        <span>📅 <strong>Effective Date:</strong> September 2026</span>
+                    </div>
+                    <div class="hero-meta-item">
+                        <span>🕊️ <strong>Philosophy:</strong> 100% Offline-First & Serverless</span>
+                    </div>
+                    <div class="hero-meta-item">
+                        <span>📱 <strong>Compliance:</strong> Google Play 2026 Standards</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- A Letter from the Heart (EN) -->
+            <div class="human-letter-card">
+                <div class="letter-header">
+                    <span style="font-size: 1.5rem;">💌</span>
+                    <h2 class="letter-title">A Letter from the Heart: Why We Built Sila This Way</h2>
+                </div>
+                <div class="letter-body">
+                    <p>
+                        When we wrote the very first line of code for <strong>Sila</strong>, we set an uncompromising principle: <em>"Your family's memories, your grandparents' phone numbers, and your private reminders carry the sacred sanctity of your own home."</em>
+                    </p>
+                    <p>
+                        We refuse to view you as a "user metric" to be targeted with ads, nor do we see your beloved family members as "data points." Sila is simply a <strong>warm family keepsake</strong> — like the handwritten journal our parents kept in their bedside drawer, private to them and never shared with the world.
+                    </p>
+                    <p>
+                        That is why Sila is architected to be <strong>completely self-contained on your phone</strong>. It requires no servers, never uploads a byte of your records, and functions seamlessly offline.
+                    </p>
+                </div>
+                <div class="letter-signature">
+                    <span>— Omar & the Sila Engineering Family 🤍</span>
+                </div>
+            </div>
+
+            <!-- 4 Executive Highlights (EN) -->
+            <div class="highlights-grid">
+                <div class="highlight-card">
+                    <div class="highlight-icon-wrap" aria-hidden="true">🏡</div>
+                    <h3>Inside Your Home Only</h3>
+                    <p>Your relatives' details, birthdays, and phone numbers never leave your phone. Your database stays securely on your device.</p>
+                </div>
+                <div class="highlight-card">
+                    <div class="highlight-icon-wrap" aria-hidden="true">🌱</div>
+                    <h3>Zero Ads & Zero Telemetry</h3>
+                    <p>No intrusive ads and no analytics tracking libraries (No SDKs). Your time belongs entirely to nurturing family ties.</p>
+                </div>
+                <div class="highlight-card">
+                    <div class="highlight-icon-wrap" aria-hidden="true">🕊️</div>
+                    <h3>100% Independent & Offline</h3>
+                    <p>Functions completely without internet. Sila operates with full reliability whether you are connected or totally offline.</p>
+                </div>
+                <div class="highlight-card">
+                    <div class="highlight-icon-wrap" aria-hidden="true">🔑</div>
+                    <h3>Unconditional Ownership</h3>
+                    <p>Export a complete backup file to your own drive anytime, or erase records in a single tap without obstacles.</p>
+                </div>
+            </div>
+
+            <!-- Jump Navigation (EN) -->
+            <div class="category-nav-wrap">
+                <nav class="category-nav" aria-label="Pledge sections">
+                    <a href="#en-data" class="nav-pill active">What's in Sila</a>
+                    <a href="#en-noserver" class="nav-pill">Our Sacred Pledge</a>
+                    <a href="#en-permissions" class="nav-pill">Honest Permissions</a>
+                    <a href="#en-backup" class="nav-pill">Your Portable Backup</a>
+                    <a href="#en-deletion" class="nav-pill">Right to Erase</a>
+                    <a href="#en-family" class="nav-pill">Family & Children</a>
+                    <a href="#en-faq" class="nav-pill">FAQ</a>
+                    <a href="#en-support" class="nav-pill">Support Sila 🤍</a>
+                    <a href="#en-contact" class="nav-pill">Get in Touch</a>
+                </nav>
+            </div>
+
+            <!-- Section 1 (EN) -->
+            <article class="policy-card" id="en-data">
+                <div class="section-header">
+                    <span class="section-number">1</span>
+                    <div class="section-title-wrap">
+                        <h2 class="section-title">What Data Enters Sila's Keepsake?</h2>
+                        <span class="section-tagline">Only what you intentionally choose to enter out of love and care</span>
+                    </div>
+                </div>
+                <p>
+                    Sila never snoops or scrapes your phone in the background. The only information handled is what you deliberately type yourself:
+                </p>
+                <ul class="feature-list">
+                    <li class="feature-item">
+                        <span class="feature-icon">🌿</span>
+                        <div><strong>Relative Names & Numbers:</strong> The warm nicknames you prefer, relationships (father, aunt, cousin), contact numbers, and birthdays or special anniversaries to help you celebrate them.</div>
+                    </li>
+                    <li class="feature-item">
+                        <span class="feature-icon">☕</span>
+                        <div><strong>Check-in Logs & Thoughtful Notes:</strong> The date of your last warm visit, calls, and little personal reminders you cherish (such as: "Grandmother loves jasmine tea", "Congratulate cousin on new baby").</div>
+                    </li>
+                    <li class="feature-item">
+                        <span class="feature-icon">🖼️</span>
+                        <div><strong>Attached Keepsake Photos:</strong> If you choose to attach an avatar or memory photo, it remains strictly within Sila's sandboxed local application directory on your device.</div>
+                    </li>
+                    <li class="feature-item">
+                        <span class="feature-icon">⏰</span>
+                        <div><strong>Your Routine Preferences:</strong> Your preferred reminder times (morning or evening), chosen visual theme, and language choice.</div>
+                    </li>
+                </ul>
+
+                <div class="callout-box">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                    <div class="callout-content">
+                        <strong>Sandboxed Security:</strong> Everything is stored inside Android's protected Room/SQLite sandbox database. No other app on your device has authorization to read or access this data.
+                    </div>
+                </div>
+            </article>
+
+            <!-- Section 2 (EN) -->
+            <article class="policy-card" id="en-noserver">
+                <div class="section-header">
+                    <span class="section-number">2</span>
+                    <div class="section-title-wrap">
+                        <h2 class="section-title">Our Sacred Pledge: What Sila Will NEVER Do</h2>
+                        <span class="section-tagline">Uncompromising red lines to honor the trust of your home</span>
+                    </div>
+                </div>
+                <p>We built Sila to be programmatically incapable of violating your privacy. Here is our solemn promise:</p>
+                <ul class="prohibition-list">
+                    <li class="prohibition-item">❌ We do NOT operate servers that harvest your family's data</li>
+                    <li class="prohibition-item">❌ We do NOT track your physical GPS location</li>
+                    <li class="prohibition-item">❌ We do NOT read your chat messages or conversations</li>
+                    <li class="prohibition-item">❌ We do NOT display commercials or monetize screen time</li>
+                    <li class="prohibition-item">❌ We do NOT sell or exchange records with 3rd parties</li>
+                    <li class="prohibition-item">❌ We do NOT require persistent background contacts dump</li>
+                    <li class="prohibition-item">❌ We do NOT request general phone call log permissions</li>
+                    <li class="prohibition-item">❌ We do NOT embed telemetry or behavioral trackers</li>
+                </ul>
+            </article>
+
+            <!-- Section 3 (EN) -->
+            <article class="policy-card" id="en-permissions">
+                <div class="section-header">
+                    <span class="section-number">3</span>
+                    <div class="section-title-wrap">
+                        <h2 class="section-title">Honest Permissions: Why Sila May Ask</h2>
+                        <span class="section-tagline">Strictly the minimum required to help you remember your loved ones</span>
+                    </div>
+                </div>
+                <p>We only ask for device permissions that directly empower your kinship habits. Here is complete transparency:</p>
+
+                <div class="table-responsive">
+                    <table class="permission-table">
+                        <thead>
+                            <tr>
+                                <th>Permission</th>
+                                <th>Status</th>
+                                <th>Why is it needed?</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>Notifications</strong><br><small style="color:var(--text-subtle);">POST_NOTIFICATIONS</small></td>
+                                <td><span class="status-chip status-required">Recommended</span></td>
+                                <td>To send gentle, timely reminders: <em>"Today is a wonderful day to check in on your aunt 🤍"</em>.</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Exact Alarm</strong><br><small style="color:var(--text-subtle);">SCHEDULE_EXACT_ALARM</small></td>
+                                <td><span class="status-chip status-required">Essential for Alarms</span></td>
+                                <td>Ensures reminders trigger precisely at the hour and minute you selected, preventing OS battery sleep delays.</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Boot Reschedule</strong><br><small style="color:var(--text-subtle);">RECEIVE_BOOT_COMPLETED</small></td>
+                                <td><span class="status-chip status-required">Automatic</span></td>
+                                <td>Restores your kinship reminders automatically when your phone restarts, so you never miss an anniversary.</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Attach Photo</strong><br><small style="color:var(--text-subtle);">READ_MEDIA_IMAGES</small></td>
+                                <td><span class="status-chip status-optional">Completely Optional</span></td>
+                                <td>Triggered only when you manually choose to attach a picture to a relative card or family memory keepsake.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="callout-box">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                    <div class="callout-content">
+                        <strong>Total Autonomy:</strong> You can deny any permission and Sila will continue serving you with core functionality. You are in control at all times.
+                    </div>
+                </div>
+            </article>
+
+            <!-- Section 4 (EN) -->
+            <article class="policy-card" id="en-backup">
+                <div class="section-header">
+                    <span class="section-number">4</span>
+                    <div class="section-title-wrap">
+                        <h2 class="section-title">Your Records Travel With You</h2>
+                        <span class="section-tagline">Portable, independent backups kept in your own hands</span>
+                    </div>
+                </div>
+                <p>
+                    We hold no copies of your database on cloud servers because we believe you are the only rightful custodian of your records. Sila provides straightforward <strong>local backup & export</strong>:
+                </p>
+                <ul class="feature-list">
+                    <li class="feature-item">
+                        <span class="feature-icon">📦</span>
+                        <div><strong>Instant Export:</strong> With one tap in Settings, generate a neat <code>JSON</code> backup file containing your family list, logs, and dates. Store it locally or email it to yourself.</div>
+                    </li>
+                    <li class="feature-item">
+                        <span class="feature-icon">✨</span>
+                        <div><strong>Seamless Restore:</strong> When upgrading your device, simply import your file and your kinship garden is restored in seconds — no registration or account required.</div>
+                    </li>
+                </ul>
+            </article>
+
+            <!-- Section 5 (EN) -->
+            <article class="policy-card" id="en-deletion">
+                <div class="section-header">
+                    <span class="section-number">5</span>
+                    <div class="section-title-wrap">
+                        <h2 class="section-title">Right to Instant Erasure</h2>
+                        <span class="section-tagline">No hidden archives, no retention periods, no hassle</span>
+                    </div>
+                </div>
+                <p>
+                    At any moment, you may delete any relative or communication log directly inside the app, and it is instantly eradicated from phone storage. If you choose to uninstall Sila, Android wipes the application sandbox completely. Zero residual fragments remain anywhere on the internet, because no data was ever uploaded to begin with.
+                </p>
+            </article>
+
+            <!-- Section 6 (EN) -->
+            <article class="policy-card" id="en-family">
+                <div class="section-header">
+                    <span class="section-number">6</span>
+                    <div class="section-title-wrap">
+                        <h2 class="section-title">A Pure Haven for Families and Children (COPPA)</h2>
+                        <span class="section-tagline">Free from digital toxins, dark patterns, and commercial exploitation</span>
+                    </div>
+                </div>
+                <p>
+                    Sila exists to help children practice kindness with parents and grandparents, and to help adults stay closely connected. The app contains no in-app purchases, no commercials, and no external tracking. It is 100% safe for all generations, compliant with Google Play Families Policy and COPPA.
+                </p>
+            </article>
+
+            <!-- Section 7 (EN FAQ) -->
+            <article class="policy-card" id="en-faq">
+                <div class="section-header">
+                    <span class="section-number">7</span>
+                    <div class="section-title-wrap">
+                        <h2 class="section-title">Questions on Your Mind</h2>
+                        <span class="section-tagline">Warm, honest answers to common curiosities</span>
+                    </div>
+                </div>
+
+                <div class="faq-accordion">
+                    <div class="faq-item">
+                        <button class="faq-question" onclick="toggleFaq(this)">
+                            <span>Can Sila's developer see who my relatives are or their phone numbers?</span>
+                            <svg class="faq-chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                        </button>
+                        <div class="faq-answer">
+                            <strong>Never, and it is technically impossible.</strong> Sila does not possess an external API bridge to our desks. Everything you record stays strictly on your physical phone. We could not inspect your records even if we wanted to!
+                        </div>
+                    </div>
+
+                    <div class="faq-item">
+                        <button class="faq-question" onclick="toggleFaq(this)">
+                            <span>Does Sila send WhatsApp messages automatically without my knowledge?</span>
+                            <svg class="faq-chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                        </button>
+                        <div class="faq-answer">
+                            <strong>Never.</strong> Tapping the WhatsApp button simply opens the official WhatsApp chat with your relative's number pre-filled. You are always the one reading the message and tapping send.
+                        </div>
+                    </div>
+
+                    <div class="faq-item">
+                        <button class="faq-question" onclick="toggleFaq(this)">
+                            <span>Why doesn't Sila require creating an account or email login?</span>
+                            <svg class="faq-chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                        </button>
+                        <div class="faq-answer">
+                            Because honoring your kinship is an act of love and virtue, not a web subscription. You should be able to open the app and instantly ask about your mother or check in on your cousin without giving away your personal email.
+                        </div>
+                    </div>
+                </div>
+            </article>
+
+            <!-- Section 8 (EN Support Sila) -->
+            <article class="support-card" id="en-support">
+                <div class="section-header" style="border-bottom: 1px solid rgba(233, 206, 121, 0.35);">
+                    <div class="section-number" style="background: var(--accent-gold); color: #433207;">🤍</div>
+                    <div class="section-title-wrap">
+                        <h2 class="section-title">Support Sila's Growth 🤍</h2>
+                        <span class="section-tagline">A community endeavor for good — your voluntary contribution keeps this sanctuary thriving</span>
+                    </div>
+                </div>
+
+                <div class="support-free-banner">
+                    <span style="font-size: 1.6rem; flex-shrink: 0;">✨</span>
+                    <div style="font-size: 0.98rem; color: var(--text-main); line-height: 1.75;">
+                        <strong>Sila is 100% Free & Ad-Free:</strong>
+                        We do not run distracting ads, we never monetize family data, and we do not charge monthly subscriptions. Your voluntary support powers developer account fees, system updates, and new features to help families stay closely connected.
+                    </div>
+                </div>
+
+                <div class="support-methods-grid">
+                    <!-- InstaPay Card -->
+                    <div class="support-method-card">
+                        <div>
+                            <div class="support-method-top">
+                                <div class="support-method-icon">📲</div>
+                                <div class="support-method-meta">
+                                    <h4>InstaPay (Egypt & IPN)</h4>
+                                    <span>Direct & instant transfer via Payment Address (IPA)</span>
+                                </div>
+                            </div>
+                            <div style="margin-top: 1rem;">
+                                <div class="support-value-box">
+                                    <span id="enInstapayVal">aather@instapay</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="contact-buttons-row" style="margin-top: 0.5rem;">
+                            <button class="btn-action btn-primary-action" onclick="copyText('aather@instapay', 'InstaPay address copied successfully ✨ Thank you!')">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                                <span>Copy Payment Address</span>
+                            </button>
+                            <a href="https://ipn.eg/S/aather/instapay" target="_blank" rel="noopener noreferrer" class="btn-action">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+                                <span>Open Payment Link</span>
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Mobile Wallets Card -->
+                    <div class="support-method-card">
+                        <div>
+                            <div class="support-method-top">
+                                <div class="support-method-icon">📱</div>
+                                <div class="support-method-meta">
+                                    <h4>Mobile Wallets (Vodafone Cash)</h4>
+                                    <span>Vodafone, Orange, Etisalat Cash or smart bank wallets</span>
+                                </div>
+                            </div>
+                            <div style="margin-top: 1rem;">
+                                <div class="support-value-box">
+                                    <span id="enVodafoneVal">01068888907</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="contact-buttons-row" style="margin-top: 0.5rem;">
+                            <button class="btn-action btn-primary-action" onclick="copyText('01068888907', 'Wallet number copied successfully ✨ Thank you!')">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                                <span>Copy Wallet Number</span>
+                            </button>
+                            <a href="tel:01068888907" class="btn-action">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+                                <span>Dial Number Directly</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="support-appreciation-banner">
+                    <span>✨ Thank you for supporting Sila! May Allah reward you and bless your loved ones ✨</span>
+                </div>
+            </article>
+
+            <!-- Section 9 (EN Contact) -->
+            <article class="policy-card" id="en-contact">
+                <div class="section-header">
+                    <span class="section-number">9</span>
+                    <div class="section-title-wrap">
+                        <h2 class="section-title">We Are Here to Listen and Learn</h2>
+                        <span class="section-tagline">Our door is always open for your thoughts, blessings, and ideas</span>
+                    </div>
+                </div>
+                <p>
+                    If you ever have a question about security, want to propose an idea that brings more warmth to families, or just wish to say hello, please write to us directly. We answer with pride as friends and companions on this journey:
+                </p>
+
+                <div class="contact-card">
+                    <div class="contact-info-block">
+                        <div class="contact-avatar" aria-hidden="true">🌱</div>
+                        <div class="contact-text">
+                            <h4>Omar & Sila Development Team</h4>
+                            <span class="contact-note">Always delighted to hear from you</span>
+                            <div>
+                                <span class="contact-email" id="enEmailText">omar.silah.app@gmail.com</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="contact-buttons-row">
+                        <button class="btn-action btn-primary-action" onclick="copyEmail('omar.silah.app@gmail.com')">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                            <span>Copy Email Address</span>
+                        </button>
+                        <a href="mailto:omar.silah.app@gmail.com?subject=Note%20from%20a%20Sila%20App%20Friend" class="btn-action">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                            <span>Send an Email</span>
+                        </a>
+                    </div>
+                </div>
+            </article>
+
         </div>
+
+    </main>
+
+    <!-- Back to Top Button -->
+    <button class="back-to-top" id="backToTopBtn" onclick="scrollToTop()" aria-label="Back to top">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="19" x2="12" y2="5"></line>
+            <polyline points="5 12 12 5 19 12"></polyline>
+        </svg>
+    </button>
+
+    <!-- Copy Toast -->
+    <div class="toast-notification" id="copyToast">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+        <span id="toastMessage">تم نسخ البريد الإلكتروني بنجاح!</span>
     </div>
 
+    <!-- Page Footer -->
+    <footer class="page-footer">
+        <div class="footer-content">
+            <div class="footer-logo">
+                <span>تطبيق صِلَةِ</span>
+                <span style="color: var(--accent-gold);">🌿</span>
+                <span>Sila App</span>
+            </div>
+            <p class="footer-tagline" id="footerTagline">
+                صُمّم بكل حب لتعزيز أواصر القربى وبر الأرحام، مع الحفاظ الأقدس على حرمة وخصوصية بيتك وأسرتك.
+            </p>
+            <p class="footer-copyright">
+                © 2026 تطبيق صِلَةِ (Sila App) — وقفٌ محبّ لصلة الأرحام. جميع الحقوق محفوظة.
+            </p>
+        </div>
+    </footer>
+
+    <!-- Interactive Logic & State Management -->
     <script>
-        let isArabic = true;
-        function toggleLang() {
-            isArabic = !isArabic;
-            document.getElementById('ar-section').style.display = isArabic ? 'block' : 'none';
-            document.getElementById('en-section').style.display = isArabic ? 'none' : 'block';
-            document.getElementById('langBtn').textContent = isArabic ? 'English Version' : 'النسخة العربية';
-            document.body.setAttribute('dir', isArabic ? 'rtl' : 'ltr');
+        let currentLang = 'ar';
+        let currentTheme = 'light';
+
+        function toggleLanguage() {
+            const isAr = currentLang === 'ar';
+            currentLang = isAr ? 'en' : 'ar';
+            
+            const html = document.documentElement;
+            const arContent = document.getElementById('arContent');
+            const enContent = document.getElementById('enContent');
+            const langBtnText = document.getElementById('langBtnText');
+            const navSubtitle = document.getElementById('navSubtitle');
+            const footerTagline = document.getElementById('footerTagline');
+            const navSupportBtn = document.getElementById('navSupportBtn');
+            const navSupportText = document.getElementById('navSupportText');
+
+            if (currentLang === 'en') {
+                html.setAttribute('lang', 'en');
+                html.setAttribute('dir', 'ltr');
+                document.title = "Privacy & Human Pledge — Sila App | صِلَةِ";
+                
+                arContent.classList.add('lang-hidden');
+                enContent.classList.remove('lang-hidden');
+                
+                langBtnText.textContent = "النسخة العربية";
+                navSubtitle.textContent = "Kinship & Family Connection App";
+                footerTagline.textContent = "Crafted with heartfelt love to strengthen family kinship, honoring the sacred privacy of your home.";
+                if (navSupportBtn) navSupportBtn.setAttribute('href', '#en-support');
+                if (navSupportText) navSupportText.textContent = "Support Sila";
+            } else {
+                html.setAttribute('lang', 'ar');
+                html.setAttribute('dir', 'rtl');
+                document.title = "ميثاق الخصوصية وحفظ الأمانة — تطبيق صِلَةِ | Privacy Policy — Sila App";
+                
+                enContent.classList.add('lang-hidden');
+                arContent.classList.remove('lang-hidden');
+                
+                langBtnText.textContent = "English";
+                navSubtitle.textContent = "تطبيق تعزيز صلة الرحم والتواصل العائلي";
+                footerTagline.textContent = "صُمّم بكل حب لتعزيز أواصر القربى وبر الأرحام، مع الحفاظ الأقدس على حرمة وخصوصية بيتك وأسرتك.";
+                if (navSupportBtn) navSupportBtn.setAttribute('href', '#ar-support');
+                if (navSupportText) navSupportText.textContent = "ادعم صِلَةِ";
+            }
+
+            try {
+                localStorage.setItem('sila_policy_lang', currentLang);
+            } catch(e) {}
         }
+
+        function toggleTheme() {
+            currentTheme = currentTheme === 'light' ? 'dark' : 'light';
+            applyTheme(currentTheme);
+            try {
+                localStorage.setItem('sila_policy_theme', currentTheme);
+            } catch(e) {}
+        }
+
+        function applyTheme(theme) {
+            const html = document.documentElement;
+            const sunIcon = document.getElementById('themeIconSun');
+            const moonIcon = document.getElementById('themeIconMoon');
+            
+            html.setAttribute('data-theme', theme);
+            if (theme === 'dark') {
+                sunIcon.classList.remove('lang-hidden');
+                moonIcon.classList.add('lang-hidden');
+            } else {
+                sunIcon.classList.add('lang-hidden');
+                moonIcon.classList.remove('lang-hidden');
+            }
+        }
+
+        function toggleFaq(button) {
+            const faqItem = button.parentElement;
+            const isOpen = faqItem.classList.contains('open');
+            
+            const container = faqItem.closest('.faq-accordion');
+            if (container) {
+                container.querySelectorAll('.faq-item').forEach(item => {
+                    if (item !== faqItem) item.classList.remove('open');
+                });
+            }
+            
+            if (isOpen) {
+                faqItem.classList.remove('open');
+            } else {
+                faqItem.classList.add('open');
+            }
+        }
+
+        function copyText(text, successMessage) {
+            navigator.clipboard.writeText(text).then(() => {
+                showToast(successMessage);
+            }).catch(() => {
+                showToast(text);
+            });
+        }
+
+        function copyEmail(email) {
+            copyText(email, currentLang === 'ar' ? 'تم نسخ البريد الإلكتروني بنجاح! يسعدنا تواصلك 🤍' : 'Email copied to clipboard! Delighted to hear from you 🤍');
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('copyToast');
+            const toastMsg = document.getElementById('toastMessage');
+            toastMsg.textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        function scrollToTop() {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        window.addEventListener('scroll', () => {
+            const backBtn = document.getElementById('backToTopBtn');
+            if (window.scrollY > 300) {
+                backBtn.classList.add('visible');
+            } else {
+                backBtn.classList.remove('visible');
+            }
+            updateActivePill();
+        });
+
+        function updateActivePill() {
+            const activeContent = currentLang === 'ar' ? document.getElementById('arContent') : document.getElementById('enContent');
+            const sections = activeContent.querySelectorAll('.policy-card');
+            const pills = activeContent.querySelectorAll('.nav-pill');
+            
+            let currentId = '';
+            sections.forEach(sec => {
+                const top = sec.offsetTop - 180;
+                if (window.scrollY >= top) {
+                    currentId = sec.id;
+                }
+            });
+
+            if (currentId) {
+                pills.forEach(pill => {
+                    if (pill.getAttribute('href') === '#' + currentId) {
+                        pill.classList.add('active');
+                    } else {
+                        pill.classList.remove('active');
+                    }
+                });
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            let savedTheme = 'light';
+            try {
+                savedTheme = localStorage.getItem('sila_policy_theme');
+            } catch(e) {}
+
+            if (!savedTheme && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                savedTheme = 'dark';
+            }
+            if (savedTheme === 'dark') {
+                currentTheme = 'dark';
+                applyTheme('dark');
+            }
+
+            let savedLang = 'ar';
+            try {
+                savedLang = localStorage.getItem('sila_policy_lang');
+            } catch(e) {}
+            if (savedLang === 'en') {
+                toggleLanguage();
+            }
+        });
     </script>
 </body>
 </html>
