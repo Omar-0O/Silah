@@ -19,7 +19,6 @@ import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.SubcomposeAsyncImage
-import kotlin.math.abs
 
 private val avatarPalette = listOf(
     Pair(Color(0xFF1A5C4A), Color(0xFF2A9D6E)),
@@ -47,7 +46,8 @@ fun RelativeAvatar(
             .size(size)
             .clip(CircleShape)
     ) {
-        if (!photoUri.isNullOrBlank()) {
+        val hasCustomPhoto = !photoUri.isNullOrBlank() && !photoUri.equals("null", ignoreCase = true)
+        if (hasCustomPhoto) {
             SubcomposeAsyncImage(
                 model = photoUri,
                 contentDescription = name,
@@ -80,7 +80,7 @@ private fun FallbackInitialsAvatar(
             .background(Brush.linearGradient(listOf(fromColor, toColor)))
     ) {
         Text(
-            text = name.take(1),
+            text = name.trim().firstOrNull()?.toString()?.uppercase() ?: "",
             fontSize = fontSize,
             fontWeight = FontWeight.ExtraBold,
             color = Color.White

@@ -47,37 +47,16 @@ import com.example.viewmodel.RelativeViewModel
 import java.text.SimpleDateFormat
 import java.util.*
 
+import androidx.compose.ui.input.nestedscroll.nestedScroll
+import com.example.ui.components.SilaFloatingNavigationBar
+import com.example.ui.components.SilaNavBarScrollState
+import com.example.ui.components.rememberSilaNavBarScrollState
+import com.example.ui.components.SilaTab
+import dev.chrisbanes.haze.rememberHazeState
+import dev.chrisbanes.haze.hazeSource
+
 // Helper: pick the right string based on language
 fun String.ifEn(lang: String, en: String): String = if (lang == "en") en else this
-
-// ── Bottom Nav Tab Enum ───────────────────────────────────────────────────────
-enum class SilaTab(
-    val labelAr: String,
-    val labelEn: String,
-    val iconOutlined: ImageVector,
-    val iconFilled: ImageVector
-) {
-    DASHBOARD(
-        labelAr = "الرئيسية",
-        labelEn = "Dashboard",
-        iconOutlined = Icons.Outlined.Home,
-        iconFilled = Icons.Filled.Home
-    ),
-    RELATIVES(
-        labelAr = "الأرحام",
-        labelEn = "Relatives",
-        iconOutlined = Icons.Outlined.People,
-        iconFilled = Icons.Filled.People
-    ),
-    SETTINGS(
-        labelAr = "الإعدادات",
-        labelEn = "Settings",
-        iconOutlined = Icons.Outlined.Settings,
-        iconFilled = Icons.Filled.Settings
-    );
-
-    fun label(lang: String) = if (lang == "en") labelEn else labelAr
-}
 
 // ── App Navigation (Splash → Onboarding → Main) ───────────────────────────────
 @Composable
@@ -135,6 +114,11 @@ fun MainDashboardScreen(
         viewModel.checkPendingNotifiedRelatives()
     }
 
+    val userName by viewModel.userName.collectAsState()
+    val userPhotoPath by viewModel.userPhotoPath.collectAsState()
+    val userPhotoTimestamp by viewModel.userPhotoTimestamp.collectAsState()
+    val userAvatarId by viewModel.userAvatarId.collectAsState()
+
     val layoutDirection = if (selectedLanguage == "en") LayoutDirection.Ltr else LayoutDirection.Rtl
 
     // Current selected tab
@@ -150,6 +134,17 @@ fun MainDashboardScreen(
     }
 
     val selectedRelativeForDetail by viewModel.selectedRelativeForDetail.collectAsState()
+    val showWhyKinshipScreen by viewModel.showWhyKinshipScreen.collectAsState()
+
+    if (showWhyKinshipScreen) {
+        CompositionLocalProvider(LocalLayoutDirection provides layoutDirection) {
+            WhyKinshipScreen(
+                lang = selectedLanguage,
+                onBack = { viewModel.closeWhyKinshipScreen() }
+            )
+        }
+        return
+    }
 
     if (selectedRelativeForDetail != null) {
         CompositionLocalProvider(LocalLayoutDirection provides layoutDirection) {
@@ -162,27 +157,22 @@ fun MainDashboardScreen(
         return
     }
 
+    val navBarScrollState = rememberSilaNavBarScrollState()
+    val hazeState = rememberHazeState()
+
     CompositionLocalProvider(LocalLayoutDirection provides layoutDirection) {
-        Scaffold(
-            bottomBar = {
-                SilaBottomNavigationBar(
-                    selectedTab = selectedTab,
-                    onTabSelected = { tab ->
-                        // Settings tab opens dialog instead of navigating
-                        if (tab == SilaTab.SETTINGS) {
-                            viewModel.showSettingsDialog.value = true
-                        } else {
-                            selectedTab = tab
-                        }
-                    },
-                    lang = selectedLanguage,
-                    dueCount = dueCount
-                )
-            },
-            containerColor = MaterialTheme.colorScheme.background
-        ) { innerPadding ->
-            Box(modifier = Modifier.padding(bottom = innerPadding.calculateBottomPadding())) {
-                // Tab Content
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background)
+        ) {
+            // Tab Content with nested scroll connection for responsive navbar + hazeSource for background blur
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .nestedScroll(navBarScrollState.nestedScrollConnection)
+                    .hazeSource(state = hazeState)
+            ) {
                 AnimatedContent(
                     targetState = selectedTab,
                     transitionSpec = {
@@ -199,10 +189,30 @@ fun MainDashboardScreen(
                     when (tab) {
                         SilaTab.DASHBOARD -> HomeTabScreen(viewModel = viewModel)
                         SilaTab.RELATIVES -> RelativesTabScreen(viewModel = viewModel)
-                        SilaTab.SETTINGS  -> HomeTabScreen(viewModel = viewModel) // BUG-04 Fix: SETTINGS opens dialog, fallback to Dashboard
+                        SilaTab.PROFILE   -> ProfileTabScreen(
+                            viewModel = viewModel,
+                            onReplayOnboarding = onReplayOnboarding
+                        )
                     }
                 }
             }
+
+            // Floating Navigation Bar overlaid at bottom center with blur effect
+            SilaFloatingNavigationBar(
+                modifier = Modifier.align(Alignment.BottomCenter),
+                selectedTab = selectedTab,
+                onTabSelected = { tab ->
+                    selectedTab = tab
+                },
+                lang = selectedLanguage,
+                dueCount = dueCount,
+                userPhotoPath = userPhotoPath,
+                userName = userName,
+                userPhotoTimestamp = userPhotoTimestamp,
+                userAvatarId = userAvatarId,
+                scrollState = navBarScrollState,
+                hazeState = hazeState
+            )
 
             // ── Global Dialogs & Bottom Sheets ────────────────────────────────
             if (showAddRelativeDialog) {
@@ -258,6 +268,7 @@ fun MainDashboardScreen(
                     contactedCount = contactedCount,
                     interactionCount = logs.size,
                     daysUsingApp = daysUsingApp,
+                    lang = selectedLanguage,
                     onDismiss = { viewModel.showSupportSilaDialog.value = false }
                 )
             }
@@ -285,147 +296,6 @@ fun MainDashboardScreen(
     }
 }
 
-// ── Sila Bottom Navigation Bar ────────────────────────────────────────────────
-@Composable
-fun SilaBottomNavigationBar(
-    selectedTab: SilaTab,
-    onTabSelected: (SilaTab) -> Unit,
-    lang: String,
-    dueCount: Int = 0
-) {
-    Surface(
-        color = MaterialTheme.colorScheme.surface,
-        shadowElevation = 16.dp,
-        modifier = Modifier
-            .fillMaxWidth()
-            .shadow(
-                elevation = 24.dp,
-                shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
-                ambientColor = PrimaryGreen.copy(alpha = 0.12f),
-                spotColor = PrimaryGreen.copy(alpha = 0.08f)
-            )
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .navigationBarsPadding()
-                .height(56.dp),
-            horizontalArrangement = Arrangement.SpaceEvenly,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            SilaTab.entries.forEach { tab ->
-                if (tab == SilaTab.SETTINGS) {
-                    // Settings: always outlined, opens dialog
-                    NavItem(
-                        tab = tab,
-                        isSelected = false,
-                        lang = lang,
-                        badge = null,
-                        onClick = { onTabSelected(tab) }
-                    )
-                } else {
-                    NavItem(
-                        tab = tab,
-                        isSelected = selectedTab == tab,
-                        lang = lang,
-                        badge = if (tab == SilaTab.RELATIVES && dueCount > 0) dueCount else null,
-                        onClick = { onTabSelected(tab) }
-                    )
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun RowScope.NavItem(
-    tab: SilaTab,
-    isSelected: Boolean,
-    lang: String,
-    badge: Int?,
-    onClick: () -> Unit
-) {
-    val animatedColor by animateColorAsState(
-        targetValue = if (isSelected) PrimaryGreen else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.45f),
-        animationSpec = tween(250),
-        label = "nav_color"
-    )
-    val animatedBgAlpha by animateFloatAsState(
-        targetValue = if (isSelected) 1f else 0f,
-        animationSpec = tween(250),
-        label = "nav_bg"
-    )
-
-    val view = LocalView.current
-
-    Box(
-        contentAlignment = Alignment.TopCenter,
-        modifier = Modifier
-            .weight(1f)
-            .fillMaxHeight()
-            .clickable(
-                indication = null,
-                interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
-            ) {
-                view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
-                onClick()
-            }
-    ) {
-        // Top indicator line when selected
-        if (isSelected) {
-            Box(
-                modifier = Modifier
-                    .align(Alignment.TopCenter)
-                    .width(20.dp)
-                    .height(2.dp)
-                    .clip(RoundedCornerShape(bottomStart = 2.dp, bottomEnd = 2.dp))
-                    .background(PrimaryGreen)
-            )
-        }
-
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center,
-            modifier = Modifier.fillMaxHeight()
-        ) {
-            // Badge + Icon
-            BadgedBox(
-                badge = {
-                    if (badge != null && badge > 0) {
-                        Badge(
-                            containerColor = Color(0xFFD32F2F),
-                            contentColor = Color.White,
-                            modifier = Modifier.offset(x = (-2).dp, y = 2.dp)
-                        ) {
-                            Text(
-                                text = if (badge > 99) "99+" else badge.toString(),
-                                fontSize = 9.sp,
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
-                    }
-                }
-            ) {
-                Icon(
-                    imageVector = if (isSelected) tab.iconFilled else tab.iconOutlined,
-                    contentDescription = tab.label(lang),
-                    tint = animatedColor,
-                    modifier = Modifier.size(22.dp)
-                )
-            }
-
-            Spacer(modifier = Modifier.height(2.dp))
-
-            // Label
-            Text(
-                text = tab.label(lang),
-                fontSize = 10.sp,
-                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                color = animatedColor
-            )
-        }
-    }
-}
 
 // ── Logs History Dialog ───────────────────────────────────────────────────────
 @Composable

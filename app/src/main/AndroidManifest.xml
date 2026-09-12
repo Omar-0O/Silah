@@ -3,11 +3,14 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <!-- Notifications only — 100% privacy, zero background contact or call log permissions -->
+    <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32" />
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
 
     <!-- WhatsApp / Dialer deep-links: no network access needed from Sila itself -->
     <queries>
@@ -44,11 +47,6 @@
             </intent-filter>
         </activity>
 
-        <!-- Notification action receiver: handles 📞 Call and 💬 WhatsApp directly -->
-        <receiver
-            android:name=".NotificationActionReceiver"
-            android:exported="false" />
-
         <receiver
             android:name=".widget.SilaAppWidgetProvider"
             android:exported="true"
@@ -67,6 +65,11 @@
 
         <receiver
             android:name=".work.NotificationActionReceiver"
+            android:exported="false" />
+
+        <!-- Snooze alarm receiver: re-sends kinship notification after 6-hour snooze -->
+        <receiver
+            android:name=".work.SnoozeAlarmReceiver"
             android:exported="false" />
 
         <receiver

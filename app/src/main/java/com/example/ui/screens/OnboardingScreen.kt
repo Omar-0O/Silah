@@ -60,6 +60,13 @@ fun OnboardingScreen(
     var showNameError by remember { mutableStateOf(false) }
     var showRelativeError by remember { mutableStateOf(false) }
 
+    val currentRelatives by viewModel.relatives.collectAsState()
+    LaunchedEffect(currentRelatives) {
+        if (currentRelatives.isNotEmpty()) {
+            showRelativeError = false
+        }
+    }
+
     val pages = 4
 
     // Main scaffold
@@ -281,7 +288,7 @@ fun OnboardingScreen(
                                     currentPage++
                                 }
                                 2 -> {
-                                    if (viewModel.relatives.value.isEmpty()) {
+                                    if (currentRelatives.isEmpty() && viewModel.relatives.value.isEmpty()) {
                                         showRelativeError = true
                                         return@Button
                                     }

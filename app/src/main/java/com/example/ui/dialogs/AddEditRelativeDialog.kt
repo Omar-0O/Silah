@@ -64,8 +64,20 @@ fun AddEditRelativeDialog(
     val initialPickedPhone = remember { viewModel.pickedContactPhone.value }
     val initialHasPicked = remember { viewModel.hasPendingPickedContact.value }
 
-    var selectedTab by remember {
-        mutableIntStateOf(if (initialHasPicked || initialPickedName.isNotBlank() || initialPickedPhone.isNotBlank()) 1 else 0)
+    fun mapToDetailedDegree(rawName: String): String {
+        val suggested = viewModel.suggestRelationshipDegree(rawName)
+        val lower = rawName.lowercase()
+        return when (suggested) {
+            "والدان" -> if (lower.contains("أم") || lower.contains("امي") || lower.contains("ماما") || lower.contains("والدة") || lower.contains("والدتي")) "أم" else "أب"
+            "أشقاء" -> if (lower.contains("أخت") || lower.contains("اخت") || lower.contains("شقيقة")) "أخت" else "أخ"
+            "أعمام/أخوال" -> when {
+                lower.contains("عمة") || lower.contains("عمتي") -> "عمة"
+                lower.contains("خالة") || lower.contains("خالتي") -> "خالة"
+                lower.contains("خال") -> "خال"
+                else -> "عم"
+            }
+            else -> if (lower.contains("جدة")) "جدة" else if (lower.contains("جد")) "جد" else "أقارب آخرون"
+        }
     }
 
     // Manual / Edit mode state
@@ -78,21 +90,20 @@ fun AddEditRelativeDialog(
     var relationshipDegree by remember {
         mutableStateOf(
             relativeToEdit?.relationshipDegree
-                ?: viewModel.suggestRelationshipDegree(relativeToEdit?.name ?: if (initialHasPicked) initialPickedName else "")
+                ?: mapToDetailedDegree(relativeToEdit?.name ?: if (initialHasPicked) initialPickedName else "")
         )
     }
     var intervalDays by remember { mutableIntStateOf(relativeToEdit?.contactIntervalDays ?: 7) }
     var notes by remember { mutableStateOf(relativeToEdit?.notes ?: "") }
 
-    // When a contact is picked, switch to manual tab with pre-filled data
+    // When a contact is picked, pre-fill form data directly
     LaunchedEffect(hasPicked) {
         if (hasPicked && !isEditMode) {
-            name = pickedName
-            phone = pickedPhone
+            if (pickedName.isNotBlank()) name = pickedName
+            if (pickedPhone.isNotBlank()) phone = pickedPhone
             if (pickedName.isNotBlank()) {
-                relationshipDegree = viewModel.suggestRelationshipDegree(pickedName)
+                relationshipDegree = mapToDetailedDegree(pickedName)
             }
-            selectedTab = 1 // Switch to manual form so user can confirm/adjust
             viewModel.clearPickedContact()
         }
     }
@@ -101,9 +112,6 @@ fun AddEditRelativeDialog(
     val existingNormalizedPhones = remember(existingRelatives) {
         existingRelatives.map { it.phone.replace("[^\\d+]".toRegex(), "").takeLast(9) }.toSet()
     }
-
-
-
 
     val degrees = listOf("جد", "جدة", "أب", "أم", "أخ", "أخت", "عم", "عمة", "خال", "خالة", "أقارب آخرون")
     val degreeLabels = if (lang == "en")
@@ -128,7 +136,6 @@ fun AddEditRelativeDialog(
         BoxWithConstraints {
             val isTablet = maxWidth > 600.dp
             val dialogWidth = if (isTablet) 560.dp else maxWidth
-            val isManualMode = isEditMode || selectedTab == 1
 
             Card(
                 shape = RoundedCornerShape(24.dp),
@@ -136,15 +143,12 @@ fun AddEditRelativeDialog(
                 modifier = Modifier
                     .width(dialogWidth)
                     .fillMaxWidth()
-                    .then(
-                        if (isManualMode) Modifier.wrapContentHeight()
-                        else Modifier.fillMaxHeight(0.82f)
-                    )
+                    .wrapContentHeight()
             ) {
             Column(
                 modifier = Modifier
                     .padding(20.dp)
-                    .then(if (isManualMode) Modifier.wrapContentHeight() else Modifier.fillMaxSize())
+                    .wrapContentHeight()
             ) {
                 // Dialog Title
                 Text(
@@ -160,256 +164,155 @@ fun AddEditRelativeDialog(
                 if (!isEditMode) {
                     Spacer(modifier = Modifier.height(10.dp))
 
-                    // Tab Selector: Contacts vs Manual
-                    TabRow(
-                        selectedTabIndex = selectedTab,
-                        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
-                        contentColor = MaterialTheme.colorScheme.primary,
+                    // Choose from Contacts Action Button
+                    Surface(
+                        onClick = { viewModel.launchContactPicker() },
+                        shape = RoundedCornerShape(14.dp),
+                        color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.6f),
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)),
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clip(RoundedCornerShape(14.dp))
+                            .height(46.dp)
                     ) {
-                        Tab(
-                            selected = selectedTab == 0,
-                            onClick = { selectedTab = 0 },
-                            text = {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(6.dp)
-                                ) {
-                                    Icon(Icons.Default.ContactPhone, contentDescription = null, modifier = Modifier.size(16.dp))
-                                    Text(
-                                        text = if (lang == "en") "From Contacts 📲" else "من الجوال 📲",
-                                        fontSize = 12.sp,
-                                        fontWeight = if (selectedTab == 0) FontWeight.Bold else FontWeight.Normal
-                                    )
-                                }
-                            }
-                        )
-                        Tab(
-                            selected = selectedTab == 1,
-                            onClick = { selectedTab = 1 },
-                            text = {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(6.dp)
-                                ) {
-                                    Icon(Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(16.dp))
-                                    Text(
-                                        text = if (lang == "en") "Manual Entry ✍️" else "إدخال يدوي ✍️",
-                                        fontSize = 12.sp,
-                                        fontWeight = if (selectedTab == 1) FontWeight.Bold else FontWeight.Normal
-                                    )
-                                }
-                            }
-                        )
+                        Row(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(horizontal = 14.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.ContactPhone,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onSecondaryContainer,
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = if (lang == "en") "Choose from Contacts 📲" else "اختر من جهات الاتصال 📲",
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSecondaryContainer
+                            )
+                        }
                     }
                 }
 
                 Spacer(modifier = Modifier.height(14.dp))
 
-                // Content Body
-                if (isManualMode) {
-                    // Manual Form (Edit or Manual Tab)
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .verticalScroll(rememberScrollState()),
-                        verticalArrangement = Arrangement.spacedBy(14.dp)
-                    ) {
-                        OutlinedTextField(
-                            value = name,
-                            onValueChange = {
-                                name = it
-                                if (!isEditMode) {
-                                    relationshipDegree = viewModel.suggestRelationshipDegree(it)
-                                }
-                            },
-                            label = { Text(if (lang == "en") "Relative's Name" else "اسم القريب") },
-                            placeholder = { Text(if (lang == "en") "e.g. Mom, Uncle Ahmed" else "مثال: أمي الغالية، عاطف") },
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(16.dp),
-                            singleLine = true
-                        )
+                // Form Content Body (Unified single form)
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(14.dp)
+                ) {
+                    OutlinedTextField(
+                        value = name,
+                        onValueChange = {
+                            name = it
+                            if (!isEditMode) {
+                                relationshipDegree = viewModel.suggestRelationshipDegree(it)
+                            }
+                        },
+                        label = { Text(if (lang == "en") "Relative's Name" else "اسم القريب") },
+                        placeholder = { Text(if (lang == "en") "e.g. Mom, Uncle Ahmed" else "مثال: أمي الغالية، عاطف") },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(16.dp),
+                        singleLine = true
+                    )
 
-                        OutlinedTextField(
-                            value = phone,
-                            onValueChange = { phone = it },
-                            label = { Text(if (lang == "en") "Phone Number" else "رقم الهاتف") },
-                            placeholder = { Text("+201000000000") },
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(16.dp),
-                            singleLine = true
-                        )
-
-                        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                            Text(if (lang == "en") "Relationship:" else "درجة القرابة:", fontSize = 12.sp, fontWeight = FontWeight.Bold)
-                            LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                items(degrees.zip(degreeLabels)) { (degree, label) ->
-                                    FilterChip(
-                                        selected = relationshipDegree == degree,
-                                        onClick = { relationshipDegree = degree },
-                                        label = { Text(label, fontSize = 11.sp) },
-                                        shape = RoundedCornerShape(12.dp)
+                    OutlinedTextField(
+                        value = phone,
+                        onValueChange = { phone = it },
+                        label = { Text(if (lang == "en") "Phone Number" else "رقم الهاتف") },
+                        placeholder = { Text("+201000000000") },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+                        trailingIcon = {
+                            if (!isEditMode) {
+                                IconButton(onClick = { viewModel.launchContactPicker() }) {
+                                    Icon(
+                                        Icons.Default.ContactPhone,
+                                        contentDescription = if (lang == "en") "Pick Contact" else "اختر من جهات الاتصال",
+                                        tint = MaterialTheme.colorScheme.primary
                                     )
                                 }
                             }
-                        }
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(16.dp),
+                        singleLine = true
+                    )
 
-                        ReminderIntervalSelector(
-                            intervalDays = intervalDays,
-                            onIntervalChange = { intervalDays = it },
-                            relationshipDegree = relationshipDegree,
-                            lang = lang
-                        )
-
-                        Spacer(modifier = Modifier.height(6.dp))
-
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.End,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            TextButton(onClick = onDismiss) {
-                                Text(if (lang == "en") "Cancel" else "إلغاء", color = MaterialTheme.colorScheme.secondary)
-                            }
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Button(
-                                onClick = {
-                                    if (name.isBlank() || phone.isBlank()) {
-                                        Toast.makeText(
-                                            context,
-                                            if (lang == "en") "Please enter a name and phone number"
-                                            else "يرجى كتابة الاسم ورقم الهاتف على الأقل",
-                                            Toast.LENGTH_SHORT
-                                        ).show()
-                                        return@Button
-                                    }
-                                    view.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
-                                    if (relativeToEdit != null) {
-                                        viewModel.editRelative(relativeToEdit, name, phone, relationshipDegree, intervalDays, notes)
-                                        Toast.makeText(
-                                            context,
-                                            if (lang == "en") "$name updated successfully ✅" else "تم تحديث بيانات $name بنجاح ✅",
-                                            Toast.LENGTH_SHORT
-                                        ).show()
-                                    } else {
-                                        viewModel.addRelative(name, phone, relationshipDegree, intervalDays, notes)
-                                        Toast.makeText(
-                                            context,
-                                            if (lang == "en") "$name added to Silah successfully! ✨" else "تمت إضافة $name بنجاح في صِلَةِ! ✨",
-                                            Toast.LENGTH_SHORT
-                                        ).show()
-                                    }
-                                    onDismiss()
-                                },
-                                colors = ButtonDefaults.buttonColors(containerColor = SoftGold, contentColor = Color(0xFF141816)),
-                                shape = RoundedCornerShape(14.dp)
-                            ) {
-                                Text(
-                                    if (isEditMode) (if (lang == "en") "Save Changes ✅" else "حفظ التعديلات ✅")
-                                    else (if (lang == "en") "Save & Activate Reminder ✨" else "حفظ وتفعيل التذكير ✨"),
-                                    fontWeight = FontWeight.Bold
+                    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        Text(if (lang == "en") "Relationship:" else "درجة القرابة:", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                        LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            items(degrees.zip(degreeLabels)) { (degree, label) ->
+                                FilterChip(
+                                    selected = relationshipDegree == degree,
+                                    onClick = { relationshipDegree = degree },
+                                    label = { Text(label, fontSize = 11.sp) },
+                                    shape = RoundedCornerShape(12.dp)
                                 )
                             }
                         }
                     }
-                } else {
-                    // ── Contact Picker Tab (uses Android's native picker) ────────────────
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .weight(1f),
-                        verticalArrangement = Arrangement.spacedBy(16.dp)
+
+                    ReminderIntervalSelector(
+                        intervalDays = intervalDays,
+                        onIntervalChange = { intervalDays = it },
+                        relationshipDegree = relationshipDegree,
+                        lang = lang
+                    )
+
+                    Spacer(modifier = Modifier.height(6.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.End,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Spacer(modifier = Modifier.height(8.dp))
-
-                        // Big CTA button
-                        Button(
-                            onClick = { viewModel.launchContactPicker() },
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = Color(0xFF0E7075),
-                                contentColor = Color.White
-                            ),
-                            shape = RoundedCornerShape(18.dp),
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(56.dp)
-                        ) {
-                            Icon(Icons.Default.ContactPhone, contentDescription = null, modifier = Modifier.size(20.dp))
-                            Spacer(modifier = Modifier.width(10.dp))
-                            Text(
-                                text = if (lang == "en") "Choose from Contacts 📲" else "اختار من جهات الاتصال 📲",
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 15.sp
-                            )
+                        TextButton(onClick = onDismiss) {
+                            Text(if (lang == "en") "Cancel" else "إلغاء", color = MaterialTheme.colorScheme.secondary)
                         }
-
-                        // Info card
-                        Card(
-                            shape = RoundedCornerShape(16.dp),
-                            colors = CardDefaults.cardColors(
-                                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
-                            )
-                        ) {
-                            Column(
-                                modifier = Modifier.padding(16.dp),
-                                verticalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                Row(verticalAlignment = Alignment.Top, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                                    Text("🔒", fontSize = 18.sp)
-                                    Text(
-                                        text = if (lang == "en")
-                                            "Sila uses Android's built-in contact picker.\nOnly the name and phone number of the contact you select are stored — nothing is uploaded or shared."
-                                        else
-                                            "صِلَةِ تستخدم نافذة اختيار جهات الاتصال المدمجة في أندرويد.\nفقط اسم ورقم الشخص اللي تختاره يُحفظ على جهازك — لا يُرفع شيء ولا يُشارك.",
-                                        fontSize = 12.sp,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        lineHeight = 18.sp
-                                    )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Button(
+                            onClick = {
+                                if (name.trim().isBlank()) {
+                                    Toast.makeText(
+                                        context,
+                                        if (lang == "en") "Please enter the relative's name"
+                                        else "يرجى كتابة اسم القريب على الأقل",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                    return@Button
                                 }
-                            }
-                        }
-
-                        // Divider with OR
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            HorizontalDivider(modifier = Modifier.weight(1f))
-                            Text(
-                                text = if (lang == "en") "  or  " else "  أو  ",
-                                fontSize = 12.sp,
-                                color = MaterialTheme.colorScheme.secondary
-                            )
-                            HorizontalDivider(modifier = Modifier.weight(1f))
-                        }
-
-                        // Switch to Manual
-                        OutlinedButton(
-                            onClick = { selectedTab = 1 },
-                            shape = RoundedCornerShape(14.dp),
-                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
-                            modifier = Modifier.fillMaxWidth()
+                                view.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
+                                if (relativeToEdit != null) {
+                                    viewModel.editRelative(relativeToEdit, name.trim(), phone.trim(), relationshipDegree, intervalDays, notes.trim())
+                                    Toast.makeText(
+                                        context,
+                                        if (lang == "en") "$name updated successfully ✅" else "تم تحديث بيانات $name بنجاح ✅",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                } else {
+                                    viewModel.addRelative(name.trim(), phone.trim(), relationshipDegree, intervalDays, notes.trim())
+                                    Toast.makeText(
+                                        context,
+                                        if (lang == "en") "$name added to Silah successfully! ✨" else "تمت إضافة $name بنجاح في صِلَةِ! ✨",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                }
+                                onDismiss()
+                            },
+                            colors = ButtonDefaults.buttonColors(containerColor = SoftGold, contentColor = Color(0xFF141816)),
+                            shape = RoundedCornerShape(14.dp)
                         ) {
-                            Icon(Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(16.dp))
-                            Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                text = if (lang == "en") "Enter manually instead ✍️" else "إدخال يدوي بدلاً منه ✍️",
-                                fontSize = 13.sp
+                                if (isEditMode) (if (lang == "en") "Save Changes ✅" else "حفظ التعديلات ✅")
+                                else (if (lang == "en") "Save & Activate Reminder ✨" else "حفظ وتفعيل التذكير ✨"),
+                                fontWeight = FontWeight.Bold
                             )
-                        }
-
-                        Spacer(modifier = Modifier.weight(1f))
-
-                        Button(
-                            onClick = onDismiss,
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = SoftGold,
-                                contentColor = Color(0xFF141816)
-                            ),
-                            shape = RoundedCornerShape(14.dp),
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Text(if (lang == "en") "Cancel" else "إلغاء", fontWeight = FontWeight.Bold)
                         }
                     }
                 }

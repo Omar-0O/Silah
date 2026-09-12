@@ -1,21 +1,21 @@
 package com.example.ui.components
 
 import androidx.compose.animation.core.*
-import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Contacts
+import androidx.compose.material.icons.outlined.People
 import androidx.compose.material.icons.outlined.PersonAdd
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -43,7 +43,6 @@ fun SilaEmptyStateView(
     )
 
     val primaryColor = MaterialTheme.colorScheme.primary
-    val goldColor = SoftGold
 
     Column(
         modifier = modifier
@@ -52,40 +51,29 @@ fun SilaEmptyStateView(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // Animated Kinship Knot Illustration
-        Canvas(
+        // Soft & Clean Empty State Illustration
+        Box(
             modifier = Modifier
-                .size(110.dp)
+                .size(88.dp)
                 .scale(scale)
+                .clip(CircleShape)
+                .background(primaryColor.copy(alpha = 0.08f)),
+            contentAlignment = Alignment.Center
         ) {
-            val w = size.width
-            val h = size.height
-            val cx = w / 2f
-            val cy = h / 2f
-
-            drawCircle(
-                color = primaryColor.copy(alpha = 0.08f),
-                radius = w / 2f
-            )
-            drawCircle(
-                color = primaryColor.copy(alpha = 0.15f),
-                radius = w / 2.5f
-            )
-
-            val path = Path().apply {
-                moveTo(cx * 0.5f, cy)
-                cubicTo(cx * 0.5f, cy * 0.4f, cx * 0.9f, cy * 0.4f, cx, cy)
-                cubicTo(cx * 1.1f, cy * 1.6f, cx * 1.5f, cy * 1.6f, cx * 1.5f, cy)
-                cubicTo(cx * 1.5f, cy * 0.4f, cx * 1.1f, cy * 0.4f, cx, cy)
-                cubicTo(cx * 0.9f, cy * 1.6f, cx * 0.5f, cy * 1.6f, cx * 0.5f, cy)
+            Box(
+                modifier = Modifier
+                    .size(66.dp)
+                    .clip(CircleShape)
+                    .background(primaryColor.copy(alpha = 0.14f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.People,
+                    contentDescription = null,
+                    tint = primaryColor,
+                    modifier = Modifier.size(34.dp)
+                )
             }
-            drawPath(
-                path = path,
-                color = primaryColor,
-                style = Stroke(width = 3.dp.toPx(), cap = StrokeCap.Round)
-            )
-
-            drawCircle(color = goldColor, radius = 5.dp.toPx(), center = center)
         }
 
         Text(

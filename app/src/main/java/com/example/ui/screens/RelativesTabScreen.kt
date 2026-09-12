@@ -34,7 +34,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.Relative
 import com.example.ui.components.CommitmentHeaderCard
-import com.example.ui.components.KinshipKnotIcon
 import com.example.ui.components.RelativeCard
 import com.example.ui.components.SilaEmptyStateView
 import androidx.compose.foundation.border
@@ -123,7 +122,6 @@ fun RelativesTabScreen(
     }
 
     val userGender by viewModel.userGender.collectAsState()
-    var showProfileDialog by remember { mutableStateOf(false) }
     val selectedRelativeForDetail by viewModel.selectedRelativeForDetail.collectAsState()
 
     // Internal values stay Arabic (used for filtering stored data)
@@ -132,13 +130,6 @@ fun RelativesTabScreen(
         listOf("All", "Parents", "Siblings", "Uncles/Aunts", "Other Relatives")
     else
         categories
-
-    if (showProfileDialog) {
-        com.example.ui.dialogs.UserProfileDialog(
-            viewModel = viewModel,
-            onDismiss = { showProfileDialog = false }
-        )
-    }
 
     // Navigate to detail screen if a relative is selected
     val currentDetailRelative = selectedRelativeForDetail
@@ -151,58 +142,7 @@ fun RelativesTabScreen(
         return
     }
 
-
-    val userAvatarId by viewModel.userAvatarId.collectAsState()
-
     Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    // Top-Right Header User Profile & Avatar
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(10.dp),
-                        modifier = Modifier
-                            .padding(start = 4.dp)
-                            .clip(RoundedCornerShape(20.dp))
-                            .clickable { showProfileDialog = true }
-                            .padding(4.dp)
-                    ) {
-                        com.example.ui.components.SilaUserAvatar(
-                            avatarId = userAvatarId,
-                            size = 42.dp,
-                            showBorder = true
-                        )
-
-                        Text(
-                            text = if (userName.isNotBlank()) userName else if (lang == "en") "Family Keeper" else "حافظ الأرحام", // BUG-07 Fix: removed hardcoded "عمر"
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onBackground,
-                            fontSize = 20.sp
-                        )
-                    }
-                },
-                actions = {
-                    Button(
-                        onClick = launchImportContacts,
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.7f),
-                            contentColor = MaterialTheme.colorScheme.onSecondaryContainer
-                        ),
-                        modifier = Modifier
-                            .padding(end = 12.dp)
-                            .testTag("import_contacts_button"),
-                        shape = RoundedCornerShape(20.dp),
-                        contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp)
-                    ) {
-                        Icon(Icons.Default.ContactPhone, contentDescription = if (lang == "en") "Import" else "استيراد", modifier = Modifier.size(16.dp))
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text(if (lang == "en") "Import" else "استيراد", fontSize = 12.sp, fontWeight = FontWeight.Bold)
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
-            )
-        },
         floatingActionButton = {
             FloatingActionButton(
                 onClick = { viewModel.showAddRelativeDialog.value = true },
@@ -210,7 +150,7 @@ fun RelativesTabScreen(
                 contentColor = Color(0xFF1C221E),
                 shape = RoundedCornerShape(18.dp),
                 modifier = Modifier
-                    .padding(8.dp)
+                    .padding(bottom = 76.dp, end = 8.dp)
                     .shadow(12.dp, RoundedCornerShape(18.dp), spotColor = SoftGold.copy(alpha = 0.4f))
                     .testTag("add_relative_fab")
             ) {
@@ -223,9 +163,10 @@ fun RelativesTabScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
+                .statusBarsPadding()
                 .padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
-            contentPadding = PaddingValues(bottom = 80.dp)
+            contentPadding = PaddingValues(top = 16.dp, bottom = 100.dp)
         ) {
             // 1. Commitment Header Card
             item {
@@ -276,32 +217,68 @@ fun RelativesTabScreen(
                 }
             }
 
-            // 4. Search Bar
+            // 4. Search Bar & Import Contacts Row
             item {
-                OutlinedTextField(
-                    value = searchQuery,
-                    onValueChange = { viewModel.searchQuery.value = it },
-                    placeholder = { Text(if (lang == "en") "Search by name or phone number..." else "ابحث عن قريب بالاسم أو رقم الهاتف...") },
-                    leadingIcon = { Icon(Icons.Outlined.Search, contentDescription = if (lang == "en") "Search" else "بحث") },
-                    trailingIcon = {
-                        if (searchQuery.isNotEmpty()) {
-                            IconButton(onClick = { viewModel.searchQuery.value = "" }) {
-                                Icon(Icons.Default.Clear, contentDescription = "مسح")
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    OutlinedTextField(
+                        value = searchQuery,
+                        onValueChange = { viewModel.searchQuery.value = it },
+                        placeholder = { Text(if (lang == "en") "Search name or phone..." else "ابحث عن قريب بالاسم أو الهاتف...", fontSize = 13.sp) },
+                        leadingIcon = { Icon(Icons.Outlined.Search, contentDescription = if (lang == "en") "Search" else "بحث") },
+                        trailingIcon = {
+                            if (searchQuery.isNotEmpty()) {
+                                IconButton(onClick = { viewModel.searchQuery.value = "" }) {
+                                    Icon(Icons.Default.Clear, contentDescription = "مسح")
+                                }
                             }
+                        },
+                        modifier = Modifier
+                            .weight(1f)
+                            .shadow(3.dp, RoundedCornerShape(18.dp), ambientColor = Color.Black.copy(alpha = 0.03f)),
+                        shape = RoundedCornerShape(18.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+                            focusedContainerColor = MaterialTheme.colorScheme.surface,
+                            unfocusedBorderColor = SoftGold.copy(alpha = 0.35f),
+                            focusedBorderColor = MaterialTheme.colorScheme.primary
+                        ),
+                        singleLine = true
+                    )
+
+                    Surface(
+                        onClick = launchImportContacts,
+                        shape = RoundedCornerShape(18.dp),
+                        color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.7f),
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)),
+                        shadowElevation = 2.dp,
+                        modifier = Modifier
+                            .height(54.dp)
+                            .testTag("import_contacts_button")
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(6.dp),
+                            modifier = Modifier.padding(horizontal = 12.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.ContactPhone,
+                                contentDescription = if (lang == "en") "Import" else "استيراد",
+                                tint = MaterialTheme.colorScheme.onSecondaryContainer,
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Text(
+                                text = if (lang == "en") "Import" else "استيراد",
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSecondaryContainer
+                            )
                         }
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .shadow(4.dp, RoundedCornerShape(20.dp), ambientColor = Color.Black.copy(alpha = 0.03f)),
-                    shape = RoundedCornerShape(20.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        unfocusedContainerColor = MaterialTheme.colorScheme.surface,
-                        focusedContainerColor = MaterialTheme.colorScheme.surface,
-                        unfocusedBorderColor = SoftGold.copy(alpha = 0.3f),
-                        focusedBorderColor = MaterialTheme.colorScheme.primary
-                    ),
-                    singleLine = true
-                )
+                    }
+                }
             }
 
             // 5. Relatives List
@@ -310,9 +287,16 @@ fun RelativesTabScreen(
                     if (searchQuery.isNotEmpty()) {
                         SilaEmptyStateView(
                             title = if (lang == "en") "No results matching \"$searchQuery\""
-                                    else "لا توجد نتائج مطابقة لـ \"$searchQuery\"",
+                                     else "لا توجد نتائج مطابقة لـ \"$searchQuery\"",
                             subtitle = if (lang == "en") "Try searching with a different name or phone number"
-                                       else "جرّب البحث باسم مختلف أو رقم الهاتف"
+                                        else "جرّب البحث باسم مختلف أو رقم الهاتف"
+                        )
+                    } else if (selectedCategory != "الكل" && allRelatives.isNotEmpty()) {
+                        SilaEmptyStateView(
+                            title = if (lang == "en") "No relatives under \"$selectedCategory\""
+                                     else "لا توجد أرحام مسجلة في تصنيف «$selectedCategory»",
+                            subtitle = if (lang == "en") "Tap \"All\" to see all your relatives"
+                                        else "اضغط على «الكل» بالأعلى لعرض كافة الأقارب (${allRelatives.size})"
                         )
                     } else {
                         SilaEmptyStateView(

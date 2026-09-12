@@ -25,7 +25,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
-import com.example.ui.components.AvatarPickerSheet
+import com.example.ui.components.ProfilePhotoSheet
 import com.example.ui.components.SilaUserAvatar
 import com.example.ui.theme.PrimaryGreen
 import com.example.ui.theme.SoftGold
@@ -38,7 +38,8 @@ fun UserProfileDialog(
     onDismiss: () -> Unit
 ) {
     val userName: String by viewModel.userName.collectAsState(initial = "")
-    val userAvatarId: String by viewModel.userAvatarId.collectAsState(initial = "avatar_01")
+    val userPhotoPath: String? by viewModel.userPhotoPath.collectAsState(initial = null)
+    val userPhotoTimestamp: Long by viewModel.userPhotoTimestamp.collectAsState(initial = 0L)
     val lang: String by viewModel.selectedLanguage.collectAsState(initial = "ar")
     val logs by viewModel.logs.collectAsState(initial = emptyList())
 
@@ -98,7 +99,9 @@ fun UserProfileDialog(
                             modifier = Modifier.clickable { showAvatarPicker = true }
                         ) {
                             SilaUserAvatar(
-                                avatarId = userAvatarId,
+                                photoPath = userPhotoPath,
+                                userName = displayName,
+                                timestamp = userPhotoTimestamp,
                                 size = 58.dp,
                                 showBorder = true
                             )
@@ -401,13 +404,18 @@ fun UserProfileDialog(
         }
     }
 
-    // ── Avatar Picker Sheet ───────────────────────────────────────────────────
+    // ── Profile Photo Sheet ───────────────────────────────────────────────────
     if (showAvatarPicker) {
-        AvatarPickerSheet(
-            currentAvatarId = userAvatarId,
+        ProfilePhotoSheet(
+            photoPath = userPhotoPath,
+            userName = displayName,
+            timestamp = userPhotoTimestamp,
             lang = lang,
-            onAvatarSelected = { newId ->
-                viewModel.saveUserAvatar(newId)
+            onPhotoSelected = { uri ->
+                viewModel.setUserPhoto(uri)
+            },
+            onRemovePhoto = {
+                viewModel.removeUserPhoto()
             },
             onDismiss = { showAvatarPicker = false }
         )

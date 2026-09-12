@@ -20,14 +20,12 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.ContentCopy
-import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.QrCode
 import androidx.compose.material3.*
@@ -35,7 +33,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -55,6 +52,7 @@ fun SupportSilaDialog(
     contactedCount: Int,
     interactionCount: Int,
     daysUsingApp: Long,
+    lang: String = "ar",
     onDismiss: () -> Unit
 ) {
     val context = LocalContext.current
@@ -101,7 +99,7 @@ fun SupportSilaDialog(
                                 ) {
                                     Icon(
                                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                        contentDescription = "الرجوع",
+                                        contentDescription = if (lang == "en") "Back" else "الرجوع",
                                         tint = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
                                 }
@@ -109,9 +107,9 @@ fun SupportSilaDialog(
 
                             Text(
                                 text = when (currentPage) {
-                                    SupportPage.MAIN -> "ادعم صِلَةِ"
-                                    SupportPage.INSTAPAY -> "الدعم عبر InstaPay"
-                                    SupportPage.VODAFONE_CASH -> "الدعم عبر المحفظة الإلكترونية"
+                                    SupportPage.MAIN -> if (lang == "en") "Support Sila 🤍" else "ادعم صِلَةِ 🤍"
+                                    SupportPage.INSTAPAY -> if (lang == "en") "Support via InstaPay" else "الدعم عبر InstaPay"
+                                    SupportPage.VODAFONE_CASH -> if (lang == "en") "Support via Mobile Wallet" else "الدعم عبر المحفظة الإلكترونية"
                                 },
                                 style = MaterialTheme.typography.titleLarge.copy(
                                     fontWeight = FontWeight.Bold,
@@ -129,7 +127,7 @@ fun SupportSilaDialog(
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Close,
-                                contentDescription = "إغلاق",
+                                contentDescription = if (lang == "en") "Close" else "إغلاق",
                                 tint = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
@@ -153,7 +151,10 @@ fun SupportSilaDialog(
                                 .padding(bottom = 14.dp)
                         ) {
                             Text(
-                                text = "شكرًا لدعمك لصِلَةِ! جزاك الله خيراً وبارك في رزقك.",
+                                text = if (lang == "en")
+                                    "Thank you for supporting Sila! May Allah reward you and bless your sustenance ✨"
+                                else
+                                    "شكرًا لدعمك لصِلَةِ! جزاك الله خيراً وبارك في رزقك ✨",
                                 modifier = Modifier.padding(14.dp),
                                 style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
                                 color = MaterialTheme.colorScheme.onTertiaryContainer,
@@ -162,36 +163,39 @@ fun SupportSilaDialog(
                         }
                     }
 
-                // Screen Switcher
-                AnimatedContent(
-                    targetState = currentPage,
-                    transitionSpec = { fadeIn() togetherWith fadeOut() },
-                    label = "SupportPageTransition"
-                ) { page ->
-                    when (page) {
-                        SupportPage.MAIN -> MainSupportContent(
-                            contactedCount = contactedCount,
-                            interactionCount = interactionCount,
-                            daysUsingApp = daysUsingApp,
-                            onSelectInstaPay = { currentPage = SupportPage.INSTAPAY },
-                            onSelectVodafone = { currentPage = SupportPage.VODAFONE_CASH }
-                        )
+                    // Screen Switcher
+                    AnimatedContent(
+                        targetState = currentPage,
+                        transitionSpec = { fadeIn() togetherWith fadeOut() },
+                        label = "SupportPageTransition"
+                    ) { page ->
+                        when (page) {
+                            SupportPage.MAIN -> MainSupportContent(
+                                contactedCount = contactedCount,
+                                interactionCount = interactionCount,
+                                daysUsingApp = daysUsingApp,
+                                lang = lang,
+                                onSelectInstaPay = { currentPage = SupportPage.INSTAPAY },
+                                onSelectVodafone = { currentPage = SupportPage.VODAFONE_CASH }
+                            )
 
-                        SupportPage.INSTAPAY -> DedicatedInstaPayPage(
-                            context = context,
-                            onActionDone = { showAppreciationBanner = true }
-                        )
+                            SupportPage.INSTAPAY -> DedicatedInstaPayPage(
+                                context = context,
+                                lang = lang,
+                                onActionDone = { showAppreciationBanner = true }
+                            )
 
-                        SupportPage.VODAFONE_CASH -> DedicatedVodafoneCashPage(
-                            context = context,
-                            onActionDone = { showAppreciationBanner = true }
-                        )
+                            SupportPage.VODAFONE_CASH -> DedicatedVodafoneCashPage(
+                                context = context,
+                                lang = lang,
+                                onActionDone = { showAppreciationBanner = true }
+                            )
+                        }
                     }
                 }
             }
         }
     }
-}
 }
 
 @Composable
@@ -199,6 +203,7 @@ private fun MainSupportContent(
     contactedCount: Int,
     interactionCount: Int,
     daysUsingApp: Long,
+    lang: String,
     onSelectInstaPay: () -> Unit,
     onSelectVodafone: () -> Unit
 ) {
@@ -223,7 +228,7 @@ private fun MainSupportContent(
                 ) {
                     Text(text = "✨", fontSize = 18.sp)
                     Text(
-                        text = "صِلَةِ مجاني 100% وبدون إعلانات",
+                        text = if (lang == "en") "Sila is 100% Free & Ad-Free" else "صِلَةِ مجاني 100% وبدون إعلانات",
                         fontSize = 15.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color(0xFF004D40)
@@ -231,7 +236,10 @@ private fun MainSupportContent(
                 }
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = "تطبيق صِلَةِ بدون أي اشتراكات. دعمك الاختياري يساهم مباشرة في استمرار تطوير وتحديث التطبيق.",
+                    text = if (lang == "en")
+                        "Sila has no subscriptions or ads. Your voluntary support directly powers the ongoing development, updates, and maintenance of the app."
+                    else
+                        "تطبيق صِلَةِ بدون أي اشتراكات أو إعلانات. دعمك الاختياري يساهم مباشرة في استمرار تطوير وتحديث التطبيق.",
                     fontSize = 12.sp,
                     color = Color(0xFF00796B),
                     lineHeight = 17.sp
@@ -243,7 +251,7 @@ private fun MainSupportContent(
 
         // Personal Impact Section
         Text(
-            text = "أثرك في صِلَةِ 📊",
+            text = if (lang == "en") "Your Impact on Sila 📊" else "أثرك في صِلَةِ 📊",
             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold, fontSize = 15.sp),
             color = MaterialTheme.colorScheme.onSurface
         )
@@ -257,19 +265,19 @@ private fun MainSupportContent(
                 modifier = Modifier.weight(1f),
                 icon = "👥",
                 value = contactedCount.toString(),
-                label = "أقارب تواصلت معهم"
+                label = if (lang == "en") "Relatives Contacted" else "أقارب تواصلت معهم"
             )
             ImpactStatCard(
                 modifier = Modifier.weight(1f),
                 icon = "📝",
                 value = interactionCount.toString(),
-                label = "تفاعلات مسجلة"
+                label = if (lang == "en") "Logs Recorded" else "تفاعلات مسجلة"
             )
             ImpactStatCard(
                 modifier = Modifier.weight(1f),
                 icon = "⏳",
                 value = maxOf(1L, daysUsingApp).toString(),
-                label = "أيام استخدام"
+                label = if (lang == "en") "Days Using Sila" else "أيام استخدام"
             )
         }
 
@@ -277,7 +285,7 @@ private fun MainSupportContent(
 
         // Support Methods Selection
         Text(
-            text = "اختر طريقة الدعم 💳",
+            text = if (lang == "en") "Choose Support Method 💳" else "اختر طريقة الدعم 💳",
             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold, fontSize = 15.sp),
             color = MaterialTheme.colorScheme.onSurface
         )
@@ -285,8 +293,8 @@ private fun MainSupportContent(
 
         // Method 1 Button Card
         SupportMethodNavCard(
-            title = "InstaPay (إنستا باي)",
-            subtitle = "تحويل مباشر وسريع عبر عنوان IPA",
+            title = if (lang == "en") "InstaPay (Egypt)" else "InstaPay (إنستا باي)",
+            subtitle = if (lang == "en") "Fast & direct transfer via IPA payment address" else "تحويل مباشر وسريع عبر عنوان IPA",
             iconText = "📲",
             onClick = onSelectInstaPay
         )
@@ -295,8 +303,8 @@ private fun MainSupportContent(
 
         // Method 2 Button Card
         SupportMethodNavCard(
-            title = "المحفظة الإلكترونية (فودافون كاش)",
-            subtitle = "تحويل من فودافون/اتصالات/أورنج كاش أو محفظة بنكية",
+            title = if (lang == "en") "Mobile Wallets (Vodafone Cash / EGP)" else "المحفظة الإلكترونية (فودافون كاش)",
+            subtitle = if (lang == "en") "Transfer via Vodafone, Orange, Etisalat Cash or Bank Wallet" else "تحويل من فودافون/اتصالات/أورنج كاش أو محفظة بنكية",
             iconText = "📱",
             onClick = onSelectVodafone
         )
@@ -306,6 +314,7 @@ private fun MainSupportContent(
 @Composable
 private fun DedicatedInstaPayPage(
     context: Context,
+    lang: String,
     onActionDone: () -> Unit
 ) {
     var showQR by remember { mutableStateOf(false) }
@@ -326,7 +335,7 @@ private fun DedicatedInstaPayPage(
                     Spacer(modifier = Modifier.width(10.dp))
                     Column {
                         Text(
-                            text = "عنوان الدفع الخاص بـ InstaPay (IPA)",
+                            text = if (lang == "en") "InstaPay Payment Address (IPA)" else "عنوان الدفع الخاص بـ InstaPay (IPA)",
                             fontSize = 12.sp,
                             color = Color(0xFF166534),
                             fontWeight = FontWeight.Medium
@@ -352,7 +361,11 @@ private fun DedicatedInstaPayPage(
                             val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                             val clip = ClipData.newPlainText("InstaPay IPA", SupportConfig.INSTAPAY_ADDRESS)
                             clipboard.setPrimaryClip(clip)
-                            Toast.makeText(context, "تم نسخ عنوان InstaPay بنجاح ✨", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(
+                                context,
+                                if (lang == "en") "InstaPay address copied successfully ✨" else "تم نسخ عنوان InstaPay بنجاح ✨",
+                                Toast.LENGTH_SHORT
+                            ).show()
                             onActionDone()
                         },
                         modifier = Modifier.weight(1f),
@@ -361,7 +374,7 @@ private fun DedicatedInstaPayPage(
                     ) {
                         Icon(Icons.Default.ContentCopy, contentDescription = null, modifier = Modifier.size(16.dp))
                         Spacer(modifier = Modifier.width(6.dp))
-                        Text("نسخ العنوان", fontSize = 13.sp)
+                        Text(if (lang == "en") "Copy Address" else "نسخ العنوان", fontSize = 13.sp)
                     }
 
                     // Open InstaPay App
@@ -372,7 +385,11 @@ private fun DedicatedInstaPayPage(
                                 context.startActivity(intent)
                                 onActionDone()
                             } catch (e: Exception) {
-                                Toast.makeText(context, "تعذر فتح تطبيق InstaPay تلقائياً", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(
+                                    context,
+                                    if (lang == "en") "Unable to open InstaPay automatically" else "تعذر فتح تطبيق InstaPay تلقائياً",
+                                    Toast.LENGTH_SHORT
+                                ).show()
                             }
                         },
                         modifier = Modifier.weight(1f),
@@ -380,7 +397,7 @@ private fun DedicatedInstaPayPage(
                     ) {
                         Icon(Icons.AutoMirrored.Filled.OpenInNew, contentDescription = null, modifier = Modifier.size(16.dp))
                         Spacer(modifier = Modifier.width(6.dp))
-                        Text("فتح التطبيق", fontSize = 13.sp)
+                        Text(if (lang == "en") "Open App" else "فتح التطبيق", fontSize = 13.sp)
                     }
 
                     // Toggle QR
@@ -437,7 +454,7 @@ private fun DedicatedInstaPayPage(
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Text(
-                    text = "خطوات التحويل بالتفصيل 📋",
+                    text = if (lang == "en") "Transfer Steps in Detail 📋" else "خطوات التحويل بالتفصيل 📋",
                     fontSize = 15.sp,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface
@@ -446,29 +463,41 @@ private fun DedicatedInstaPayPage(
 
                 StepGuideItem(
                     stepNumber = "1",
-                    title = "افتح تطبيق InstaPay",
-                    description = "قم بفتح تطبيق إنستا باي على هاتفك واضغط على زر الإرسال."
+                    title = if (lang == "en") "Open InstaPay App" else "افتح تطبيق InstaPay",
+                    description = if (lang == "en")
+                        "Open the InstaPay app on your phone and tap the Send button."
+                    else
+                        "قم بفتح تطبيق إنستا باي على هاتفك واضغط على زر الإرسال."
                 )
                 HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp), color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f))
 
                 StepGuideItem(
                     stepNumber = "2",
-                    title = "اختر الإرسال عبر عنوان IPA",
-                    description = "اختر \"إرسال نقود\" ثم حدد الخيار \"عنوان الدفع (IPA)\"."
+                    title = if (lang == "en") "Select Send via IPA" else "اختر الإرسال عبر عنوان IPA",
+                    description = if (lang == "en")
+                        "Choose \"Send Money\" then select \"Payment Address (IPA)\"."
+                    else
+                        "اختر \"إرسال نقود\" ثم حدد الخيار \"عنوان الدفع (IPA)\"."
                 )
                 HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp), color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f))
 
                 StepGuideItem(
                     stepNumber = "3",
-                    title = "الصق عنوان الدفع",
-                    description = "أدخل العنوان: ${SupportConfig.INSTAPAY_ADDRESS} (أو اضغط زر نسخ العنوان أعلاه)."
+                    title = if (lang == "en") "Paste Payment Address" else "الصق عنوان الدفع",
+                    description = if (lang == "en")
+                        "Enter: ${SupportConfig.INSTAPAY_ADDRESS} (or tap Copy Address above)."
+                    else
+                        "أدخل العنوان: ${SupportConfig.INSTAPAY_ADDRESS} (أو اضغط زر نسخ العنوان أعلاه)."
                 )
                 HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp), color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f))
 
                 StepGuideItem(
                     stepNumber = "4",
-                    title = "حدد المبلغ واضغط تأكيد",
-                    description = "اكتب مبلغ التبرع الاختياري وأدخل الرقم السري لـ InstaPay لإتمام التحويل."
+                    title = if (lang == "en") "Enter Amount & Confirm" else "حدد المبلغ واضغط تأكيد",
+                    description = if (lang == "en")
+                        "Enter your voluntary support amount and enter your InstaPay PIN to complete the transfer."
+                    else
+                        "اكتب مبلغ التبرع الاختياري وأدخل الرقم السري لـ InstaPay لإتمام التحويل."
                 )
             }
         }
@@ -478,6 +507,7 @@ private fun DedicatedInstaPayPage(
 @Composable
 private fun DedicatedVodafoneCashPage(
     context: Context,
+    lang: String,
     onActionDone: () -> Unit
 ) {
     var showQR by remember { mutableStateOf(false) }
@@ -498,7 +528,7 @@ private fun DedicatedVodafoneCashPage(
                     Spacer(modifier = Modifier.width(10.dp))
                     Column {
                         Text(
-                            text = "رقم المحفظة الإلكترونية (فودافون كاش)",
+                            text = if (lang == "en") "Electronic Wallet Number (Vodafone Cash)" else "رقم المحفظة الإلكترونية (فودافون كاش)",
                             fontSize = 12.sp,
                             color = Color(0xFF991B1B),
                             fontWeight = FontWeight.Medium
@@ -524,7 +554,11 @@ private fun DedicatedVodafoneCashPage(
                             val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                             val clip = ClipData.newPlainText("Vodafone Cash Number", SupportConfig.VODAFONE_CASH_NUMBER)
                             clipboard.setPrimaryClip(clip)
-                            Toast.makeText(context, "تم نسخ الرقم بنجاح ✨", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(
+                                context,
+                                if (lang == "en") "Wallet number copied successfully ✨" else "تم نسخ الرقم بنجاح ✨",
+                                Toast.LENGTH_SHORT
+                            ).show()
                             onActionDone()
                         },
                         modifier = Modifier.weight(1f),
@@ -533,7 +567,7 @@ private fun DedicatedVodafoneCashPage(
                     ) {
                         Icon(Icons.Default.ContentCopy, contentDescription = null, modifier = Modifier.size(16.dp))
                         Spacer(modifier = Modifier.width(6.dp))
-                        Text("نسخ الرقم", fontSize = 13.sp)
+                        Text(if (lang == "en") "Copy Number" else "نسخ الرقم", fontSize = 13.sp)
                     }
 
                     // Direct USSD Call *9#
@@ -544,7 +578,11 @@ private fun DedicatedVodafoneCashPage(
                                 context.startActivity(intent)
                                 onActionDone()
                             } catch (e: Exception) {
-                                Toast.makeText(context, "تعذر فتح لوحة الاتصال", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(
+                                    context,
+                                    if (lang == "en") "Unable to open dialer" else "تعذر فتح لوحة الاتصال",
+                                    Toast.LENGTH_SHORT
+                                ).show()
                             }
                         },
                         modifier = Modifier.weight(1f),
@@ -552,7 +590,7 @@ private fun DedicatedVodafoneCashPage(
                     ) {
                         Icon(Icons.Default.Phone, contentDescription = null, modifier = Modifier.size(16.dp))
                         Spacer(modifier = Modifier.width(6.dp))
-                        Text("طلب *9#", fontSize = 13.sp)
+                        Text(if (lang == "en") "Dial *9#" else "طلب *9#", fontSize = 13.sp)
                     }
 
                     // Toggle QR
@@ -609,7 +647,7 @@ private fun DedicatedVodafoneCashPage(
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Text(
-                    text = "خطوات التحويل بالتفصيل 📋",
+                    text = if (lang == "en") "Transfer Steps in Detail 📋" else "خطوات التحويل بالتفصيل 📋",
                     fontSize = 15.sp,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface
@@ -618,29 +656,41 @@ private fun DedicatedVodafoneCashPage(
 
                 StepGuideItem(
                     stepNumber = "1",
-                    title = "افتح كود المحفظة أو التطبيق",
-                    description = "اطلب كود *9# (فودافون كاش) أو افتح تطبيق المحفظة الخاص بك (أورنج كاش، اتصالات، WE، محفظة البنك)."
+                    title = if (lang == "en") "Dial USSD or Open Wallet App" else "افتح كود المحفظة أو التطبيق",
+                    description = if (lang == "en")
+                        "Dial *9# (Vodafone Cash) or open your electronic wallet app (Orange, Etisalat, WE, Bank Wallet)."
+                    else
+                        "اطلب كود *9# (فودافون كاش) أو افتح تطبيق المحفظة الخاص بك (أورنج كاش، اتصالات، WE، محفظة البنك)."
                 )
                 HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp), color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f))
 
                 StepGuideItem(
                     stepNumber = "2",
-                    title = "اختر تحويل الأموال",
-                    description = "حدد خيار \"تحويل الأموال\" ثم اختر الإرسال إلى رقم آخر."
+                    title = if (lang == "en") "Select Transfer Money" else "اختر تحويل الأموال",
+                    description = if (lang == "en")
+                        "Select \"Money Transfer\" and choose sending to another mobile number."
+                    else
+                        "حدد خيار \"تحويل الأموال\" ثم اختر الإرسال إلى رقم آخر."
                 )
                 HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp), color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f))
 
                 StepGuideItem(
                     stepNumber = "3",
-                    title = "أدخل الرقم المستلم",
-                    description = "اكتب الرقم: ${SupportConfig.VODAFONE_CASH_NUMBER} (أو استخدم زر نسخ الرقم أعلاه)."
+                    title = if (lang == "en") "Enter Recipient Number" else "أدخل الرقم المستلم",
+                    description = if (lang == "en")
+                        "Enter the number: ${SupportConfig.VODAFONE_CASH_NUMBER} (or tap Copy Number above)."
+                    else
+                        "اكتب الرقم: ${SupportConfig.VODAFONE_CASH_NUMBER} (أو استخدم زر نسخ الرقم أعلاه)."
                 )
                 HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp), color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f))
 
                 StepGuideItem(
                     stepNumber = "4",
-                    title = "حدد المبلغ والرقم السري",
-                    description = "أدخل مبلغ التبرع الاختياري ثم أدخل الرقم السري للمحفظة لتأكيد التحويل."
+                    title = if (lang == "en") "Enter Amount & Wallet PIN" else "حدد المبلغ والرقم السري",
+                    description = if (lang == "en")
+                        "Enter your voluntary support amount and your wallet PIN to confirm the transfer."
+                    else
+                        "أدخل مبلغ التبرع الاختياري ثم أدخل الرقم السري للمحفظة لتأكيد التحويل."
                 )
             }
         }
@@ -760,7 +810,7 @@ private fun SupportMethodNavCard(
             }
             Spacer(modifier = Modifier.width(8.dp))
             Icon(
-                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                imageVector = Icons.AutoMirrored.Filled.ArrowForward,
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.size(18.dp)
@@ -807,4 +857,3 @@ private fun ImpactStatCard(
         }
     }
 }
-

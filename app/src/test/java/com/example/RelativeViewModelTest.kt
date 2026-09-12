@@ -128,4 +128,48 @@ class RelativeViewModelTest {
         viewModel.dismissKinshipCheckInDialog()
         assertFalse(viewModel.showKinshipCheckInDialog.value)
     }
+
+    @Test
+    fun testAddRelativeResetsFilterAndMatchesCategory() {
+        viewModel.searchQuery.value = "بحث قديم"
+        viewModel.selectedCategory.value = "والدان"
+
+        viewModel.addRelative(
+            name = "عمي خالد",
+            phone = "01012345678",
+            relationshipDegree = "عم",
+            intervalDays = 7,
+            notes = "ملاحظة"
+        )
+
+        assertEquals("", viewModel.searchQuery.value)
+        assertEquals("الكل", viewModel.selectedCategory.value)
+    }
+
+    @Test
+    fun testAddRelativePersistsAndEmits() = kotlinx.coroutines.test.runTest {
+        val application = ApplicationProvider.getApplicationContext<Application>()
+        val db = com.example.data.AppDatabase.getDatabase(application)
+        
+        viewModel.addRelative(
+            name = "خالتي فاطمة",
+            phone = "01122334455",
+            relationshipDegree = "خالة",
+            intervalDays = 5,
+            notes = "ملاحظة خاصة"
+        )
+
+        // Wait a little for coroutine execution
+        var found = false
+        for (i in 1..20) {
+            val list = db.relativeDao().getAllRelativesOnce()
+            if (list.any { it.name == "خالتي فاطمة" }) {
+                found = true
+                break
+            }
+            kotlinx.coroutines.delay(100)
+        }
+        assertTrue("Relative should be in database", found)
+    }
 }
+

@@ -44,7 +44,6 @@ import java.util.*
 fun HomeTabScreen(viewModel: RelativeViewModel) {
     val lang by viewModel.selectedLanguage.collectAsState()
     val userName by viewModel.userName.collectAsState()
-    val userAvatarId by viewModel.userAvatarId.collectAsState()
     val relatives by viewModel.relatives.collectAsState()
     val logs by viewModel.logs.collectAsState()
     val streakDays by viewModel.streakDays.collectAsState()
@@ -74,54 +73,17 @@ fun HomeTabScreen(viewModel: RelativeViewModel) {
         logs.map { it.relativeId }.distinct().size
     }
 
-    var showProfileDialog by remember { mutableStateOf(false) }
-
-    if (showProfileDialog) {
-        com.example.ui.dialogs.UserProfileDialog(
-            viewModel = viewModel,
-            onDismiss = { showProfileDialog = false }
-        )
-    }
-
     Scaffold(
-        topBar = {
-            Surface(
-                color = Color.Transparent,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .statusBarsPadding()
-                        .padding(horizontal = 16.dp, vertical = 6.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
-                    com.example.ui.components.SilaUserAvatar(
-                        avatarId = userAvatarId,
-                        size = 34.dp,
-                        showBorder = true,
-                        modifier = Modifier.clickableNoRipple { showProfileDialog = true }
-                    )
-                    Text(
-                        text = if (userName.isNotBlank()) userName
-                               else if (lang == "en") "Family Keeper" else "حافظ الأرحام",
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onBackground,
-                        fontSize = 15.sp
-                    )
-                }
-            }
-        },
         containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
+                .statusBarsPadding()
                 .padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.spacedBy(18.dp),
-            contentPadding = PaddingValues(bottom = 96.dp, top = 4.dp)
+            contentPadding = PaddingValues(top = 16.dp, bottom = 100.dp)
         ) {
 
             // 1. Commitment Arc Card
@@ -136,15 +98,6 @@ fun HomeTabScreen(viewModel: RelativeViewModel) {
                 )
             }
 
-            // 2. Quick Stats Row
-            item {
-                QuickStatsRow(
-                    relativesCount = relatives.size,
-                    dueCount = dueRelatives.size,
-                    logsCount = totalLogsCount,
-                    lang = lang
-                )
-            }
 
             // 3. Kinship Streak Card
             item {
@@ -167,90 +120,7 @@ fun HomeTabScreen(viewModel: RelativeViewModel) {
     }
 }
 
-// ── Quick Stats Row ───────────────────────────────────────────────────────────
-@Composable
-private fun QuickStatsRow(
-    relativesCount: Int,
-    dueCount: Int,
-    logsCount: Int,
-    lang: String
-) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(10.dp)
-    ) {
-        MiniStatCard(
-            emoji = "👥",
-            value = relativesCount.toString(),
-            label = if (lang == "en") "Relatives" else "أقارب",
-            color = PrimaryGreen,
-            modifier = Modifier.weight(1f)
-        )
-        MiniStatCard(
-            emoji = "🔔",
-            value = dueCount.toString(),
-            label = if (lang == "en") "Due Now" else "بانتظارك",
-            color = if (dueCount > 0) Color(0xFFD32F2F) else PrimaryGreen,
-            modifier = Modifier.weight(1f)
-        )
-        MiniStatCard(
-            emoji = "🤝",
-            value = logsCount.toString(),
-            label = if (lang == "en") "Total Logs" else "صلات مسجلة",
-            color = Color(0xFF0E7075),
-            modifier = Modifier.weight(1f)
-        )
-    }
-}
 
-@Composable
-private fun MiniStatCard(
-    emoji: String,
-    value: String,
-    label: String,
-    color: Color,
-    modifier: Modifier = Modifier
-) {
-    Card(
-        shape = RoundedCornerShape(18.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        border = androidx.compose.foundation.BorderStroke(1.dp, color.copy(alpha = 0.15f)),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        modifier = modifier
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 12.dp, horizontal = 6.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(6.dp)
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(38.dp)
-                    .background(color.copy(alpha = 0.12f), CircleShape),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = emoji,
-                    fontSize = 18.sp
-                )
-            }
-            Text(
-                text = value,
-                fontSize = 19.sp,
-                fontWeight = FontWeight.Black,
-                color = color
-            )
-            Text(
-                text = label,
-                fontSize = 11.sp,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
-                fontWeight = FontWeight.SemiBold
-            )
-        }
-    }
-}
 
 // ── Kinship Streak Card ────────────────────────────────────────────────────────
 @Composable
@@ -309,26 +179,26 @@ private fun StreakCard(
                     modifier = Modifier
                         .size(44.dp)
                         .background(
-                            color = if (streakDays > 0) Color(0xFFFF6D00).copy(alpha = 0.15f)
+                            color = if (streakDays > 0) PrimaryGreen.copy(alpha = 0.14f)
                                     else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f),
                             shape = CircleShape
                         ),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = if (streakDays > 0) "🔥" else "🌱",
+                        text = if (streakDays > 0) "🌿" else "🌱",
                         fontSize = 22.sp
                     )
                 }
 
                 Column {
                     Text(
-                        text = if (lang == "en") "$streakDays Day Streak!"
+                        text = if (lang == "en") "$streakDays Day Streak! 🌿"
                                else if (streakDays == 0) "تتابع صلة الرحم 🌸"
-                               else if (streakDays == 1) "يوم واحد متواصل 🔥"
-                               else if (streakDays == 2) "يومان متواصلان 🔥"
-                               else if (streakDays in 3..10) "$streakDays أيام متتالية 🔥"
-                               else "$streakDays يوماً متتالياً 🔥",
+                               else if (streakDays == 1) "يوم واحد متواصل 🌿"
+                               else if (streakDays == 2) "يومان متواصلان 🌿"
+                               else if (streakDays in 3..10) "$streakDays أيام متتالية 🌿"
+                               else "$streakDays يوماً متتالياً 🌿",
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface
@@ -337,7 +207,7 @@ private fun StreakCard(
                         text = if (streakDays == 0) {
                             if (lang == "en") "Connect today to start your streak!" else "تواصل اليوم لتبدأ سلسلة صلة الرحم! 🌸"
                         } else {
-                            if (lang == "en") "Keep the flame of family ties glowing!" else "واصل صلة رحمك يومياً لنيل البركة والرضوان ✨"
+                            if (lang == "en") "Keep the warmth of family ties blooming! 🌿" else "واصل صلة رحمك يومياً لنيل البركة والرضوان ✨"
                         },
                         fontSize = 11.sp,
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
@@ -370,19 +240,19 @@ private fun StreakCard(
                             modifier = Modifier
                                 .size(32.dp)
                                 .background(
-                                    color = if (isActive) Color(0xFFFF6D00).copy(alpha = 0.18f)
+                                    color = if (isActive) PrimaryGreen.copy(alpha = 0.15f)
                                             else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.06f),
                                     shape = CircleShape
                                 )
                                 .border(
                                     width = if (isToday) 1.5.dp else 0.dp,
-                                    color = if (isToday) Color(0xFFFF6D00) else Color.Transparent,
+                                    color = if (isToday) PrimaryGreen else Color.Transparent,
                                     shape = CircleShape
                                 ),
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
-                                text = if (isActive) "🔥" else "•",
+                                text = if (isActive) "🌿" else "•",
                                 fontSize = if (isActive) 13.sp else 16.sp,
                                 color = if (isActive) Color.Unspecified else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
                             )

@@ -24,6 +24,7 @@ import com.example.work.UsageNotificationWorker
 import java.util.Calendar
 import java.util.concurrent.TimeUnit
 import android.net.Uri
+import java.io.File
 import com.example.data.BackupManager
 import com.example.data.CallLogManager
 import com.example.data.CallType
@@ -87,19 +88,32 @@ class RelativeViewModel(application: Application) : AndroidViewModel(application
         selectedCategory
     ) { relativesList, query, category ->
         relativesList.filter { relative ->
-            val matchesSearch = relative.name.contains(query, ignoreCase = true) || 
-                                relative.phone.contains(query)
-            val matchesCategory = category == "الكل" || relative.relationshipDegree == category
+            val cleanQuery = query.trim()
+            val matchesSearch = if (cleanQuery.isBlank()) true
+            else relative.name.contains(cleanQuery, ignoreCase = true) || relative.phone.contains(cleanQuery)
+
+            val matchesCategory = when (category) {
+                "الكل" -> true
+                "والدان" -> relative.relationshipDegree in listOf("والدان", "أب", "أم", "والد", "والدة", "جد", "جدة", "Father", "Mother", "Parents")
+                "أشقاء" -> relative.relationshipDegree in listOf("أشقاء", "أخ", "أخت", "شقيق", "شقيقة", "Brother", "Sister", "Siblings")
+                "أعمام/أخوال" -> relative.relationshipDegree in listOf("أعمام/أخوال", "عم", "عمة", "خال", "خالة", "Uncle", "Aunt", "Uncles/Aunts")
+                "أقارب آخرون" -> relative.relationshipDegree == "أقارب آخرون" || (
+                    relative.relationshipDegree !in listOf("والدان", "أب", "أم", "والد", "والدة", "جد", "جدة", "Father", "Mother", "Parents") &&
+                    relative.relationshipDegree !in listOf("أشقاء", "أخ", "أخت", "شقيق", "شقيقة", "Brother", "Sister", "Siblings") &&
+                    relative.relationshipDegree !in listOf("أعمام/أخوال", "عم", "عمة", "خال", "خالة", "Uncle", "Aunt", "Uncles/Aunts")
+                )
+                else -> relative.relationshipDegree.contains(category) || category.contains(relative.relationshipDegree)
+            }
             matchesSearch && matchesCategory
         }.sortedWith(
             compareBy<Relative> { relative ->
                 if (relative.lastContactDate == 0L) 0L
                 else relative.lastContactDate + (relative.contactIntervalDays * 86_400_000L)
             }.thenBy { relative ->
-                when (relative.relationshipDegree) {
-                    "والدان" -> 1
-                    "أشقاء" -> 2
-                    "أعمام/أخوال" -> 3
+                when {
+                    relative.relationshipDegree in listOf("والدان", "أب", "أم", "والد", "والدة", "جد", "جدة") -> 1
+                    relative.relationshipDegree in listOf("أشقاء", "أخ", "أخت", "شقيق", "شقيقة") -> 2
+                    relative.relationshipDegree in listOf("أعمام/أخوال", "عم", "عمة", "خال", "خالة") -> 3
                     else -> 4
                 }
             }.thenBy { it.name }
@@ -117,6 +131,15 @@ class RelativeViewModel(application: Application) : AndroidViewModel(application
     val showSetReminderDialog = MutableStateFlow<Relative?>(null)
     val showSupportSilaDialog = MutableStateFlow(false)
     val activeMilestoneDialog = MutableStateFlow<Int?>(null)
+    val showWhyKinshipScreen = MutableStateFlow(false)
+
+    fun openWhyKinshipScreen() {
+        showWhyKinshipScreen.value = true
+    }
+
+    fun closeWhyKinshipScreen() {
+        showWhyKinshipScreen.value = false
+    }
 
     // Deep navigation state (opened from notification or widget)
     val selectedRelativeForDetail = MutableStateFlow<Relative?>(null)
@@ -251,6 +274,9 @@ class RelativeViewModel(application: Application) : AndroidViewModel(application
     // Safe SharedPreferences helpers to prevent startup crash on type mismatch
     private fun safeGetString(key: String, default: String): String {
         return try { prefs.getString(key, default) ?: default } catch (e: Exception) { default }
+    }
+    private fun safeGetNullableString(key: String): String? {
+        return try { prefs.getString(key, null) } catch (e: Exception) { null }
     }
     private fun safeGetBoolean(key: String, default: Boolean): Boolean {
         return try { prefs.getBoolean(key, default) } catch (e: Exception) { default }
@@ -442,10 +468,25 @@ class RelativeViewModel(application: Application) : AndroidViewModel(application
         prefs.edit().putString("selected_language", langCode).apply()
     }
 
-    // User Profile state (Name, Gender & Avatar)
+    // User Profile state (Name, Gender & Photo)
     val userName = MutableStateFlow(safeGetString("user_name", ""))
     val userGender = MutableStateFlow(safeGetString("user_gender", "male"))
     val userAvatarId = MutableStateFlow(safeGetString("user_avatar_id", "avatar_01"))
+
+    private fun initUserPhotoPath(): String? {
+        val savedPath = safeGetNullableString("user_photo_path")
+        if (!savedPath.isNullOrBlank() && File(savedPath).exists()) {
+            return savedPath
+        }
+        val legacy = File(getApplication<Application>().filesDir, "custom_avatar.jpg")
+        if (legacy.exists() && legacy.length() > 0) {
+            return legacy.absolutePath
+        }
+        return null
+    }
+
+    val userPhotoPath = MutableStateFlow<String?>(initUserPhotoPath())
+    val userPhotoTimestamp = MutableStateFlow<Long>(safeGetLong("user_photo_ts", System.currentTimeMillis()))
 
     fun saveUserProfile(name: String, gender: String) {
         userName.value = name
@@ -459,6 +500,182 @@ class RelativeViewModel(application: Application) : AndroidViewModel(application
     fun saveUserAvatar(avatarId: String) {
         userAvatarId.value = avatarId
         prefs.edit().putString("user_avatar_id", avatarId).apply()
+    }
+
+    private fun openStreamSafely(app: Application, uri: Uri): java.io.InputStream? {
+        // 1. Direct ContentResolver.openInputStream
+        try {
+            val s = app.contentResolver.openInputStream(uri)
+            if (s != null) return s
+        } catch (e: Exception) {
+            android.util.Log.w("SilaPhoto", "openInputStream failed: ${e.message}")
+        }
+
+        // 2. Map MediaDocumentsProvider URI -> MediaStore URI
+        try {
+            if (uri.authority == "com.android.providers.media.documents") {
+                val docId = android.provider.DocumentsContract.getDocumentId(uri)
+                val split = docId.split(":")
+                if (split.size >= 2 && split[0].equals("image", ignoreCase = true)) {
+                    val mediaId = split[1].toLongOrNull()
+                    if (mediaId != null) {
+                        val mediaUri = android.content.ContentUris.withAppendedId(
+                            android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                            mediaId
+                        )
+                        android.util.Log.d("SilaPhoto", "Mapped to MediaStore URI: $mediaUri")
+                        val mediaStream = app.contentResolver.openInputStream(mediaUri)
+                        if (mediaStream != null) return mediaStream
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            android.util.Log.w("SilaPhoto", "Mapping MediaDocumentsProvider failed: ${e.message}")
+        }
+
+        // 3. Fallback: openFileDescriptor
+        try {
+            val pfd = app.contentResolver.openFileDescriptor(uri, "r")
+            if (pfd != null) {
+                return java.io.FileInputStream(pfd.fileDescriptor)
+            }
+        } catch (e: Exception) {
+            android.util.Log.w("SilaPhoto", "openFileDescriptor failed: ${e.message}")
+        }
+
+        // 4. Query _data column
+        try {
+            val cursor = app.contentResolver.query(uri, arrayOf(android.provider.MediaStore.Images.Media.DATA), null, null, null)
+            cursor?.use {
+                if (it.moveToFirst()) {
+                    val dataIndex = it.getColumnIndex(android.provider.MediaStore.Images.Media.DATA)
+                    if (dataIndex != -1) {
+                        val filePath = it.getString(dataIndex)
+                        if (!filePath.isNullOrBlank()) {
+                            val f = File(filePath)
+                            if (f.exists() && f.length() > 0) {
+                                return java.io.FileInputStream(f)
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            android.util.Log.w("SilaPhoto", "Query _data failed: ${e.message}")
+        }
+
+        // 5. Direct File if file path exists
+        try {
+            uri.path?.let { path ->
+                val f = File(path)
+                if (f.exists()) return java.io.FileInputStream(f)
+                val emulatedPath = path.replace("/document/primary:", "/storage/emulated/0/")
+                val f2 = File(emulatedPath)
+                if (f2.exists()) return java.io.FileInputStream(f2)
+            }
+        } catch (e: Exception) {
+            android.util.Log.w("SilaPhoto", "direct File failed: ${e.message}")
+        }
+
+        return null
+    }
+
+    fun setUserPhoto(uri: Uri) {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val app = getApplication<Application>()
+                android.util.Log.d("SilaPhoto", "setUserPhoto: $uri")
+
+                val validStream = openStreamSafely(app, uri) ?: run {
+                    android.util.Log.e("SilaPhoto", "Could not open stream for URI: $uri")
+                    return@launch
+                }
+
+                // Clean up previous photo files
+                app.filesDir.listFiles { file ->
+                    file.name.startsWith("user_photo_") || file.name == "custom_avatar.jpg"
+                }?.forEach { it.delete() }
+
+                val ts = System.currentTimeMillis()
+                val newFile = File(app.filesDir, "user_photo_$ts.jpg")
+                validStream.use { inStream ->
+                    newFile.outputStream().use { outStream ->
+                        inStream.copyTo(outStream)
+                    }
+                }
+
+                if (newFile.exists() && newFile.length() > 0) {
+                    prefs.edit()
+                        .putString("user_photo_path", newFile.absolutePath)
+                        .putLong("user_photo_ts", ts)
+                        .putString("user_avatar_id", "custom_$ts")
+                        .apply()
+                    userPhotoPath.value = newFile.absolutePath
+                    userPhotoTimestamp.value = ts
+                    userAvatarId.value = "custom_$ts"
+                    android.util.Log.i("SilaPhoto", "Successfully saved user photo to: ${newFile.absolutePath} (size: ${newFile.length()} bytes)")
+                }
+            } catch (e: Exception) {
+                android.util.Log.e("SilaPhoto", "Failed to setUserPhoto", e)
+            }
+        }
+    }
+
+    fun setUserPhotoFromFile(sourceFile: File) {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                if (!sourceFile.exists() || sourceFile.length() <= 0) return@launch
+                val app = getApplication<Application>()
+                app.filesDir.listFiles { file ->
+                    file.name.startsWith("user_photo_") || file.name == "custom_avatar.jpg"
+                }?.forEach { it.delete() }
+
+                val ts = System.currentTimeMillis()
+                val newFile = File(app.filesDir, "user_photo_$ts.jpg")
+                sourceFile.inputStream().use { inStream ->
+                    newFile.outputStream().use { outStream ->
+                        inStream.copyTo(outStream)
+                    }
+                }
+
+                if (newFile.exists() && newFile.length() > 0) {
+                    prefs.edit()
+                        .putString("user_photo_path", newFile.absolutePath)
+                        .putLong("user_photo_ts", ts)
+                        .putString("user_avatar_id", "custom_$ts")
+                        .apply()
+                    userPhotoPath.value = newFile.absolutePath
+                    userPhotoTimestamp.value = ts
+                    userAvatarId.value = "custom_$ts"
+                    android.util.Log.i("SilaPhoto", "Successfully copied user photo from file to: ${newFile.absolutePath}")
+                }
+            } catch (e: Exception) {
+                android.util.Log.e("SilaPhoto", "Failed setUserPhotoFromFile", e)
+            }
+        }
+    }
+
+    fun removeUserPhoto() {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val app = getApplication<Application>()
+                app.filesDir.listFiles { file ->
+                    file.name.startsWith("user_photo_") || file.name == "custom_avatar.jpg"
+                }?.forEach { it.delete() }
+
+                val ts = System.currentTimeMillis()
+                prefs.edit()
+                    .remove("user_photo_path")
+                    .putLong("user_photo_ts", ts)
+                    .putString("user_avatar_id", "avatar_01")
+                    .apply()
+                userPhotoPath.value = null
+                userPhotoTimestamp.value = ts
+                userAvatarId.value = "avatar_01"
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
     }
 
     // ─────────────────────────────────────────────────────────────────────
@@ -692,13 +909,17 @@ data class DeviceContact(
         notes: String,
         photoUri: String? = null
     ) {
+        // Clear any active search query and category filter so the new relative is visible immediately
+        searchQuery.value = ""
+        selectedCategory.value = "الكل"
+
         viewModelScope.launch(Dispatchers.IO) {
             val relative = Relative(
-                name = name,
-                phone = phone,
-                relationshipDegree = relationshipDegree,
+                name = name.trim(),
+                phone = phone.trim(),
+                relationshipDegree = relationshipDegree.trim(),
                 contactIntervalDays = intervalDays,
-                notes = notes,
+                notes = notes.trim(),
                 photoUri = photoUri
             )
             val id = repository.insertRelative(relative)

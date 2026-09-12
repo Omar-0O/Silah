@@ -1,154 +1,72 @@
 package com.example.work
 
-import android.app.NotificationChannel
-import android.app.NotificationManager
-import android.app.PendingIntent
 import android.content.Context
-import android.content.Intent
-import android.os.Build
-import androidx.core.app.NotificationCompat
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
-import com.example.MainActivity
-import com.example.NotificationActionReceiver
-import com.example.R
+import com.example.data.AppDatabase
 
+/**
+ * WorkManager periodic worker for individual relative reminders.
+ * Delegates to [SilaNotificationHelper] to send the actual notification,
+ * and checks [ReminderScheduler.wasNotifiedToday] to prevent duplicates
+ * with the AlarmReceiver/PeriodicDueWorker path.
+ */
 class ReminderWorker(
     appContext: Context,
     workerParams: WorkerParameters
 ) : CoroutineWorker(appContext, workerParams) {
 
     override suspend fun doWork(): Result {
-        val relativeName = inputData.getString("relative_name") ?: "قريبك"
-        val relationshipDegree = inputData.getString("relationship_degree") ?: "أقارب آخرون"
         val relativeId = inputData.getInt("relative_id", -1)
-        val relativePhone = inputData.getString("relative_phone") ?: ""
+        if (relativeId == -1) return Result.success()
 
-        val prefs = applicationContext.getSharedPreferences("app_settings", Context.MODE_PRIVATE)
-        val userName = prefs.getString("user_name", "") ?: ""
-        val lang = prefs.getString("selected_language", "ar") ?: "ar"
+        val now = System.currentTimeMillis()
 
-        val greeting = when {
-            userName.isNotBlank() && lang == "en" -> "Hey $userName, "
-            userName.isNotBlank() -> "يا $userName، "
-            else -> ""
+        // ── Prevent duplicate: if already notified today, skip ──
+        if (ReminderScheduler.wasNotifiedToday(applicationContext, relativeId, now)) {
+            return Result.success()
         }
 
-        val baseMessage = buildNotificationMessage(relativeName, relationshipDegree, lang)
-        val notificationMessage = "$greeting$baseMessage"
-
-        sendNotification(relativeName, notificationMessage, relativeId, relativePhone, lang)
-        return Result.success()
-    }
-
-    private fun sendNotification(
-        relativeName: String,
-        messageText: String,
-        relativeId: Int,
-        phone: String,
-        lang: String
-    ) {
         try {
-            val silahPrefs = applicationContext.getSharedPreferences("silah_prefs", Context.MODE_PRIVATE)
-            val enableCallAction = silahPrefs.getBoolean("notif_action_call", true)
-            val enableWhatsappAction = silahPrefs.getBoolean("notif_action_whatsapp", true)
-            val enableDoneAction = silahPrefs.getBoolean("notif_action_done", true)
+            val db = AppDatabase.getDatabase(applicationContext)
+            val relative = db.relativeDao().getRelativeById(relativeId) ?: return Result.success()
 
-            val notificationManager =
-                applicationContext.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-            val channelId = "silat_rahim_reminders"
-
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                val channel = NotificationChannel(
-                    channelId,
-                    if (lang == "en") "Kin Tie Reminders" else "تذكيرات صلة الرحم",
-                    NotificationManager.IMPORTANCE_HIGH
-                ).apply {
-                    description = if (lang == "en") "Reminders to stay connected with your relatives"
-                    else "تذكيرات للتواصل مع أقاربك"
-                    enableVibration(true)
-                    enableLights(true)
-                }
-                notificationManager.createNotificationChannel(channel)
+            // Check if actually due
+            val isDue = if (relative.lastContactDate == 0L) {
+                true
+            } else {
+                val diffDays = ((now - relative.lastContactDate) / (1000 * 60 * 60 * 24)).toInt()
+                diffDays >= relative.contactIntervalDays
             }
 
-            // Tap notification → open app
-            val openIntent = Intent(applicationContext, MainActivity::class.java).apply {
-                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                putExtra("relative_id", relativeId)
-                putExtra("open_tab", "relatives")
-            }
-            val openPendingIntent = PendingIntent.getActivity(
-                applicationContext, relativeId, openIntent,
-                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            if (!isDue) return Result.success()
+
+            val prefs = applicationContext.getSharedPreferences("app_settings", Context.MODE_PRIVATE)
+            val userName = prefs.getString("user_name", "") ?: ""
+            val lang = prefs.getString("selected_language", "ar") ?: "ar"
+
+            // ── Send notification through the central helper ──
+            SilaNotificationHelper.sendKinshipNotification(
+                context = applicationContext,
+                relative = relative,
+                lang = lang,
+                userName = userName
             )
 
-            val iconRes = try { R.drawable.ic_notification_sila } catch (e: Exception) { R.mipmap.ic_launcher }
-            val title = if (lang == "en") "❤️ Time to connect with $relativeName"
-            else "❤️ حان وقت تواصلك مع $relativeName"
-
-            val builder = NotificationCompat.Builder(applicationContext, channelId)
-                .setSmallIcon(iconRes)
-                .setContentTitle(title)
-                .setContentText(messageText)
-                .setStyle(NotificationCompat.BigTextStyle().bigText(messageText))
-                .setPriority(NotificationCompat.PRIORITY_HIGH)
-                .setAutoCancel(true)
-                .setContentIntent(openPendingIntent)
-                .setCategory(NotificationCompat.CATEGORY_REMINDER)
-                .setColor(0xFF0E7075.toInt())
-
-            // 📞 Call — BroadcastReceiver fires directly (no app launch)
-            if (phone.isNotBlank() && enableCallAction) {
-                val callIntent = Intent(applicationContext, NotificationActionReceiver::class.java).apply {
-                    action = NotificationActionReceiver.ACTION_CALL
-                    putExtra(NotificationActionReceiver.EXTRA_PHONE, phone)
-                    putExtra(NotificationActionReceiver.EXTRA_RELATIVE_NAME, relativeName)
-                    putExtra(NotificationActionReceiver.EXTRA_RELATIVE_ID, relativeId)
-                }
-                val callPi = PendingIntent.getBroadcast(
-                    applicationContext, relativeId + 5000, callIntent,
-                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-                )
-                builder.addAction(iconRes, if (lang == "en") "📞 Call" else "📞 اتصل", callPi)
-            }
-
-            // 💬 WhatsApp — BroadcastReceiver fires directly
-            if (phone.isNotBlank() && enableWhatsappAction) {
-                val waIntent = Intent(applicationContext, NotificationActionReceiver::class.java).apply {
-                    action = NotificationActionReceiver.ACTION_WHATSAPP
-                    putExtra(NotificationActionReceiver.EXTRA_PHONE, phone)
-                    putExtra(NotificationActionReceiver.EXTRA_RELATIVE_NAME, relativeName)
-                    putExtra(NotificationActionReceiver.EXTRA_RELATIVE_ID, relativeId)
-                }
-                val waPi = PendingIntent.getBroadcast(
-                    applicationContext, relativeId + 7000, waIntent,
-                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-                )
-                builder.addAction(iconRes, if (lang == "en") "💬 WhatsApp" else "💬 واتساب", waPi)
-            }
-
-            // ✅ Mark Done — opens app to confirm
-            if (enableDoneAction) {
-                val doneIntent = Intent(applicationContext, MainActivity::class.java).apply {
-                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                    putExtra("relative_id", relativeId)
-                    putExtra("action", "mark_contacted")
-                }
-                val donePi = PendingIntent.getActivity(
-                    applicationContext, relativeId + 9000, doneIntent,
-                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-                )
-                builder.addAction(iconRes, if (lang == "en") "✅ Done" else "✅ تم التواصل", donePi)
-            }
-
-            notificationManager.notify(relativeId, builder.build())
+            // ── Mark as notified today to prevent duplicates from AlarmReceiver/PeriodicDueWorker ──
+            ReminderScheduler.markNotifiedToday(applicationContext, relativeId, now)
         } catch (e: Exception) {
             e.printStackTrace()
         }
+
+        return Result.success()
     }
 
     companion object {
+        /**
+         * Builds a degree-aware notification message.
+         * Kept for backward compatibility with any external callers.
+         */
         fun buildNotificationMessage(name: String, degree: String, lang: String = "ar"): String {
             val cleanName = name.trim()
             if (lang == "en") {

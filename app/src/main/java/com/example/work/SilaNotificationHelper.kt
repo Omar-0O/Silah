@@ -11,14 +11,19 @@ import androidx.core.app.NotificationCompat
 import com.example.MainActivity
 import com.example.R
 import com.example.data.Relative
+import com.example.work.NotificationStyleEngine.NotificationStyle
 
 /**
- * Central builder for high-quality, degree-aware Kinship notifications with interactive actions.
+ * Central builder for high-quality, context-aware Kinship notifications with interactive actions.
+ * Uses [NotificationStyleEngine] to pick the right style (Heartwarming, Gentle, Friday, Ramadan, Eid).
  */
 object SilaNotificationHelper {
 
     const val CHANNEL_ID_DUE = "silat_rahim_due_today"
     const val CHANNEL_ID_REMINDERS = "silat_rahim_reminders"
+
+    /** Snooze duration in milliseconds — 6 hours */
+    const val SNOOZE_DURATION_MS = 6 * 60 * 60 * 1000L
 
     fun ensureChannels(context: Context, lang: String = "ar") {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -47,10 +52,8 @@ object SilaNotificationHelper {
     }
 
     /**
-     * Builds and sends a rich degree-aware notification with 3 interactive action buttons:
-     * 1. 📞 Call
-     * 2. 💬 Message / WhatsApp
-     * 3. ✅ Mark Contacted (Done)
+     * Builds and sends a context-aware notification with style-specific action buttons.
+     * The style is automatically resolved by [NotificationStyleEngine].
      */
     fun sendKinshipNotification(
         context: Context,
@@ -62,41 +65,15 @@ object SilaNotificationHelper {
             ensureChannels(context, lang)
             val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
-            val greeting = when {
-                userName.isNotBlank() && lang == "en" -> "Hey $userName ✨, "
-                userName.isNotBlank() -> "يا $userName 🌸، "
-                else -> ""
-            }
+            // ── Resolve notification content via style engine ──
+            val content = NotificationStyleEngine.generateContent(relative.name, lang)
+            val title = if (lang == "en") content.titleEn else content.titleAr
+            val body = if (lang == "en") content.bodyEn else content.bodyAr
 
-            val baseMessage = ReminderWorker.buildNotificationMessage(
-                relative.name,
-                relative.relationshipDegree,
-                lang
-            )
-            val fullMessage = "$greeting$baseMessage"
+            // Primary Green from Sila Design System
+            val brandColor = 0xFF1E5A35.toInt()
 
-            val title = if (lang == "en") {
-                when (relative.relationshipDegree) {
-                    "والدان" -> "Parents Kinship 💚"
-                    "أشقاء" -> "Siblings Connection 🌸"
-                    "أعمام/أخوال" -> "Uncles & Aunts Kinship ✨"
-                    else -> "Family Kinship Reminder 🌿"
-                }
-            } else {
-                when (relative.relationshipDegree) {
-                    "والدان" -> "بِرّ الوالدين 💚"
-                    "أشقاء" -> "صلة الإخوة والأخوات 🌸"
-                    "أعمام/أخوال" -> "صلة الأرحام والأعمام ✨"
-                    else -> "تذكير بصلة الرحم 🌿"
-                }
-            }
-
-            val subText = if (lang == "en") "Sila • Kinship Time" else "صِلَةِ • موعد صلة الرحم 🌿"
-
-            // Primary Sage Green color from Sila Design System
-            val brandColor = 0xFF2D5A3D.toInt()
-
-            // ── Tap Notification Body: Opens MainActivity at relative detail screen ──
+            // ── Tap Notification Body: Opens MainActivity at relative detail ──
             val contentIntent = Intent(context, MainActivity::class.java).apply {
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
                 putExtra("relative_id", relative.id)
@@ -108,19 +85,14 @@ object SilaNotificationHelper {
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
             )
 
+            val notificationId = relative.id + 10000
+
             val builder = NotificationCompat.Builder(context, CHANNEL_ID_DUE)
                 .setSmallIcon(R.drawable.ic_notification_sila)
                 .setColor(brandColor)
-                .setColorized(true)
                 .setContentTitle(title)
-                .setContentText(fullMessage)
-                .setSubText(subText)
-                .setStyle(
-                    NotificationCompat.BigTextStyle()
-                        .setBigContentTitle(title)
-                        .bigText("$fullMessage\n\n${if (lang == "en") "Connecting brings joy and barakah to your family." else "تواصلك اليوم يُدخل السرور والبركة على قلوب أهلك 🌿"}")
-                        .setSummaryText(subText)
-                )
+                .setContentText(body)
+                .setStyle(NotificationCompat.BigTextStyle().bigText(body))
                 .setPriority(NotificationCompat.PRIORITY_HIGH)
                 .setCategory(NotificationCompat.CATEGORY_REMINDER)
                 .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
@@ -128,65 +100,196 @@ object SilaNotificationHelper {
                 .setAutoCancel(true)
                 .setContentIntent(contentPendingIntent)
 
-            // ── Action 1: Direct Call 📞 ──────────────────────────────────────────
-            if (relative.phone.isNotBlank()) {
-                val dialIntent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:${relative.phone}")).apply {
-                    flags = Intent.FLAG_ACTIVITY_NEW_TASK
-                }
-                val dialPendingIntent = PendingIntent.getActivity(
-                    context,
-                    relative.id * 10 + 1,
-                    dialIntent,
-                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-                )
-                builder.addAction(
-                    android.R.drawable.ic_menu_call,
-                    if (lang == "en") "Call 📞" else "اتصال 📞",
-                    dialPendingIntent
-                )
-            }
+            // ── Add style-specific action buttons ──
+            addActionsForStyle(context, builder, content.style, relative, notificationId, lang)
 
-            // ── Action 2: Direct WhatsApp / Message 💬 ────────────────────────────
-            if (relative.phone.isNotBlank()) {
-                val messageIntent = Intent(context, NotificationActionReceiver::class.java).apply {
-                    action = NotificationActionReceiver.ACTION_MESSAGE
-                    putExtra(NotificationActionReceiver.EXTRA_PHONE, relative.phone)
-                }
-                val messagePendingIntent = PendingIntent.getBroadcast(
-                    context,
-                    relative.id * 10 + 2,
-                    messageIntent,
-                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-                )
-                builder.addAction(
-                    android.R.drawable.ic_menu_send,
-                    if (lang == "en") "Message 💬" else "مراسلة 💬",
-                    messagePendingIntent
-                )
-            }
-
-            // ── Action 3: Mark as Contacted (Done) in Background ✅ ───────────────
-            val doneIntent = Intent(context, NotificationActionReceiver::class.java).apply {
-                action = NotificationActionReceiver.ACTION_MARK_CONTACTED
-                putExtra(NotificationActionReceiver.EXTRA_RELATIVE_ID, relative.id)
-                putExtra(NotificationActionReceiver.EXTRA_RELATIVE_NAME, relative.name)
-                putExtra(NotificationActionReceiver.EXTRA_NOTIFICATION_ID, relative.id + 10000)
-            }
-            val donePendingIntent = PendingIntent.getBroadcast(
-                context,
-                relative.id * 10 + 3,
-                doneIntent,
-                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-            )
-            builder.addAction(
-                android.R.drawable.checkbox_on_background,
-                if (lang == "en") "Mark Done ✅" else "تم التواصل ✅",
-                donePendingIntent
-            )
-
-            notificationManager.notify(relative.id + 10000, builder.build())
+            notificationManager.notify(notificationId, builder.build())
         } catch (e: Exception) {
             e.printStackTrace()
         }
+    }
+
+    /**
+     * Adds action buttons to the notification based on the resolved style.
+     */
+    private fun addActionsForStyle(
+        context: Context,
+        builder: NotificationCompat.Builder,
+        style: NotificationStyle,
+        relative: Relative,
+        notificationId: Int,
+        lang: String
+    ) {
+        when (style) {
+            // ── النمط 1: دقيقة تسعد قلب ──
+            // Buttons: 📞 اتصال مباشر · 💬 واتساب · ⏰ ذكّرني لاحقاً
+            NotificationStyle.HEARTWARMING -> {
+                addCallAction(context, builder, relative, lang)
+                addWhatsAppAction(context, builder, relative, lang)
+                addSnoozeAction(context, builder, relative, notificationId, lang)
+            }
+
+            // ── النمط 2: لمسة وجدانية ──
+            // Buttons: 📱 تواصل الآن · ⏳ بعد 6 ساعات
+            NotificationStyle.GENTLE_EMOTIONAL -> {
+                addOpenRelativeAction(context, builder, relative, lang)
+                addSnoozeAction(context, builder, relative, notificationId, lang,
+                    labelAr = "⏳ بعد 6 ساعات", labelEn = "⏳ In 6 Hours")
+            }
+
+            // ── النمط 3: الجمعة ──
+            // Button: 📇 فتح قائمة الأقارب
+            NotificationStyle.FRIDAY -> {
+                addOpenRelativesListAction(context, builder, lang)
+            }
+
+            // ── النمط 4: رمضان ──
+            // Buttons: 📞 اتصال مباشر · 💬 واتساب · ⏰ ذكّرني لاحقاً
+            NotificationStyle.RAMADAN -> {
+                addCallAction(context, builder, relative, lang)
+                addWhatsAppAction(context, builder, relative, lang)
+                addSnoozeAction(context, builder, relative, notificationId, lang)
+            }
+
+            // ── النمط 5: العيد ──
+            // Buttons: 📞 اتصال مباشر · 💬 واتساب
+            NotificationStyle.EID -> {
+                addCallAction(context, builder, relative, lang)
+                addWhatsAppAction(context, builder, relative, lang)
+            }
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // Action Builders
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    /** 📞 Direct call — opens dialer with relative's phone number */
+    private fun addCallAction(
+        context: Context,
+        builder: NotificationCompat.Builder,
+        relative: Relative,
+        lang: String
+    ) {
+        if (relative.phone.isBlank()) return
+
+        val dialIntent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:${relative.phone}")).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK
+        }
+        val pendingIntent = PendingIntent.getActivity(
+            context,
+            relative.id * 10 + 1,
+            dialIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+        builder.addAction(
+            R.drawable.ic_notification_sila,
+            if (lang == "en") "📞 Call Now" else "📞 اتصال مباشر",
+            pendingIntent
+        )
+    }
+
+    /** 💬 WhatsApp — opens WhatsApp with a pre-filled greeting message */
+    private fun addWhatsAppAction(
+        context: Context,
+        builder: NotificationCompat.Builder,
+        relative: Relative,
+        lang: String
+    ) {
+        if (relative.phone.isBlank()) return
+
+        val messageIntent = Intent(context, NotificationActionReceiver::class.java).apply {
+            action = NotificationActionReceiver.ACTION_MESSAGE
+            putExtra(NotificationActionReceiver.EXTRA_PHONE, relative.phone)
+            putExtra(NotificationActionReceiver.EXTRA_RELATIVE_NAME, relative.name)
+        }
+        val pendingIntent = PendingIntent.getBroadcast(
+            context,
+            relative.id * 10 + 2,
+            messageIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+        builder.addAction(
+            R.drawable.ic_notification_sila,
+            if (lang == "en") "💬 WhatsApp" else "💬 واتساب",
+            pendingIntent
+        )
+    }
+
+    /** ⏰ Snooze — dismisses notification and reschedules after 6 hours */
+    private fun addSnoozeAction(
+        context: Context,
+        builder: NotificationCompat.Builder,
+        relative: Relative,
+        notificationId: Int,
+        lang: String,
+        labelAr: String = "⏰ ذكّرني لاحقاً",
+        labelEn: String = "⏰ Remind Later"
+    ) {
+        val snoozeIntent = Intent(context, NotificationActionReceiver::class.java).apply {
+            action = NotificationActionReceiver.ACTION_SNOOZE
+            putExtra(NotificationActionReceiver.EXTRA_RELATIVE_ID, relative.id)
+            putExtra(NotificationActionReceiver.EXTRA_RELATIVE_NAME, relative.name)
+            putExtra(NotificationActionReceiver.EXTRA_PHONE, relative.phone)
+            putExtra(NotificationActionReceiver.EXTRA_NOTIFICATION_ID, notificationId)
+        }
+        val pendingIntent = PendingIntent.getBroadcast(
+            context,
+            relative.id * 10 + 4,
+            snoozeIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+        builder.addAction(
+            R.drawable.ic_notification_sila,
+            if (lang == "en") labelEn else labelAr,
+            pendingIntent
+        )
+    }
+
+    /** 📱 Open relative's detail page in the app */
+    private fun addOpenRelativeAction(
+        context: Context,
+        builder: NotificationCompat.Builder,
+        relative: Relative,
+        lang: String
+    ) {
+        val openIntent = Intent(context, MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+            putExtra("relative_id", relative.id)
+        }
+        val pendingIntent = PendingIntent.getActivity(
+            context,
+            relative.id * 10 + 5,
+            openIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+        builder.addAction(
+            R.drawable.ic_notification_sila,
+            if (lang == "en") "📱 Connect Now" else "📱 تواصل الآن",
+            pendingIntent
+        )
+    }
+
+    /** 📇 Open the relatives list tab in the app */
+    private fun addOpenRelativesListAction(
+        context: Context,
+        builder: NotificationCompat.Builder,
+        lang: String
+    ) {
+        val openIntent = Intent(context, MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+            putExtra("open_tab", "relatives")
+        }
+        val pendingIntent = PendingIntent.getActivity(
+            context,
+            9999,
+            openIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+        builder.addAction(
+            R.drawable.ic_notification_sila,
+            if (lang == "en") "📇 Open Relatives List" else "📇 فتح قائمة الأقارب",
+            pendingIntent
+        )
     }
 }

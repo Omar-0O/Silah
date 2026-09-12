@@ -195,7 +195,7 @@ fun CommitmentHeaderCard(
                             color = SoftGold
                         )
                         Text(
-                            text = if (lang == "en") "Tied" else "صلة",
+                            text = if (lang == "en") "Tied" else "واصل",
                             fontSize = 9.sp,
                             color = Color.White.copy(alpha = 0.6f),
                             fontWeight = FontWeight.Medium
