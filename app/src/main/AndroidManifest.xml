@@ -61,10 +61,6 @@
             </intent-filter>
         </activity>
 
-        <activity
-            android:name="androidx.activity.ComponentActivity"
-            android:exported="false" />
-
         <receiver
             android:name=".widget.SilaAppWidgetProvider"
             android:exported="true"

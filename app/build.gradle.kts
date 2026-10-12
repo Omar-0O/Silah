@@ -54,7 +54,6 @@ android {
     compose = true
     buildConfig = true
   }
-  testBuildType = "release"
   testOptions { unitTests { isIncludeAndroidResources = true } }
 }
 
