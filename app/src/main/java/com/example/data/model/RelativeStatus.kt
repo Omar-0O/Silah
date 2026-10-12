@@ -18,8 +18,3 @@ enum class RelativeStatus(
 
     fun getLabel(lang: String) = if (lang == "en") labelEn else label
 }
-
-
-
-
-far from home
