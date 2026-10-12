@@ -93,7 +93,7 @@ class SilaAppWidgetProvider : AppWidgetProvider() {
                     badgeUpdateViews.setTextViewText(R.id.widget_badge, badgeText)
                     appWidgetManager.partiallyUpdateAppWidget(appWidgetId, badgeUpdateViews)
                 } catch (e: Exception) {
-                    e.printStackTrace()
+                    com.example.core.util.SilaLogger.e("SilaAppWidgetProvider", "Error updating widget badge", e)
                 }
             }
 
@@ -116,7 +116,7 @@ class SilaAppWidgetProvider : AppWidgetProvider() {
                     updateAppWidget(context, appWidgetManager, id)
                 }
             } catch (e: Exception) {
-                e.printStackTrace()
+                com.example.core.util.SilaLogger.e("SilaAppWidgetProvider", "Error triggering widget update", e)
             }
         }
     }
@@ -158,7 +158,7 @@ class SilaAppWidgetProvider : AppWidgetProvider() {
                         try {
                             context.startActivity(smsIntent)
                         } catch (ex: Exception) {
-                            ex.printStackTrace()
+                            com.example.core.util.SilaLogger.e("SilaAppWidgetProvider", "Error starting SMS intent from widget", ex)
                         }
                     }
                 }

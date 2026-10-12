@@ -25,7 +25,9 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import com.example.R
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -105,7 +107,7 @@ fun KinshipCheckInDialog(
                     ) {
                         Icon(
                             imageVector = Icons.Outlined.Close,
-                            contentDescription = if (lang == "en") "Close" else "إغلاق",
+                            contentDescription = stringResource(R.string.close),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
                             modifier = Modifier.size(20.dp)
                         )
@@ -116,7 +118,7 @@ fun KinshipCheckInDialog(
 
                 // ── Dialog Title & Subtitle ─────────────────────────────────
                 Text(
-                    text = if (lang == "en") "Did you reach out today? 🌸" else "هل تواصلت مع أحبابك اليوم؟ 🌸",
+                    text = stringResource(R.string.checkin_title),
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface,
@@ -126,10 +128,7 @@ fun KinshipCheckInDialog(
                 Spacer(modifier = Modifier.height(6.dp))
 
                 Text(
-                    text = if (lang == "en")
-                        "You received a reminder today to connect with these relatives. Let us know if you stayed in touch!"
-                    else
-                        "أرسلنا لك تذكيراً اليوم للتواصل مع هؤلاء الأقارب الأعزاء. طمئنا هل تم الوصل؟",
+                    text = stringResource(R.string.checkin_desc),
                     fontSize = 12.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center,
@@ -177,7 +176,11 @@ fun KinshipCheckInDialog(
                                         val smsIntent = Intent(Intent.ACTION_SENDTO, Uri.parse("smsto:${relative.phone}")).apply {
                                             flags = Intent.FLAG_ACTIVITY_NEW_TASK
                                         }
-                                        try { context.startActivity(smsIntent) } catch (ex: Exception) { ex.printStackTrace() }
+                                        try {
+                                            context.startActivity(smsIntent)
+                                        } catch (ex: Exception) {
+                                            com.example.core.util.SilaLogger.e("KinshipCheckInDialog", "Failed to launch SMS intent", ex)
+                                        }
                                     }
                                 }
                             },
@@ -210,7 +213,7 @@ fun KinshipCheckInDialog(
                             )
                         ) {
                             Text(
-                                text = if (lang == "en") "Yes, reached out to all 💚" else "نعم، تواصلت مع الجميع 💚",
+                                text = stringResource(R.string.checkin_yes_all),
                                 fontSize = 13.sp,
                                 fontWeight = FontWeight.Bold
                             )
@@ -223,7 +226,7 @@ fun KinshipCheckInDialog(
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Text(
-                            text = if (lang == "en") "I'll connect with them later ⏳" else "سأتواصل معهم لاحقاً ⏳",
+                            text = stringResource(R.string.checkin_later),
                             fontSize = 12.sp,
                             fontWeight = FontWeight.SemiBold,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -311,7 +314,7 @@ private fun CheckInRelativeCard(
                         Icon(Icons.Outlined.Call, contentDescription = null, modifier = Modifier.size(13.dp))
                         Spacer(modifier = Modifier.width(3.dp))
                         Text(
-                            text = if (lang == "en") "Call" else "اتصال",
+                            text = stringResource(R.string.action_call),
                             fontSize = 11.sp,
                             fontWeight = FontWeight.Bold
                         )
@@ -334,7 +337,7 @@ private fun CheckInRelativeCard(
                         Icon(Icons.AutoMirrored.Outlined.Chat, contentDescription = null, modifier = Modifier.size(13.dp))
                         Spacer(modifier = Modifier.width(3.dp))
                         Text(
-                            text = if (lang == "en") "WhatsApp" else "واتس",
+                            text = stringResource(R.string.action_whatsapp),
                             fontSize = 11.sp,
                             fontWeight = FontWeight.Bold
                         )
@@ -359,7 +362,7 @@ private fun CheckInRelativeCard(
                         Icon(Icons.Outlined.Check, contentDescription = null, modifier = Modifier.size(14.dp))
                         Spacer(modifier = Modifier.width(3.dp))
                         Text(
-                            text = if (lang == "en") "Yes, Connected ✅" else "نعم، تواصلت ✅",
+                            text = stringResource(R.string.checkin_yes_single),
                             fontSize = 11.sp,
                             fontWeight = FontWeight.Bold,
                             maxLines = 1

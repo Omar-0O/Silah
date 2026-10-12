@@ -2,54 +2,92 @@ package com.example.viewmodel
 
 import android.app.Application
 import android.content.Context
+import android.net.Uri
+import android.provider.ContactsContract
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.core.datastore.UserPreferencesRepository
+import com.example.core.util.SilaLogger
 import com.example.data.AppDatabase
-import com.example.data.CommunicationLog
-import com.example.data.Relative
-import com.example.data.RelativeRepository
-import com.example.data.QuickTemplate
-import com.example.data.FamilyMemory
-import android.app.NotificationManager
-import androidx.work.Data
-import androidx.work.ExistingPeriodicWorkPolicy
-import androidx.work.ExistingWorkPolicy
-import androidx.work.OneTimeWorkRequestBuilder
-import androidx.work.PeriodicWorkRequestBuilder
-import androidx.work.WorkManager
-import com.example.work.PeriodicDueWorker
-import com.example.work.ReminderScheduler
-import com.example.work.ReminderWorker
-import com.example.work.UsageNotificationWorker
-import java.util.Calendar
-import java.util.concurrent.TimeUnit
-import android.net.Uri
-import java.io.File
 import com.example.data.BackupManager
 import com.example.data.CallLogManager
-import com.example.data.CallType
+import com.example.data.CommunicationLog
+import com.example.data.FamilyMemory
+import com.example.data.QuickTemplate
+import com.example.data.Relative
+import com.example.data.RelativeRepository
+import com.example.data.model.DeviceContact
+import com.example.data.model.RelativeStatus
+import com.example.domain.usecase.*
+import com.example.work.ReminderScheduler
 import com.example.widget.SilaAppWidgetProvider
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import java.io.File
+import java.io.FileOutputStream
+import java.util.Calendar
+import javax.inject.Inject
 
-class RelativeViewModel(application: Application) : AndroidViewModel(application) {
+typealias RelativeStatus = com.example.data.model.RelativeStatus
+typealias DeviceContact = com.example.data.model.DeviceContact
+
+sealed interface AppAction {
+    data object ExportBackup : AppAction
+    data object ImportBackup : AppAction
+    data object PickContact : AppAction
+}
+
+@HiltViewModel
+class RelativeViewModel @Inject constructor(
+    application: Application,
+    private val repository: RelativeRepository,
+    private val userPreferencesRepository: UserPreferencesRepository,
+    private val getFilteredRelativesUseCase: GetFilteredRelativesUseCase,
+    private val calculateRelativeStatusUseCase: CalculateRelativeStatusUseCase,
+    private val syncCallLogsUseCase: SyncCallLogsUseCase,
+    private val backupRestoreUseCase: BackupRestoreUseCase,
+    private val manageRemindersUseCase: ManageRemindersUseCase,
+    private val classifyRelationshipUseCase: ClassifyRelationshipUseCase,
+    private val generateMessageUseCase: GenerateMessageUseCase
+) : AndroidViewModel(application) {
+
+    // Secondary constructor for testing compatibility
+    constructor(application: Application) : this(
+        application = application,
+        repository = RelativeRepository(
+            AppDatabase.getDatabase(application).relativeDao(),
+            AppDatabase.getDatabase(application).communicationLogDao(),
+            AppDatabase.getDatabase(application).quickTemplateDao(),
+            AppDatabase.getDatabase(application).familyMemoryDao()
+        ),
+        userPreferencesRepository = UserPreferencesRepository(application),
+        getFilteredRelativesUseCase = GetFilteredRelativesUseCase(),
+        calculateRelativeStatusUseCase = CalculateRelativeStatusUseCase(),
+        syncCallLogsUseCase = SyncCallLogsUseCase(
+            RelativeRepository(
+                AppDatabase.getDatabase(application).relativeDao(),
+                AppDatabase.getDatabase(application).communicationLogDao(),
+                AppDatabase.getDatabase(application).quickTemplateDao(),
+                AppDatabase.getDatabase(application).familyMemoryDao()
+            )
+        ),
+        backupRestoreUseCase = BackupRestoreUseCase(
+            RelativeRepository(
+                AppDatabase.getDatabase(application).relativeDao(),
+                AppDatabase.getDatabase(application).communicationLogDao(),
+                AppDatabase.getDatabase(application).quickTemplateDao(),
+                AppDatabase.getDatabase(application).familyMemoryDao()
+            )
+        ),
+        manageRemindersUseCase = ManageRemindersUseCase(application),
+        classifyRelationshipUseCase = ClassifyRelationshipUseCase(),
+        generateMessageUseCase = GenerateMessageUseCase()
+    )
 
     private val prefs = application.getSharedPreferences("app_settings", Context.MODE_PRIVATE)
-
-    private val db = AppDatabase.getDatabase(application, viewModelScope)
-    private val repository = RelativeRepository(
-        db.relativeDao(),
-        db.communicationLogDao(),
-        db.quickTemplateDao(),
-        db.familyMemoryDao()
-    )
 
     // Raw database state flows
     val relatives: StateFlow<List<Relative>> = repository.allRelatives
@@ -58,69 +96,31 @@ class RelativeViewModel(application: Application) : AndroidViewModel(application
     val logs: StateFlow<List<CommunicationLog>> = repository.allLogs
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    // Milestone observer – declared after `relatives` so it's safe to collect
-    private val milestoneObserver = run { observeMilestones() }
-
-    val streakDays: StateFlow<Int> = logs
-        .combine(relatives) { logsList, _ ->
-            com.example.utils.DateUtils.calculateStreak(logsList.map { it.timestamp })
-        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0)
-
-    val last7DaysActivity: StateFlow<List<Boolean>> = logs
-        .combine(relatives) { logsList, _ ->
-            com.example.utils.DateUtils.getLast7DaysActivity(logsList.map { it.timestamp })
-        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), List(7) { false })
-
     val templates: StateFlow<List<QuickTemplate>> = repository.allTemplates
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     val memories: StateFlow<List<FamilyMemory>> = repository.allMemories
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
+    val streakDays: StateFlow<Int> = logs.combine(relatives) { logsList, _ ->
+        com.example.utils.DateUtils.calculateStreak(logsList.map { it.timestamp })
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0)
+
+    val last7DaysActivity: StateFlow<List<Boolean>> = logs.combine(relatives) { logsList, _ ->
+        com.example.utils.DateUtils.getLast7DaysActivity(logsList.map { it.timestamp })
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), List(7) { false })
+
     // Search & Filter state
     val searchQuery = MutableStateFlow("")
-    val selectedCategory = MutableStateFlow("الكل") // "الكل", "والدان", "أشقاء", "أعمام/أخوال", "أقارب آخرون"
+    val selectedCategory = MutableStateFlow("الكل")
 
-    // Filtered & Sorted Relatives Flow (Sorted by nearest contact due date / highest urgency)
-    val filteredRelatives: StateFlow<List<Relative>> = combine(
-        relatives,
-        searchQuery,
-        selectedCategory
-    ) { relativesList, query, category ->
-        relativesList.filter { relative ->
-            val cleanQuery = query.trim()
-            val matchesSearch = if (cleanQuery.isBlank()) true
-            else relative.name.contains(cleanQuery, ignoreCase = true) || relative.phone.contains(cleanQuery)
+    val filteredRelatives: StateFlow<List<Relative>> = getFilteredRelativesUseCase(
+        relatives = relatives,
+        query = searchQuery,
+        category = selectedCategory
+    ).stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-            val matchesCategory = when (category) {
-                "الكل" -> true
-                "والدان" -> relative.relationshipDegree in listOf("والدان", "أب", "أم", "والد", "والدة", "جد", "جدة", "Father", "Mother", "Parents")
-                "أشقاء" -> relative.relationshipDegree in listOf("أشقاء", "أخ", "أخت", "شقيق", "شقيقة", "Brother", "Sister", "Siblings")
-                "أعمام/أخوال" -> relative.relationshipDegree in listOf("أعمام/أخوال", "عم", "عمة", "خال", "خالة", "Uncle", "Aunt", "Uncles/Aunts")
-                "أقارب آخرون" -> relative.relationshipDegree == "أقارب آخرون" || (
-                    relative.relationshipDegree !in listOf("والدان", "أب", "أم", "والد", "والدة", "جد", "جدة", "Father", "Mother", "Parents") &&
-                    relative.relationshipDegree !in listOf("أشقاء", "أخ", "أخت", "شقيق", "شقيقة", "Brother", "Sister", "Siblings") &&
-                    relative.relationshipDegree !in listOf("أعمام/أخوال", "عم", "عمة", "خال", "خالة", "Uncle", "Aunt", "Uncles/Aunts")
-                )
-                else -> relative.relationshipDegree.contains(category) || category.contains(relative.relationshipDegree)
-            }
-            matchesSearch && matchesCategory
-        }.sortedWith(
-            compareBy<Relative> { relative ->
-                if (relative.lastContactDate == 0L) 0L
-                else relative.lastContactDate + (relative.contactIntervalDays * 86_400_000L)
-            }.thenBy { relative ->
-                when {
-                    relative.relationshipDegree in listOf("والدان", "أب", "أم", "والد", "والدة", "جد", "جدة") -> 1
-                    relative.relationshipDegree in listOf("أشقاء", "أخ", "أخت", "شقيق", "شقيقة") -> 2
-                    relative.relationshipDegree in listOf("أعمام/أخوال", "عم", "عمة", "خال", "خالة") -> 3
-                    else -> 4
-                }
-            }.thenBy { it.name }
-        )
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
-
-    // UI triggers/States for Dialogs and Forms
+    // UI Dialog & Navigation Triggers
     val showAddRelativeDialog = MutableStateFlow(false)
     val showEditRelativeDialog = MutableStateFlow<Relative?>(null)
     val showSettingsDialog = MutableStateFlow(false)
@@ -132,21 +132,189 @@ class RelativeViewModel(application: Application) : AndroidViewModel(application
     val showSupportSilaDialog = MutableStateFlow(false)
     val activeMilestoneDialog = MutableStateFlow<Int?>(null)
     val showWhyKinshipScreen = MutableStateFlow(false)
-
-    fun openWhyKinshipScreen() {
-        showWhyKinshipScreen.value = true
-    }
-
-    fun closeWhyKinshipScreen() {
-        showWhyKinshipScreen.value = false
-    }
-
-    // Deep navigation state (opened from notification or widget)
+    val showKinshipCheckInDialog = MutableStateFlow(false)
+    val pendingNotifiedRelatives = MutableStateFlow<List<Relative>>(emptyList())
     val selectedRelativeForDetail = MutableStateFlow<Relative?>(null)
 
-    fun selectRelativeForDetail(relative: Relative) {
-        selectedRelativeForDetail.value = relative
+    // User Preferences
+    val isDarkMode = MutableStateFlow(prefs.getBoolean("dark_mode", false))
+    val selectedLanguage = MutableStateFlow(prefs.getString("selected_language", "ar") ?: "ar")
+    val prefNotifyDueRelatives = MutableStateFlow(prefs.getBoolean("pref_notify_due_relatives", true))
+    val prefNotifyEncouragement = MutableStateFlow(prefs.getBoolean("pref_notify_encouragement", true))
+    val prefNotifyMonthly = MutableStateFlow(prefs.getBoolean("pref_notify_monthly", true))
+    val reminderHour = MutableStateFlow(prefs.getInt("reminder_hour", 10))
+    val reminderMinute = MutableStateFlow(prefs.getInt("reminder_minute", 0))
+    val userName = MutableStateFlow(prefs.getString("user_name", "") ?: "")
+    val userGender = MutableStateFlow(prefs.getString("user_gender", "male") ?: "male")
+    val userAvatarId = MutableStateFlow(prefs.getString("user_avatar_id", "avatar_01") ?: "avatar_01")
+    val userPhotoPath = MutableStateFlow(prefs.getString("user_photo_path", null))
+    val userPhotoTimestamp = MutableStateFlow(prefs.getLong("user_photo_ts", 0L))
+    val isSyncingCallLogs = MutableStateFlow(false)
+    val backupResult = MutableStateFlow<BackupManager.BackupResult?>(null)
+
+    // Device contacts state
+    val deviceContacts = MutableStateFlow<List<DeviceContact>>(emptyList())
+    val isLoadingContacts = MutableStateFlow(false)
+    val pickedContactName = MutableStateFlow("")
+    val pickedContactPhone = MutableStateFlow("")
+    val hasPendingPickedContact = MutableStateFlow(false)
+
+    fun onContactPicked(name: String, phone: String) {
+        pickedContactName.value = name
+        pickedContactPhone.value = phone
+        hasPendingPickedContact.value = true
     }
+
+    fun clearPickedContact() {
+        pickedContactName.value = ""
+        pickedContactPhone.value = ""
+        hasPendingPickedContact.value = false
+    }
+
+    // Navigation & Activity Actions
+    private val actionChannel = Channel<AppAction>(Channel.BUFFERED)
+    val appActions = actionChannel.receiveAsFlow()
+
+    init {
+        viewModelScope.launch {
+            userPreferencesRepository.userPreferencesFlow.collect { p ->
+                isDarkMode.value = p.isDarkMode
+                selectedLanguage.value = p.selectedLanguage
+                prefNotifyDueRelatives.value = p.prefNotifyDueRelatives
+                prefNotifyEncouragement.value = p.prefNotifyEncouragement
+                prefNotifyMonthly.value = p.prefNotifyMonthly
+                reminderHour.value = p.reminderHour
+                reminderMinute.value = p.reminderMinute
+                userName.value = p.userName
+                userGender.value = p.userGender
+                userAvatarId.value = p.userAvatarId
+                userPhotoPath.value = p.userPhotoPath
+                userPhotoTimestamp.value = p.userPhotoTimestamp
+            }
+        }
+    }
+
+    // CRUD for Relatives
+    fun addRelative(
+        name: String,
+        phone: String,
+        relationshipDegree: String,
+        intervalDays: Int,
+        notes: String = "",
+        photoUri: String? = null
+    ) {
+        searchQuery.value = ""
+        selectedCategory.value = "الكل"
+        viewModelScope.launch(Dispatchers.IO) {
+            val relative = Relative(
+                name = name.trim(),
+                phone = phone.trim(),
+                relationshipDegree = relationshipDegree.trim(),
+                contactIntervalDays = intervalDays,
+                notes = notes.trim(),
+                photoUri = photoUri
+            )
+            val id = repository.insertRelative(relative)
+            val inserted = relative.copy(id = id.toInt())
+            manageRemindersUseCase.scheduleReminderForRelative(inserted)
+            SilaAppWidgetProvider.triggerWidgetUpdate(getApplication())
+        }
+    }
+
+    fun editRelative(
+        original: Relative,
+        newName: String,
+        newPhone: String,
+        newDegree: String,
+        newIntervalDays: Int,
+        newNotes: String
+    ) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val updated = original.copy(
+                name = newName.trim(),
+                phone = newPhone.trim(),
+                relationshipDegree = newDegree.trim(),
+                contactIntervalDays = newIntervalDays,
+                notes = newNotes.trim()
+            )
+            repository.updateRelative(updated)
+            manageRemindersUseCase.scheduleReminderForRelative(updated)
+            SilaAppWidgetProvider.triggerWidgetUpdate(getApplication())
+        }
+    }
+
+    fun deleteRelative(relative: Relative) {
+        viewModelScope.launch(Dispatchers.IO) {
+            repository.deleteRelative(relative)
+            manageRemindersUseCase.cancelReminderForRelative(relative.id)
+            SilaAppWidgetProvider.triggerWidgetUpdate(getApplication())
+        }
+    }
+
+    fun updateRelativeInterval(relative: Relative, newIntervalDays: Int) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val updated = relative.copy(contactIntervalDays = newIntervalDays)
+            repository.updateRelative(updated)
+            manageRemindersUseCase.scheduleReminderForRelative(updated)
+            SilaAppWidgetProvider.triggerWidgetUpdate(getApplication())
+        }
+    }
+
+    // Use Case Delegations
+    fun getRelativeStatus(relative: Relative): RelativeStatus = calculateRelativeStatusUseCase(relative)
+    fun suggestRelationshipDegree(name: String): String = classifyRelationshipUseCase(name)
+    fun generateLocalSmartMessage(name: String, degree: String, occasion: String): String =
+        generateMessageUseCase(name, degree, occasion)
+
+    fun scheduleReminderForRelative(relative: Relative) = manageRemindersUseCase.scheduleReminderForRelative(relative)
+    fun cancelReminderForRelative(relativeId: Int) = manageRemindersUseCase.cancelReminderForRelative(relativeId)
+    fun setupDueNotificationsWorker() = manageRemindersUseCase.setupDueNotificationsWorker()
+
+    // Sync & Backup
+    fun syncCallLogsWithRelatives(context: Context, onComplete: ((Int) -> Unit)? = null) {
+        viewModelScope.launch(Dispatchers.IO) {
+            isSyncingCallLogs.value = true
+            try {
+                val synced = syncCallLogsUseCase(context, relatives.value)
+                if (synced > 0) SilaAppWidgetProvider.triggerWidgetUpdate(getApplication())
+                onComplete?.invoke(synced)
+            } catch (e: Exception) {
+                SilaLogger.e("RelativeViewModel", "Failed to sync call logs", e)
+                onComplete?.invoke(0)
+            } finally {
+                isSyncingCallLogs.value = false
+            }
+        }
+    }
+
+    fun exportBackup(context: Context, uri: Uri) {
+        viewModelScope.launch(Dispatchers.IO) {
+            backupResult.value = backupRestoreUseCase.exportBackup(
+                context, uri, relatives.value, logs.value, templates.value
+            )
+        }
+    }
+
+    fun importBackup(context: Context, uri: Uri, strategy: BackupManager.ImportConflictStrategy = BackupManager.ImportConflictStrategy.MERGE_NEW_ONLY) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val result = backupRestoreUseCase.importBackup(context, uri, strategy)
+            backupResult.value = result
+            if (result.success) SilaAppWidgetProvider.triggerWidgetUpdate(getApplication())
+        }
+    }
+
+    fun clearBackupResult() { backupResult.value = null }
+    fun suggestedBackupName(): String = BackupManager.suggestedFileName()
+
+    // Navigation & Dialog Helpers
+    fun selectRelativeForDetail(relative: Relative) { selectedRelativeForDetail.value = relative }
+    fun clearSelectedRelative() { selectedRelativeForDetail.value = null }
+    fun openWhyKinshipScreen() { showWhyKinshipScreen.value = true }
+    fun closeWhyKinshipScreen() { showWhyKinshipScreen.value = false }
+    fun openSettingsDialog() { showSettingsDialog.value = true }
+    fun closeSettingsDialog() { showSettingsDialog.value = false }
+    fun openSupportSilaDialog() { showSupportSilaDialog.value = true }
+    fun openAddRelativeDialog() { showAddRelativeDialog.value = true }
 
     fun selectRelativeById(id: Int) {
         viewModelScope.launch {
@@ -157,90 +325,124 @@ class RelativeViewModel(application: Application) : AndroidViewModel(application
         }
     }
 
-    fun clearSelectedRelative() {
-        selectedRelativeForDetail.value = null
+    fun triggerExport() { viewModelScope.launch { actionChannel.send(AppAction.ExportBackup) } }
+    fun triggerImport() { viewModelScope.launch { actionChannel.send(AppAction.ImportBackup) } }
+    fun triggerContactPicker() { viewModelScope.launch { actionChannel.send(AppAction.PickContact) } }
+    fun launchContactPicker() { triggerContactPicker() }
+
+    fun toggleDarkMode(enabled: Boolean) {
+        isDarkMode.value = enabled
+        viewModelScope.launch { userPreferencesRepository.setDarkMode(enabled) }
     }
 
-    fun openAddRelativeDialog() {
-        showAddRelativeDialog.value = true
+    fun selectLanguage(langCode: String) {
+        selectedLanguage.value = langCode
+        viewModelScope.launch { userPreferencesRepository.setSelectedLanguage(langCode) }
     }
 
-    // Check-in popup state for relatives who appeared in notifications
-    val pendingNotifiedRelatives = MutableStateFlow<List<Relative>>(emptyList())
-    val showKinshipCheckInDialog = MutableStateFlow(false)
+    fun updateReminderTime(hour: Int, minute: Int) {
+        reminderHour.value = hour
+        reminderMinute.value = minute
+        viewModelScope.launch { userPreferencesRepository.setReminderTime(hour, minute) }
+        ReminderScheduler.scheduleDailyReminder(getApplication())
+    }
 
-    fun checkPendingNotifiedRelatives() {
+    fun toggleNotifyDueRelatives(enabled: Boolean) {
+        prefNotifyDueRelatives.value = enabled
+        viewModelScope.launch { userPreferencesRepository.setPrefNotifyDueRelatives(enabled) }
+        if (enabled) {
+            ReminderScheduler.scheduleDailyReminder(getApplication())
+        } else {
+            ReminderScheduler.cancelDailyReminder(getApplication())
+        }
+    }
+
+    fun toggleNotifyEncouragement(enabled: Boolean) {
+        prefNotifyEncouragement.value = enabled
+        viewModelScope.launch { userPreferencesRepository.setPrefNotifyEncouragement(enabled) }
+    }
+
+    fun toggleNotifyMonthly(enabled: Boolean) {
+        prefNotifyMonthly.value = enabled
+        viewModelScope.launch { userPreferencesRepository.setPrefNotifyMonthly(enabled) }
+    }
+
+    fun saveUserProfile(name: String, gender: String) {
+        userName.value = name
+        userGender.value = gender
+        viewModelScope.launch { userPreferencesRepository.setUserProfile(name, gender) }
+    }
+
+    fun saveUserAvatar(avatarId: String) {
+        userAvatarId.value = avatarId
+        viewModelScope.launch { userPreferencesRepository.setUserAvatarId(avatarId) }
+    }
+
+    fun setUserPhoto(uri: Uri) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                val context = getApplication<Application>()
-                val pendingIds = ReminderScheduler.getPendingNotifiedRelativeIds(context)
-                if (pendingIds.isEmpty()) {
-                    pendingNotifiedRelatives.value = emptyList()
-                    showKinshipCheckInDialog.value = false
-                    return@launch
+                val app = getApplication<Application>()
+                val inputStream = app.contentResolver.openInputStream(uri) ?: return@launch
+                val file = File(app.filesDir, "user_photo_${System.currentTimeMillis()}.jpg")
+                val outputStream = FileOutputStream(file)
+                inputStream.use { input ->
+                    outputStream.use { output ->
+                        input.copyTo(output)
+                    }
                 }
-
-                val cal = Calendar.getInstance().apply {
-                    set(Calendar.HOUR_OF_DAY, 0)
-                    set(Calendar.MINUTE, 0)
-                    set(Calendar.SECOND, 0)
-                    set(Calendar.MILLISECOND, 0)
-                }
-                val startOfToday = cal.timeInMillis
-
-                val allRelatives = repository.getAllRelativesOnce()
-                val uncontactedPending = allRelatives.filter { relative ->
-                    pendingIds.contains(relative.id) && relative.lastContactDate < startOfToday
-                }
-
-                // Clean up any IDs from pending set that were already contacted today
-                val alreadyContactedIds = pendingIds.filter { id ->
-                    val r = allRelatives.firstOrNull { it.id == id }
-                    r == null || r.lastContactDate >= startOfToday
-                }
-                alreadyContactedIds.forEach { id ->
-                    ReminderScheduler.removePendingNotifiedRelative(context, id)
-                }
-
-                pendingNotifiedRelatives.value = uncontactedPending
-                showKinshipCheckInDialog.value = uncontactedPending.isNotEmpty()
+                val ts = System.currentTimeMillis()
+                userPhotoPath.value = file.absolutePath
+                userPhotoTimestamp.value = ts
+                viewModelScope.launch { userPreferencesRepository.setUserPhoto(file.absolutePath, ts) }
             } catch (e: Exception) {
-                e.printStackTrace()
+                SilaLogger.e("RelativeViewModel", "Failed to save user photo", e)
             }
         }
     }
+
+    fun removeUserPhoto() {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val currentPath = userPhotoPath.value
+                if (currentPath != null) {
+                    val file = File(currentPath)
+                    if (file.exists()) file.delete()
+                }
+                val ts = System.currentTimeMillis()
+                userPhotoPath.value = null
+                userPhotoTimestamp.value = ts
+                userAvatarId.value = "avatar_01"
+                viewModelScope.launch {
+                    userPreferencesRepository.setUserPhoto(null, ts)
+                    userPreferencesRepository.setUserAvatarId("avatar_01")
+                }
+            } catch (e: Exception) {
+                SilaLogger.e("RelativeViewModel", "Failed to remove user photo", e)
+            }
+        }
+    }
+
+    fun recordCommunication(relativeId: Int, type: String, notes: String) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val log = CommunicationLog(relativeId = relativeId, type = type, notes = notes, timestamp = System.currentTimeMillis())
+            repository.insertLog(log)
+            SilaAppWidgetProvider.triggerWidgetUpdate(getApplication())
+        }
+    }
+
+    fun getLogsForRelative(relativeId: Int) = repository.getLogsForRelative(relativeId)
 
     fun confirmContactedFromDialog(relativeId: Int, notes: String = "تم تأكيد التواصل عند فتح التطبيق") {
         viewModelScope.launch(Dispatchers.IO) {
-            val now = System.currentTimeMillis()
             val relative = repository.getRelativeById(relativeId) ?: return@launch
-
-            // 1. Insert log
-            val log = CommunicationLog(
-                relativeId = relativeId,
-                type = "مكالمة هاتفية",
-                notes = notes,
-                timestamp = now
-            )
-            repository.insertLog(log)
-
-            // 2. Update relative last contact date
-            repository.updateRelative(relative.copy(lastContactDate = now))
-
-            // 3. Remove from pending confirmation
-            val context = getApplication<Application>()
-            ReminderScheduler.removePendingNotifiedRelative(context, relativeId)
-
-            // 4. Update widget
-            SilaAppWidgetProvider.triggerWidgetUpdate(context)
-
-            // 5. Update local pending list
-            val updatedList = pendingNotifiedRelatives.value.filter { it.id != relativeId }
-            pendingNotifiedRelatives.value = updatedList
-            if (updatedList.isEmpty()) {
-                showKinshipCheckInDialog.value = false
-            }
+            repository.insertLog(CommunicationLog(relativeId = relativeId, type = "تواصل مؤكد", notes = notes, timestamp = System.currentTimeMillis()))
+            ReminderScheduler.removePendingNotifiedRelative(getApplication(), relativeId)
+            SilaAppWidgetProvider.triggerWidgetUpdate(getApplication())
         }
+    }
+
+    fun dismissKinshipCheckInDialog() {
+        showKinshipCheckInDialog.value = false
     }
 
     fun confirmAllContactedFromDialog() {
@@ -267,592 +469,57 @@ class RelativeViewModel(application: Application) : AndroidViewModel(application
         }
     }
 
-    fun dismissKinshipCheckInDialog() {
-        showKinshipCheckInDialog.value = false
+    fun checkPendingNotifiedRelatives() {
+        checkPendingNotifiedRelatives(getApplication())
     }
 
-    // Safe SharedPreferences helpers to prevent startup crash on type mismatch
-    private fun safeGetString(key: String, default: String): String {
-        return try { prefs.getString(key, default) ?: default } catch (e: Exception) { default }
-    }
-    private fun safeGetNullableString(key: String): String? {
-        return try { prefs.getString(key, null) } catch (e: Exception) { null }
-    }
-    private fun safeGetBoolean(key: String, default: Boolean): Boolean {
-        return try { prefs.getBoolean(key, default) } catch (e: Exception) { default }
-    }
-    private fun safeGetLong(key: String, default: Long): Long {
-        return try { prefs.getLong(key, default) } catch (e: Exception) { default }
-    }
-    private fun safeGetStringSet(key: String, default: Set<String>): Set<String> {
-        return try { prefs.getStringSet(key, default) ?: default } catch (e: Exception) { default }
-    }
-    private fun safeGetInt(key: String, default: Int): Int {
-        return try { prefs.getInt(key, default) } catch (e: Exception) { default }
-    }
-
-    // Dark mode state persisted in SharedPreferences
-    val isDarkMode = MutableStateFlow(safeGetBoolean("dark_mode", false))
-
-    fun toggleDarkMode(enabled: Boolean) {
-        isDarkMode.value = enabled
-        prefs.edit().putBoolean("dark_mode", enabled).apply()
-    }
-
-    // Notification preferences persisted in SharedPreferences
-    val prefNotifyDueRelatives = MutableStateFlow(safeGetBoolean("pref_notify_due_relatives", true))
-    val prefNotifyEncouragement = MutableStateFlow(safeGetBoolean("pref_notify_encouragement", true))
-    val prefNotifyMonthly = MutableStateFlow(safeGetBoolean("pref_notify_monthly", true))
-
-    // Daily reminder time (defaults to 10:00 AM)
-    val reminderHour = MutableStateFlow(safeGetInt("reminder_hour", ReminderScheduler.DEFAULT_REMINDER_HOUR))
-    val reminderMinute = MutableStateFlow(safeGetInt("reminder_minute", ReminderScheduler.DEFAULT_REMINDER_MINUTE))
-
-    fun updateReminderTime(hour: Int, minute: Int) {
-        reminderHour.value = hour
-        reminderMinute.value = minute
-        prefs.edit()
-            .putInt("reminder_hour", hour)
-            .putInt("reminder_minute", minute)
-            .apply()
-        ReminderScheduler.scheduleDailyReminder(getApplication())
-    }
-
-    fun toggleNotifyDueRelatives(enabled: Boolean) {
-        prefNotifyDueRelatives.value = enabled
-        prefs.edit().putBoolean("pref_notify_due_relatives", enabled).apply()
-        if (enabled) {
-            ReminderScheduler.scheduleDailyReminder(getApplication())
-        } else {
-            ReminderScheduler.cancelDailyReminder(getApplication())
-        }
-    }
-
-    fun toggleNotifyEncouragement(enabled: Boolean) {
-        prefNotifyEncouragement.value = enabled
-        prefs.edit().putBoolean("pref_notify_encouragement", enabled).apply()
-    }
-
-    fun toggleNotifyMonthly(enabled: Boolean) {
-        prefNotifyMonthly.value = enabled
-        prefs.edit().putBoolean("pref_notify_monthly", enabled).apply()
-    }
-
-    // Days using Sila — computed fresh from prefs (not cached in a StateFlow)
-    fun getAppUsageDays(): Int {
-        val firstLaunch = safeGetLong("app_first_launch_time", System.currentTimeMillis())
-        val diffMs = System.currentTimeMillis() - firstLaunch
-        return ((diffMs / (1000 * 60 * 60 * 24)) + 1).toInt()
-    }
-
-    // Expose as StateFlow for Compose to observe
-    val appUsageDays: StateFlow<Int> = MutableStateFlow(getAppUsageDays())
-
-    fun openSupportSilaDialog() { showSupportSilaDialog.value = true }
-    fun closeSupportSilaDialog() { showSupportSilaDialog.value = false }
-
-    private fun ensureFirstLaunchRecorded() {
-        if (!prefs.contains("app_first_launch_time")) {
-            prefs.edit().putLong("app_first_launch_time", System.currentTimeMillis()).apply()
-        }
-    }
-
-    init {
-        setupDueNotificationsWorker()
-        setupUsageNotificationWorker()
-        ReminderScheduler.scheduleDailyReminder(application)
-        ensureFirstLaunchRecorded()
-    }
-
-    private fun observeMilestones() {
-        viewModelScope.launch {
-            // distinctUntilChanged on contactedCount avoids re-triggering on unrelated DB emits
-            relatives
-                .map { list -> list.count { it.lastContactDate > 0L } }
-                .distinctUntilChanged()
-                .collect { contactedCount ->
-                    checkMilestonesByCount(contactedCount)
-                }
-        }
-    }
-
-    // Public for testing only — internal logic uses checkMilestonesByCount
-    fun checkMilestones(currentRelatives: List<Relative>) {
-        checkMilestonesByCount(currentRelatives.count { it.lastContactDate > 0L })
-    }
-
-    private fun checkMilestonesByCount(contactedCount: Int) {
-        if (contactedCount < 5) return
-
-        val achievedSet = safeGetStringSet("achieved_milestones", emptySet())
-        val lastPromptTime = safeGetLong("last_support_prompt_time", 0L)
-        val now = System.currentTimeMillis()
-        val isCooldownActive = lastPromptTime > 0L && (now - lastPromptTime < 30 * 86_400_000L)
-
-        // Find which milestone to show — check from highest to lowest
-        // Key fix: only markMilestoneAchieved when we actually show it (or for milestone 5)
-        when {
-            contactedCount >= 100 && !achievedSet.contains("milestone_100") -> {
-                if (!isCooldownActive) {
-                    markMilestoneAchieved("milestone_100")
-                    activeMilestoneDialog.value = 100
-                }
-                // If cooldown is active, we leave it un-marked so it shows after cooldown
-            }
-            contactedCount >= 50 && !achievedSet.contains("milestone_50") -> {
-                if (!isCooldownActive) {
-                    markMilestoneAchieved("milestone_50")
-                    activeMilestoneDialog.value = 50
-                }
-            }
-            contactedCount >= 25 && !achievedSet.contains("milestone_25") -> {
-                if (!isCooldownActive) {
-                    markMilestoneAchieved("milestone_25")
-                    activeMilestoneDialog.value = 25
-                }
-            }
-            contactedCount >= 10 && !achievedSet.contains("milestone_10") -> {
-                if (!isCooldownActive) {
-                    markMilestoneAchieved("milestone_10")
-                    activeMilestoneDialog.value = 10
-                }
-            }
-            contactedCount >= 5 && !achievedSet.contains("milestone_5") -> {
-                // Milestone 5 is celebration-only, no cooldown needed
-                markMilestoneAchieved("milestone_5")
-                activeMilestoneDialog.value = 5
-            }
-        }
-    }
-
-    private fun markMilestoneAchieved(milestoneId: String) {
-        val currentSet = safeGetStringSet("achieved_milestones", emptySet())
-        val updated = currentSet.toMutableSet().apply { add(milestoneId) }
-        prefs.edit().putStringSet("achieved_milestones", updated).apply()
-    }
-
-    fun onMilestoneNotNow() {
-        activeMilestoneDialog.value = null
-        prefs.edit().putLong("last_support_prompt_time", System.currentTimeMillis()).apply()
-    }
-
-    fun onMilestoneSupportClick() {
-        activeMilestoneDialog.value = null
-        prefs.edit().putLong("last_support_prompt_time", System.currentTimeMillis()).apply()
-        showSupportSilaDialog.value = true
-    }
-
-    fun setupUsageNotificationWorker() {
+    fun checkPendingNotifiedRelatives(context: Context) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                val workManager = WorkManager.getInstance(getApplication())
-                val usageWork = PeriodicWorkRequestBuilder<UsageNotificationWorker>(24, TimeUnit.HOURS)
-                    .build()
-
-                workManager.enqueueUniquePeriodicWork(
-                    "sila_periodic_usage_check",
-                    ExistingPeriodicWorkPolicy.KEEP,
-                    usageWork
-                )
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
-        }
-    }
-
-    // App language state persisted in SharedPreferences ("ar" or "en")
-    val selectedLanguage = MutableStateFlow(safeGetString("selected_language", "ar"))
-
-    fun selectLanguage(langCode: String) {
-        selectedLanguage.value = langCode
-        prefs.edit().putString("selected_language", langCode).apply()
-    }
-
-    // User Profile state (Name, Gender & Photo)
-    val userName = MutableStateFlow(safeGetString("user_name", ""))
-    val userGender = MutableStateFlow(safeGetString("user_gender", "male"))
-    val userAvatarId = MutableStateFlow(safeGetString("user_avatar_id", "avatar_01"))
-
-    private fun initUserPhotoPath(): String? {
-        val savedPath = safeGetNullableString("user_photo_path")
-        if (!savedPath.isNullOrBlank() && File(savedPath).exists()) {
-            return savedPath
-        }
-        val legacy = File(getApplication<Application>().filesDir, "custom_avatar.jpg")
-        if (legacy.exists() && legacy.length() > 0) {
-            return legacy.absolutePath
-        }
-        return null
-    }
-
-    val userPhotoPath = MutableStateFlow<String?>(initUserPhotoPath())
-    val userPhotoTimestamp = MutableStateFlow<Long>(safeGetLong("user_photo_ts", System.currentTimeMillis()))
-
-    fun saveUserProfile(name: String, gender: String) {
-        userName.value = name
-        userGender.value = gender
-        prefs.edit()
-            .putString("user_name", name)
-            .putString("user_gender", gender)
-            .apply()
-    }
-
-    fun saveUserAvatar(avatarId: String) {
-        userAvatarId.value = avatarId
-        prefs.edit().putString("user_avatar_id", avatarId).apply()
-    }
-
-    private fun openStreamSafely(app: Application, uri: Uri): java.io.InputStream? {
-        // 1. Direct ContentResolver.openInputStream
-        try {
-            val s = app.contentResolver.openInputStream(uri)
-            if (s != null) return s
-        } catch (e: Exception) {
-            android.util.Log.w("SilaPhoto", "openInputStream failed: ${e.message}")
-        }
-
-        // 2. Map MediaDocumentsProvider URI -> MediaStore URI
-        try {
-            if (uri.authority == "com.android.providers.media.documents") {
-                val docId = android.provider.DocumentsContract.getDocumentId(uri)
-                val split = docId.split(":")
-                if (split.size >= 2 && split[0].equals("image", ignoreCase = true)) {
-                    val mediaId = split[1].toLongOrNull()
-                    if (mediaId != null) {
-                        val mediaUri = android.content.ContentUris.withAppendedId(
-                            android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-                            mediaId
-                        )
-                        android.util.Log.d("SilaPhoto", "Mapped to MediaStore URI: $mediaUri")
-                        val mediaStream = app.contentResolver.openInputStream(mediaUri)
-                        if (mediaStream != null) return mediaStream
-                    }
-                }
-            }
-        } catch (e: Exception) {
-            android.util.Log.w("SilaPhoto", "Mapping MediaDocumentsProvider failed: ${e.message}")
-        }
-
-        // 3. Fallback: openFileDescriptor
-        try {
-            val pfd = app.contentResolver.openFileDescriptor(uri, "r")
-            if (pfd != null) {
-                return java.io.FileInputStream(pfd.fileDescriptor)
-            }
-        } catch (e: Exception) {
-            android.util.Log.w("SilaPhoto", "openFileDescriptor failed: ${e.message}")
-        }
-
-        // 4. Query _data column
-        try {
-            val cursor = app.contentResolver.query(uri, arrayOf(android.provider.MediaStore.Images.Media.DATA), null, null, null)
-            cursor?.use {
-                if (it.moveToFirst()) {
-                    val dataIndex = it.getColumnIndex(android.provider.MediaStore.Images.Media.DATA)
-                    if (dataIndex != -1) {
-                        val filePath = it.getString(dataIndex)
-                        if (!filePath.isNullOrBlank()) {
-                            val f = File(filePath)
-                            if (f.exists() && f.length() > 0) {
-                                return java.io.FileInputStream(f)
-                            }
-                        }
-                    }
-                }
-            }
-        } catch (e: Exception) {
-            android.util.Log.w("SilaPhoto", "Query _data failed: ${e.message}")
-        }
-
-        // 5. Direct File if file path exists
-        try {
-            uri.path?.let { path ->
-                val f = File(path)
-                if (f.exists()) return java.io.FileInputStream(f)
-                val emulatedPath = path.replace("/document/primary:", "/storage/emulated/0/")
-                val f2 = File(emulatedPath)
-                if (f2.exists()) return java.io.FileInputStream(f2)
-            }
-        } catch (e: Exception) {
-            android.util.Log.w("SilaPhoto", "direct File failed: ${e.message}")
-        }
-
-        return null
-    }
-
-    fun setUserPhoto(uri: Uri) {
-        viewModelScope.launch(Dispatchers.IO) {
-            try {
-                val app = getApplication<Application>()
-                android.util.Log.d("SilaPhoto", "setUserPhoto: $uri")
-
-                val validStream = openStreamSafely(app, uri) ?: run {
-                    android.util.Log.e("SilaPhoto", "Could not open stream for URI: $uri")
+                val pendingIds = ReminderScheduler.getPendingNotifiedRelativeIds(context)
+                if (pendingIds.isEmpty()) {
+                    pendingNotifiedRelatives.value = emptyList()
+                    showKinshipCheckInDialog.value = false
                     return@launch
                 }
 
-                // Clean up previous photo files
-                app.filesDir.listFiles { file ->
-                    file.name.startsWith("user_photo_") || file.name == "custom_avatar.jpg"
-                }?.forEach { it.delete() }
+                val cal = Calendar.getInstance().apply {
+                    set(Calendar.HOUR_OF_DAY, 0)
+                    set(Calendar.MINUTE, 0)
+                    set(Calendar.SECOND, 0)
+                    set(Calendar.MILLISECOND, 0)
+                }
+                val startOfToday = cal.timeInMillis
 
-                val ts = System.currentTimeMillis()
-                val newFile = File(app.filesDir, "user_photo_$ts.jpg")
-                validStream.use { inStream ->
-                    newFile.outputStream().use { outStream ->
-                        inStream.copyTo(outStream)
-                    }
+                val allRelatives = repository.getAllRelativesOnce()
+                val uncontactedPending = allRelatives.filter { relative ->
+                    pendingIds.contains(relative.id) && relative.lastContactDate < startOfToday
                 }
 
-                if (newFile.exists() && newFile.length() > 0) {
-                    prefs.edit()
-                        .putString("user_photo_path", newFile.absolutePath)
-                        .putLong("user_photo_ts", ts)
-                        .putString("user_avatar_id", "custom_$ts")
-                        .apply()
-                    userPhotoPath.value = newFile.absolutePath
-                    userPhotoTimestamp.value = ts
-                    userAvatarId.value = "custom_$ts"
-                    android.util.Log.i("SilaPhoto", "Successfully saved user photo to: ${newFile.absolutePath} (size: ${newFile.length()} bytes)")
-                }
+                pendingNotifiedRelatives.value = uncontactedPending
+                showKinshipCheckInDialog.value = uncontactedPending.isNotEmpty()
             } catch (e: Exception) {
-                android.util.Log.e("SilaPhoto", "Failed to setUserPhoto", e)
+                SilaLogger.e("RelativeViewModel", "Failed to check pending relatives", e)
             }
         }
     }
 
-    fun setUserPhotoFromFile(sourceFile: File) {
-        viewModelScope.launch(Dispatchers.IO) {
-            try {
-                if (!sourceFile.exists() || sourceFile.length() <= 0) return@launch
-                val app = getApplication<Application>()
-                app.filesDir.listFiles { file ->
-                    file.name.startsWith("user_photo_") || file.name == "custom_avatar.jpg"
-                }?.forEach { it.delete() }
-
-                val ts = System.currentTimeMillis()
-                val newFile = File(app.filesDir, "user_photo_$ts.jpg")
-                sourceFile.inputStream().use { inStream ->
-                    newFile.outputStream().use { outStream ->
-                        inStream.copyTo(outStream)
-                    }
-                }
-
-                if (newFile.exists() && newFile.length() > 0) {
-                    prefs.edit()
-                        .putString("user_photo_path", newFile.absolutePath)
-                        .putLong("user_photo_ts", ts)
-                        .putString("user_avatar_id", "custom_$ts")
-                        .apply()
-                    userPhotoPath.value = newFile.absolutePath
-                    userPhotoTimestamp.value = ts
-                    userAvatarId.value = "custom_$ts"
-                    android.util.Log.i("SilaPhoto", "Successfully copied user photo from file to: ${newFile.absolutePath}")
-                }
-            } catch (e: Exception) {
-                android.util.Log.e("SilaPhoto", "Failed setUserPhotoFromFile", e)
-            }
-        }
-    }
-
-    fun removeUserPhoto() {
-        viewModelScope.launch(Dispatchers.IO) {
-            try {
-                val app = getApplication<Application>()
-                app.filesDir.listFiles { file ->
-                    file.name.startsWith("user_photo_") || file.name == "custom_avatar.jpg"
-                }?.forEach { it.delete() }
-
-                val ts = System.currentTimeMillis()
-                prefs.edit()
-                    .remove("user_photo_path")
-                    .putLong("user_photo_ts", ts)
-                    .putString("user_avatar_id", "avatar_01")
-                    .apply()
-                userPhotoPath.value = null
-                userPhotoTimestamp.value = ts
-                userAvatarId.value = "avatar_01"
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
-        }
-    }
-
-    // ─────────────────────────────────────────────────────────────────────
-    // Backup & Restore
-    // ─────────────────────────────────────────────────────────────────────
-    val backupResult = MutableStateFlow<BackupManager.BackupResult?>(null)
-
-    // Launchers are set from MainActivity (Compose context)
-    private var exportLauncher: (() -> Unit)? = null
-    private var importLauncher: (() -> Unit)? = null
-
-    fun setExportLauncher(launcher: () -> Unit) { exportLauncher = launcher }
-    fun setImportLauncher(launcher: () -> Unit) { importLauncher = launcher }
-    private var contactPickerLauncher: (() -> Unit)? = null
-    fun setContactPickerLauncher(launcher: () -> Unit) { contactPickerLauncher = launcher }
-    fun launchContactPicker() { contactPickerLauncher?.invoke() }
-
-    // Picked contact from native Contact Picker
-    val pickedContactName = MutableStateFlow("")
-    val pickedContactPhone = MutableStateFlow("")
-    val hasPendingPickedContact = MutableStateFlow(false)
-
-    fun onContactPicked(name: String, phone: String) {
-        pickedContactName.value = name
-        pickedContactPhone.value = phone
-        hasPendingPickedContact.value = true
-        // Auto-open add relative dialog pre-filled
-        showAddRelativeDialog.value = true
-    }
-
-    fun clearPickedContact() {
-        pickedContactName.value = ""
-        pickedContactPhone.value = ""
-        hasPendingPickedContact.value = false
-    }
-
-    // Mark contacted prompt (from notification deep-link)
-    val markContactedPromptRelativeId = MutableStateFlow<Int?>(null)
-
-    fun showMarkContactedPrompt(relativeId: Int) {
-        markContactedPromptRelativeId.value = relativeId
-    }
-    fun dismissMarkContactedPrompt() {
-        markContactedPromptRelativeId.value = null
-    }
-
-    fun triggerExport() { exportLauncher?.invoke() }
-    fun triggerImport() { importLauncher?.invoke() }
-    fun suggestedBackupName() = BackupManager.suggestedFileName()
-
-    fun exportBackup(context: Context, uri: Uri) {
-        viewModelScope.launch(Dispatchers.IO) {
-            val result = BackupManager.exportToUri(
-                context = context,
-                uri = uri,
-                relatives = relatives.value,
-                logs = logs.value,
-                templates = templates.value
-            )
-            backupResult.value = result
-        }
-    }
-
-    fun importBackup(
-        context: Context,
-        uri: Uri,
-        strategy: BackupManager.ImportConflictStrategy = BackupManager.ImportConflictStrategy.MERGE_NEW_ONLY
-    ) {
-        viewModelScope.launch(Dispatchers.IO) {
-            val result = BackupManager.importFromUri(
-                context = context,
-                uri = uri,
-                relativeDao = db.relativeDao(),
-                communicationLogDao = db.communicationLogDao(),
-                quickTemplateDao = db.quickTemplateDao(),
-                onConflict = strategy
-            )
-            backupResult.value = result
-            if (result.success) {
-                SilaAppWidgetProvider.triggerWidgetUpdate(getApplication())
-            }
-        }
-    }
-
-    fun clearBackupResult() { backupResult.value = null }
-
-    // Call Log Sync State
-    val isSyncingCallLogs = MutableStateFlow(false)
-
-    /**
-     * Automatic Call Log Sync: Matches call logs with relatives & updates lastContactDate
-     */
-    fun syncCallLogsWithRelatives(context: Context, onComplete: ((Int) -> Unit)? = null) {
-        viewModelScope.launch(Dispatchers.IO) {
-            isSyncingCallLogs.value = true
-            var syncedCount = 0
-            try {
-                val recentCalls = CallLogManager.fetchRecentCallLogs(context, limit = 300)
-                val currentRelatives = relatives.value
-
-                for (relative in currentRelatives) {
-                    val relativeNormalizedPhone = CallLogManager.normalizePhoneNumber(relative.phone)
-                    if (relativeNormalizedPhone.isEmpty()) continue
-
-                    // Find latest call matching this relative
-                    val latestMatchingCall = recentCalls.firstOrNull { call ->
-                        CallLogManager.normalizePhoneNumber(call.number) == relativeNormalizedPhone
-                    }
-
-                    if (latestMatchingCall != null && latestMatchingCall.dateTimestamp > relative.lastContactDate) {
-                        // Record new communication log automatically
-                        val typeString = when (latestMatchingCall.type) {
-                            CallType.INCOMING -> "مكالمة واردة (تلقائي)"
-                            CallType.OUTGOING -> "مكالمة صادرة (تلقائي)"
-                            CallType.MISSED -> "مكالمة مفقودة"
-                            else -> "مكالمة"
-                        }
-                        val durationMinutes = latestMatchingCall.durationSeconds / 60
-                        val notes = "تم رصد $typeString تلقائياً عبر سجل الهاتف (المدة: $durationMinutes دقيقة)"
-
-                        val log = CommunicationLog(
-                            relativeId = relative.id,
-                            type = typeString,
-                            notes = notes,
-                            timestamp = latestMatchingCall.dateTimestamp
-                        )
-                        repository.insertLog(log)
-                        syncedCount++
-                    }
-                }
-            } catch (e: Exception) {
-                e.printStackTrace()
-            } finally {
-                isSyncingCallLogs.value = false
-                if (syncedCount > 0) {
-                    SilaAppWidgetProvider.triggerWidgetUpdate(getApplication())
-                }
-                onComplete?.invoke(syncedCount)
-            }
-        }
-    }
-
-data class DeviceContact(
-    val name: String,
-    val phone: String,
-    val isGoogle: Boolean = false,
-    val photoUri: String? = null
-) {
-    val first: String get() = name
-    val second: String get() = phone
-    val third: Boolean get() = isGoogle
-}
-
-    // Contact importing state
-    val deviceContacts = MutableStateFlow<List<DeviceContact>>(emptyList())
-    val isLoadingContacts = MutableStateFlow(false)
-
-    // Load actual device contacts using ContentResolver
     fun fetchDeviceContacts(context: Context) {
         viewModelScope.launch(Dispatchers.IO) {
             isLoadingContacts.value = true
             val contactsList = mutableListOf<DeviceContact>()
-            val uri = android.provider.ContactsContract.CommonDataKinds.Phone.CONTENT_URI
-            
-            // Standard projection columns guaranteed to exist on ContactsContract.CommonDataKinds.Phone
+            val uri = ContactsContract.CommonDataKinds.Phone.CONTENT_URI
             val projection = arrayOf(
-                android.provider.ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME,
-                android.provider.ContactsContract.CommonDataKinds.Phone.NUMBER,
-                android.provider.ContactsContract.CommonDataKinds.Phone.PHOTO_URI
+                ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME,
+                ContactsContract.CommonDataKinds.Phone.NUMBER,
+                ContactsContract.CommonDataKinds.Phone.PHOTO_URI
             )
 
             try {
-                val contentResolver = context.contentResolver
-                contentResolver.query(uri, projection, null, null, null)?.use { cursor ->
-                    val nameIndex = cursor.getColumnIndex(android.provider.ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME)
-                    val numberIndex = cursor.getColumnIndex(android.provider.ContactsContract.CommonDataKinds.Phone.NUMBER)
-                    val photoUriIndex = cursor.getColumnIndex(android.provider.ContactsContract.CommonDataKinds.Phone.PHOTO_URI)
+                context.contentResolver.query(uri, projection, null, null, null)?.use { cursor ->
+                    val nameIndex = cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME)
+                    val numberIndex = cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER)
+                    val photoUriIndex = cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.PHOTO_URI)
                     while (cursor.moveToNext()) {
                         if (nameIndex != -1 && numberIndex != -1) {
                             val name = cursor.getString(nameIndex)?.trim() ?: ""
@@ -865,294 +532,13 @@ data class DeviceContact(
                     }
                 }
             } catch (e: Exception) {
-                e.printStackTrace()
+                SilaLogger.e("RelativeViewModel", "Failed to query contacts", e)
             }
 
-            // Fallback query with null projection if contactsList is empty due to custom OEM schema
-            if (contactsList.isEmpty()) {
-                try {
-                    val contentResolver = context.contentResolver
-                    contentResolver.query(uri, null, null, null, null)?.use { cursor ->
-                        val nameIndex = cursor.getColumnIndex(android.provider.ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME)
-                        val numberIndex = cursor.getColumnIndex(android.provider.ContactsContract.CommonDataKinds.Phone.NUMBER)
-                        val photoUriIndex = cursor.getColumnIndex(android.provider.ContactsContract.CommonDataKinds.Phone.PHOTO_URI)
-                        while (cursor.moveToNext()) {
-                            if (nameIndex != -1 && numberIndex != -1) {
-                                val name = cursor.getString(nameIndex)?.trim() ?: ""
-                                val number = cursor.getString(numberIndex)?.trim() ?: ""
-                                val photoUri = if (photoUriIndex != -1) cursor.getString(photoUriIndex) else null
-                                if (name.isNotEmpty() && number.isNotEmpty()) {
-                                    contactsList.add(DeviceContact(name = name, phone = number, isGoogle = false, photoUri = photoUri))
-                                }
-                            }
-                        }
-                    }
-                } catch (e: Exception) {
-                    e.printStackTrace()
-                }
-            }
-
-            // Sort, remove duplicates, and update state
             deviceContacts.value = contactsList
-                .distinctBy { com.example.data.CallLogManager.normalizePhoneNumber(it.phone).ifEmpty { it.phone } }
+                .distinctBy { CallLogManager.normalizePhoneNumber(it.phone).ifEmpty { it.phone } }
                 .sortedBy { it.name }
             isLoadingContacts.value = false
         }
     }
-
-    // Insert functions
-    fun addRelative(
-        name: String,
-        phone: String,
-        relationshipDegree: String,
-        intervalDays: Int,
-        notes: String,
-        photoUri: String? = null
-    ) {
-        // Clear any active search query and category filter so the new relative is visible immediately
-        searchQuery.value = ""
-        selectedCategory.value = "الكل"
-
-        viewModelScope.launch(Dispatchers.IO) {
-            val relative = Relative(
-                name = name.trim(),
-                phone = phone.trim(),
-                relationshipDegree = relationshipDegree.trim(),
-                contactIntervalDays = intervalDays,
-                notes = notes.trim(),
-                photoUri = photoUri
-            )
-            val id = repository.insertRelative(relative)
-            scheduleReminderForRelative(relative.copy(id = id.toInt()))
-            SilaAppWidgetProvider.triggerWidgetUpdate(getApplication())
-        }
-    }
-
-    fun deleteRelative(relative: Relative) {
-        viewModelScope.launch(Dispatchers.IO) {
-            repository.deleteRelative(relative)
-            cancelReminderForRelative(relative.id)
-            SilaAppWidgetProvider.triggerWidgetUpdate(getApplication())
-        }
-    }
-
-    fun scheduleReminderForRelative(relative: Relative) {
-        viewModelScope.launch(Dispatchers.IO) {
-            try {
-                val workManager = WorkManager.getInstance(getApplication())
-                val data = Data.Builder()
-                    .putString("relative_name", relative.name)
-                    .putString("relationship_degree", relative.relationshipDegree)
-                    .putInt("relative_id", relative.id)
-                    .build()
-
-                val workRequest = PeriodicWorkRequestBuilder<ReminderWorker>(
-                    relative.contactIntervalDays.toLong(), TimeUnit.DAYS
-                )
-                    .setInputData(data)
-                    .build()
-
-                workManager.enqueueUniquePeriodicWork(
-                    "reminder_${relative.id}",
-                    ExistingPeriodicWorkPolicy.UPDATE,
-                    workRequest
-                )
-
-                // Ensure AlarmManager daily schedule is active
-                ReminderScheduler.scheduleDailyReminder(getApplication())
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
-        }
-    }
-
-    fun cancelReminderForRelative(relativeId: Int) {
-        viewModelScope.launch(Dispatchers.IO) {
-            try {
-                val workManager = WorkManager.getInstance(getApplication())
-                workManager.cancelUniqueWork("reminder_$relativeId")
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
-        }
-    }
-
-    fun setupDueNotificationsWorker() {
-        viewModelScope.launch(Dispatchers.IO) {
-            try {
-                val workManager = WorkManager.getInstance(getApplication())
-
-                // 1. Periodic worker: Runs every 2 hours to check for due relatives
-                val periodicWork = PeriodicWorkRequestBuilder<PeriodicDueWorker>(2, TimeUnit.HOURS)
-                    .build()
-
-                workManager.enqueueUniquePeriodicWork(
-                    "sila_periodic_due_check",
-                    ExistingPeriodicWorkPolicy.UPDATE,
-                    periodicWork
-                )
-
-                // 2. Immediate worker: Runs right now to trigger immediate notification for due relatives today
-                val immediateWork = OneTimeWorkRequestBuilder<PeriodicDueWorker>().build()
-                workManager.enqueueUniqueWork(
-                    "sila_immediate_due_check",
-                    ExistingWorkPolicy.REPLACE,
-                    immediateWork
-                )
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
-        }
-    }
-
-    fun recordCommunication(relativeId: Int, type: String, notes: String) {
-        viewModelScope.launch(Dispatchers.IO) {
-            val log = CommunicationLog(
-                relativeId = relativeId,
-                type = type,
-                notes = notes,
-                timestamp = System.currentTimeMillis()
-            )
-            repository.insertLog(log)
-
-            // Cancel any active due notification for this relative
-            val notificationManager = getApplication<Application>().getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-            notificationManager.cancel(relativeId + 10000)
-
-            // Mark as satisfied/notified today so reminder doesn't re-trigger today
-            ReminderScheduler.markNotifiedToday(getApplication(), relativeId)
-
-            // Re-trigger due check
-            setupDueNotificationsWorker()
-
-            SilaAppWidgetProvider.triggerWidgetUpdate(getApplication())
-        }
-    }
-
-    fun insertTemplate(template: QuickTemplate) {
-        viewModelScope.launch(Dispatchers.IO) {
-            repository.insertTemplate(template)
-        }
-    }
-
-    fun updateRelativeInterval(relative: Relative, newIntervalDays: Int) {
-        viewModelScope.launch(Dispatchers.IO) {
-            val updated = relative.copy(contactIntervalDays = newIntervalDays)
-            repository.updateRelative(updated)
-            scheduleReminderForRelative(updated)
-            SilaAppWidgetProvider.triggerWidgetUpdate(getApplication())
-        }
-    }
-
-    fun editRelative(
-        original: Relative,
-        newName: String,
-        newPhone: String,
-        newDegree: String,
-        newIntervalDays: Int,
-        newNotes: String
-    ) {
-        viewModelScope.launch(Dispatchers.IO) {
-            val updated = original.copy(
-                name = newName,
-                phone = newPhone,
-                relationshipDegree = newDegree,
-                contactIntervalDays = newIntervalDays,
-                notes = newNotes
-            )
-            repository.updateRelative(updated)
-            scheduleReminderForRelative(updated)
-            SilaAppWidgetProvider.triggerWidgetUpdate(getApplication())
-        }
-    }
-
-    // Helper functions to check status
-    fun getRelativeStatus(relative: Relative): RelativeStatus {
-        if (relative.lastContactDate == 0L) {
-            return RelativeStatus.NEEDS_CONTACT_URGENT // "متأخر جداً - لم يتم الاتصال به مطلقاً"
-        }
-        val diffMs = System.currentTimeMillis() - relative.lastContactDate
-        val diffDays = (diffMs / (1000 * 60 * 60 * 24)).toInt()
-        val interval = relative.contactIntervalDays
-
-        return when {
-            diffDays >= interval + 7 -> RelativeStatus.OVERDUE_CRITICAL
-            diffDays >= interval -> RelativeStatus.NEEDS_CONTACT
-            diffDays >= interval / 2 -> RelativeStatus.OK_SOON
-            else -> RelativeStatus.CONNECTED
-        }
-    }
-
-    // --- SMART FEATURE 2: Auto-suggest Relationship Degree ---
-    fun suggestRelationshipDegree(name: String): String {
-        val lower = name.lowercase()
-        return when {
-            lower.contains("ماما") || lower.contains("امي") || lower.contains("أمي") || lower.contains("والدتي") ||
-            lower.contains("بابا") || lower.contains("ابي") || lower.contains("أبي") || lower.contains("والدي") -> "والدان"
-            
-            lower.contains("اخي") || lower.contains("أخي") || lower.contains("اختي") || lower.contains("أختي") ||
-            lower.contains("شقيقي") || lower.contains("شقيقتي") -> "أشقاء"
-            
-            lower.contains("عمي") || lower.contains("عمتي") || lower.contains("خالي") || lower.contains("خالتي") ||
-            lower.contains("عم") || lower.contains("عمة") || lower.contains("خال") || lower.contains("خالة") -> "أعمام/أخوال"
-            
-            else -> "أقارب آخرون"
-        }
-    }
-
-    // --- SMART FEATURE 3: Smart Message Generator ---
-    fun generateLocalSmartMessage(relativeName: String, relationshipDegree: String, occasion: String): String {
-        val greeting = when (relationshipDegree) {
-            "والدان" -> "تاج رأسي وقرة عيني الغالي ${relativeName}"
-            "أشقاء" -> "أخي الغالي وسندي ${relativeName}"
-            "أعمام/أخوال" -> "عمي/خالي العزيز ${relativeName}"
-            else -> "الغالي ${relativeName}"
-        }
-
-        return when (occasion) {
-            "يوم الجمعة" -> "السلام عليكم ورحمة الله وبركاته يا $greeting. في هذا اليوم المبارك، أسأل الله أن يملأ قلبكم بالنور والسكينة، ويحفظكم من كل مكروه، ويجعل أيامكم بركة ورحمة. جمعة طيبة ومباركة ✨"
-            "عيد الفطر/الأضحى" -> "السلام عليكم ورحمة الله وبركاته يا $greeting. كل عام وأنتم في أحسن حال! أتقدم إليكم بأصدق التهاني بمناسبة العيد، سائلاً الله أن يتقبل منكم الطاعات، وأن يعيده عليكم بالخير والبركة والسرور 🌸"
-            "سؤال عام عن الحال" -> "السلام عليكم يا $greeting. حبيت أطمن على أحوالك وصحتك، عساك بخير ونعمة يارب. مشتاقين نسمع أخباركم الطيبة ونشوفكم قريب جداً. دمت بخير وعافية 🤍"
-            "دعاء بالشفاء" -> "السلام عليكم ورحمة الله وبركاته يا $greeting. ألف سلامة عليك وطهور إن شاء الله، أسأل الله العظيم رب العرش العظيم أن يشفيك شفاءً تاماً لا يغادر سقماً، ويمن عليك بالصحة والعافية وتكون دايماً بخير 🤲"
-            else -> "السلام عليكم يا $greeting. أتمنى لك يوماً طيباً جميلاً مليئاً بالطمأنينة والخير، دمت في حفظ الله ورعايته 🌿"
-        }
-    }
-
-    // --- SMART FEATURE 4: Family Time Capsule (Memories) ---
-    fun addFamilyMemory(relativeId: Int, relativeName: String, title: String, description: String, imagePath: String? = null) {
-        viewModelScope.launch(Dispatchers.IO) {
-            val memory = FamilyMemory(
-                relativeId = relativeId,
-                relativeName = relativeName,
-                title = title,
-                description = description,
-                imagePath = imagePath,
-                timestamp = System.currentTimeMillis()
-            )
-            repository.insertMemory(memory)
-        }
-    }
-
-    fun deleteFamilyMemory(memory: FamilyMemory) {
-        viewModelScope.launch(Dispatchers.IO) {
-            repository.deleteMemory(memory)
-        }
-    }
-
-    fun getLogsForRelative(relativeId: Int) = repository.getLogsForRelative(relativeId)
-}
-
-enum class RelativeStatus(
-    val label: String,
-    val labelEn: String,
-    val colorHex: String,
-    val color: androidx.compose.ui.graphics.Color
-) {
-    NEEDS_CONTACT_URGENT("لم تتواصل معه بعد.. ابدأ اليوم 🌿", "Contact Now (Never Called)", "E53935", androidx.compose.ui.graphics.Color(0xFFE53935)),
-    OVERDUE_CRITICAL("شخص عزيز مشتاق لسماع صوتك! ❤️", "Very Overdue!", "D32F2F", androidx.compose.ui.graphics.Color(0xFFD32F2F)),
-    NEEDS_CONTACT("اليوم فرصة جميلة لتطمئن عليه 🌸", "Time to Connect Today", "EF6C00", androidx.compose.ui.graphics.Color(0xFFEF6C00)),
-    OK_SOON("طمئنه قريبًا 🌿", "Connect Soon", "FBC02D", androidx.compose.ui.graphics.Color(0xFFFBC02D)),
-    CONNECTED("تواصل مبارك ومستمر ✨", "Great! Recently Connected", "2E7D32", androidx.compose.ui.graphics.Color(0xFF2E7D32));
-
-    fun getLabel(lang: String) = if (lang == "en") labelEn else label
 }

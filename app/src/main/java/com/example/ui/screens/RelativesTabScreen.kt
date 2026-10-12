@@ -29,6 +29,7 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -76,8 +77,12 @@ fun RelativesTabScreen(
     }
 
     // Relatives due for contact (still used for status logic)
-    val dueRelatives = allRelatives.filter { relative ->
-        viewModel.getRelativeStatus(relative) != RelativeStatus.CONNECTED
+    val dueRelatives by remember(viewModel) {
+        derivedStateOf {
+            allRelatives.filter { relative ->
+                viewModel.getRelativeStatus(relative) != RelativeStatus.CONNECTED
+            }
+        }
     }
 
     val userName by viewModel.userName.collectAsState()
@@ -94,16 +99,14 @@ fun RelativesTabScreen(
             viewModel.syncCallLogsWithRelatives(context) { synced ->
                 Toast.makeText(
                     context,
-                    if (lang == "en") "Synced $synced new calls automatically! 📞"
-                    else "تمت مزامنة $synced اتصالات جديدة تلقائياً! 📞",
+                    context.resources.getQuantityString(com.example.R.plurals.synced_calls_count, synced, synced),
                     Toast.LENGTH_SHORT
                 ).show()
             }
         } else {
             Toast.makeText(
                 context,
-                if (lang == "en") "Call log permission is required to track incoming and outgoing calls automatically"
-                else "صلاحية سجل المكالمات مطلوبة للتعرف التلقائي على الاتصالات الواردة والصادرة",
+                context.getString(com.example.R.string.call_log_perm_required),
                 Toast.LENGTH_LONG
             ).show()
         }
@@ -126,10 +129,13 @@ fun RelativesTabScreen(
 
     // Internal values stay Arabic (used for filtering stored data)
     val categories = listOf("الكل", "والدان", "أشقاء", "أعمام/أخوال", "أقارب آخرون")
-    val categoryLabels = if (lang == "en")
-        listOf("All", "Parents", "Siblings", "Uncles/Aunts", "Other Relatives")
-    else
-        categories
+    val categoryLabels = listOf(
+        stringResource(com.example.R.string.category_all),
+        stringResource(com.example.R.string.category_parents),
+        stringResource(com.example.R.string.category_siblings),
+        stringResource(com.example.R.string.category_uncles_aunts),
+        stringResource(com.example.R.string.category_other)
+    )
 
     // Navigate to detail screen if a relative is selected
     val currentDetailRelative = selectedRelativeForDetail
@@ -154,7 +160,7 @@ fun RelativesTabScreen(
                     .shadow(12.dp, RoundedCornerShape(18.dp), spotColor = SoftGold.copy(alpha = 0.4f))
                     .testTag("add_relative_fab")
             ) {
-                Icon(Icons.Default.Add, contentDescription = "إضافة قريب جديد", modifier = Modifier.size(28.dp))
+                Icon(Icons.Default.Add, contentDescription = stringResource(com.example.R.string.add_relative_fab_desc), modifier = Modifier.size(28.dp))
             }
         },
         containerColor = MaterialTheme.colorScheme.background
@@ -227,12 +233,12 @@ fun RelativesTabScreen(
                     OutlinedTextField(
                         value = searchQuery,
                         onValueChange = { viewModel.searchQuery.value = it },
-                        placeholder = { Text(if (lang == "en") "Search name or phone..." else "ابحث عن قريب بالاسم أو الهاتف...", fontSize = 13.sp) },
-                        leadingIcon = { Icon(Icons.Outlined.Search, contentDescription = if (lang == "en") "Search" else "بحث") },
+                        placeholder = { Text(stringResource(com.example.R.string.search_hint), fontSize = 13.sp) },
+                        leadingIcon = { Icon(Icons.Outlined.Search, contentDescription = stringResource(com.example.R.string.search)) },
                         trailingIcon = {
                             if (searchQuery.isNotEmpty()) {
                                 IconButton(onClick = { viewModel.searchQuery.value = "" }) {
-                                    Icon(Icons.Default.Clear, contentDescription = "مسح")
+                                    Icon(Icons.Default.Clear, contentDescription = stringResource(com.example.R.string.clear))
                                 }
                             }
                         },
@@ -266,12 +272,12 @@ fun RelativesTabScreen(
                         ) {
                             Icon(
                                 imageVector = Icons.Default.ContactPhone,
-                                contentDescription = if (lang == "en") "Import" else "استيراد",
+                                contentDescription = stringResource(com.example.R.string.import_text),
                                 tint = MaterialTheme.colorScheme.onSecondaryContainer,
                                 modifier = Modifier.size(18.dp)
                             )
                             Text(
-                                text = if (lang == "en") "Import" else "استيراد",
+                                text = stringResource(com.example.R.string.import_text),
                                 fontSize = 12.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onSecondaryContainer
@@ -286,17 +292,13 @@ fun RelativesTabScreen(
                 item {
                     if (searchQuery.isNotEmpty()) {
                         SilaEmptyStateView(
-                            title = if (lang == "en") "No results matching \"$searchQuery\""
-                                     else "لا توجد نتائج مطابقة لـ \"$searchQuery\"",
-                            subtitle = if (lang == "en") "Try searching with a different name or phone number"
-                                        else "جرّب البحث باسم مختلف أو رقم الهاتف"
+                            title = stringResource(com.example.R.string.no_search_results_title, searchQuery),
+                            subtitle = stringResource(com.example.R.string.no_search_results_subtitle)
                         )
                     } else if (selectedCategory != "الكل" && allRelatives.isNotEmpty()) {
                         SilaEmptyStateView(
-                            title = if (lang == "en") "No relatives under \"$selectedCategory\""
-                                     else "لا توجد أرحام مسجلة في تصنيف «$selectedCategory»",
-                            subtitle = if (lang == "en") "Tap \"All\" to see all your relatives"
-                                        else "اضغط على «الكل» بالأعلى لعرض كافة الأقارب (${allRelatives.size})"
+                            title = stringResource(com.example.R.string.no_category_results_title),
+                            subtitle = stringResource(com.example.R.string.no_category_results_subtitle)
                         )
                     } else {
                         SilaEmptyStateView(
@@ -309,7 +311,7 @@ fun RelativesTabScreen(
                     }
                 }
             } else {
-                items(filteredRelatives, key = { relative -> "${relative.id}_${relative.name}_${relative.phone}" }) { relative ->
+                items(filteredRelatives, key = { it.id }) { relative ->
                     RelativeCard(
                         relative = relative,
                         viewModel = viewModel,

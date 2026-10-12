@@ -1,19 +1,27 @@
 package com.example.work
 
 import android.content.Context
+import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
-import com.example.data.AppDatabase
+import com.example.core.datastore.UserPreferencesRepository
+import com.example.core.util.SilaLogger
+import com.example.data.RelativeRepository
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedInject
 
 /**
  * WorkManager periodic worker for individual relative reminders.
+ * Injected with [RelativeRepository] and [UserPreferencesRepository] via Hilt.
  * Delegates to [SilaNotificationHelper] to send the actual notification,
- * and checks [ReminderScheduler.wasNotifiedToday] to prevent duplicates
- * with the AlarmReceiver/PeriodicDueWorker path.
+ * and checks [ReminderScheduler.wasNotifiedToday] to prevent duplicates.
  */
-class ReminderWorker(
-    appContext: Context,
-    workerParams: WorkerParameters
+@HiltWorker
+class ReminderWorker @AssistedInject constructor(
+    @Assisted appContext: Context,
+    @Assisted workerParams: WorkerParameters,
+    private val relativeRepository: RelativeRepository,
+    private val userPreferencesRepository: UserPreferencesRepository
 ) : CoroutineWorker(appContext, workerParams) {
 
     override suspend fun doWork(): Result {
@@ -27,9 +35,8 @@ class ReminderWorker(
             return Result.success()
         }
 
-        try {
-            val db = AppDatabase.getDatabase(applicationContext)
-            val relative = db.relativeDao().getRelativeById(relativeId) ?: return Result.success()
+        return try {
+            val relative = relativeRepository.getRelativeById(relativeId) ?: return Result.success()
 
             // Check if actually due
             val isDue = if (relative.lastContactDate == 0L) {
@@ -41,9 +48,9 @@ class ReminderWorker(
 
             if (!isDue) return Result.success()
 
-            val prefs = applicationContext.getSharedPreferences("app_settings", Context.MODE_PRIVATE)
-            val userName = prefs.getString("user_name", "") ?: ""
-            val lang = prefs.getString("selected_language", "ar") ?: "ar"
+            val userPrefs = userPreferencesRepository.getInitialPreferences()
+            val userName = userPrefs.userName
+            val lang = userPrefs.selectedLanguage
 
             // ── Send notification through the central helper ──
             SilaNotificationHelper.sendKinshipNotification(
@@ -55,11 +62,11 @@ class ReminderWorker(
 
             // ── Mark as notified today to prevent duplicates from AlarmReceiver/PeriodicDueWorker ──
             ReminderScheduler.markNotifiedToday(applicationContext, relativeId, now)
+            Result.success()
         } catch (e: Exception) {
-            e.printStackTrace()
+            SilaLogger.e("ReminderWorker", "Failed to process reminder work for relative $relativeId", e)
+            if (runAttemptCount < 3) Result.retry() else Result.failure()
         }
-
-        return Result.success()
     }
 
     companion object {

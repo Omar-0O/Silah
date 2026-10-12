@@ -8,6 +8,7 @@ import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 
@@ -100,9 +101,13 @@ fun MyApplicationTheme(
 
     val dynamicTypography = getTypography(getFontFamily(fontName))
 
-    MaterialTheme(
-        colorScheme = colorScheme,
-        typography = dynamicTypography,
-        content = content
-    )
+    CompositionLocalProvider(
+        LocalSilaSpacing provides SilaSpacing()
+    ) {
+        MaterialTheme(
+            colorScheme = colorScheme,
+            typography = dynamicTypography,
+            content = content
+        )
+    }
 }

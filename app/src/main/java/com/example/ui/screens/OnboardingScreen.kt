@@ -27,6 +27,8 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -125,10 +127,10 @@ fun OnboardingScreen(
 
                         Text(
                             text = when (page) {
-                                0 -> if (selectedLanguage == "en") "Welcome to Silah 🌿" else "مرحباً بك في صِلَةِ 🌿"
-                                1 -> if (selectedLanguage == "en") "Tell Us About You" else "أخبرنا عن نفسك"
-                                2 -> if (selectedLanguage == "en") "Add Your Relatives" else "أضف أرحامك"
-                                else -> if (selectedLanguage == "en") "All Set! 🎉" else "كل شيء جاهز! 🎉"
+                                0 -> stringResource(R.string.onboarding_title_0)
+                                1 -> stringResource(R.string.onboarding_title_1)
+                                2 -> stringResource(R.string.onboarding_title_2)
+                                else -> stringResource(R.string.onboarding_title_3)
                             },
                             fontSize = 20.sp,
                             fontWeight = FontWeight.ExtraBold,
@@ -140,22 +142,10 @@ fun OnboardingScreen(
 
                         Text(
                             text = when (page) {
-                                0 -> if (selectedLanguage == "en")
-                                    "Your private companion for nurturing family ties — no ads, no subscriptions."
-                                else
-                                    "رفيقك الخاص في العناية بأرحامك وأقاربك — بدون إعلانات أو اشتراكات."
-                                1 -> if (selectedLanguage == "en")
-                                    "We'll personalize your reminders with your name."
-                                else
-                                    "عشان نخصّص التذكيرات ليك باسمك."
-                                2 -> if (selectedLanguage == "en")
-                                    "Import family members directly from your phone contacts."
-                                else
-                                    "استورد أفراد عائلتك مباشرة من جهات اتصالك."
-                                else -> if (selectedLanguage == "en")
-                                    "Silah will remind you and track your connections automatically."
-                                else
-                                    "صِلَةِ هيذكّرك ويتابع تواصلك تلقائياً."
+                                0 -> stringResource(R.string.onboarding_sub_0)
+                                1 -> stringResource(R.string.onboarding_sub_1)
+                                2 -> stringResource(R.string.onboarding_sub_2)
+                                else -> stringResource(R.string.onboarding_sub_3)
                             },
                             fontSize = 12.sp,
                             color = Color(0xFFB8DDE0),
@@ -268,7 +258,7 @@ fun OnboardingScreen(
                         ) {
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = if (selectedLanguage == "en") "Back" else "رجوع",
+                                contentDescription = stringResource(R.string.back),
                                 tint = Color(0xFF475569),
                                 modifier = Modifier.size(20.dp)
                             )
@@ -317,9 +307,9 @@ fun OnboardingScreen(
                     ) {
                         Text(
                             text = if (currentPage < pages - 1) {
-                                if (selectedLanguage == "en") "Continue" else "التالي"
+                                stringResource(R.string.continue_text)
                             } else {
-                                if (selectedLanguage == "en") "Get Started 🌸" else "ابدأ الآن 🌸"
+                                stringResource(R.string.get_started)
                             },
                             fontWeight = FontWeight.Bold,
                             fontSize = 15.sp
@@ -363,7 +353,7 @@ private fun LanguagePage(selectedLanguage: String, viewModel: RelativeViewModel)
         verticalArrangement = Arrangement.Center
     ) {
         Text(
-            text = if (selectedLanguage == "en") "Choose your language:" else "اختر لغتك المفضلة:",
+            text = stringResource(R.string.choose_language_prompt),
             fontSize = 15.sp,
             fontWeight = FontWeight.SemiBold,
             color = Color(0xFF334155)
@@ -448,17 +438,17 @@ private fun NameGenderPage(
             value = nameInput,
             onValueChange = onNameChange,
             label = {
-                Text(if (selectedLanguage == "en") "Your Name" else "اسمك")
+                Text(stringResource(R.string.your_name_label))
             },
             placeholder = {
                 Text(
-                    if (selectedLanguage == "en") "e.g. Ahmed" else "مثال: أحمد",
+                    stringResource(R.string.name_placeholder),
                     color = Color(0xFFB0B8C1)
                 )
             },
             isError = showNameError && nameInput.trim().isEmpty(),
             supportingText = if (showNameError && nameInput.trim().isEmpty()) {
-                { Text(if (selectedLanguage == "en") "Name is required" else "الاسم مطلوب", color = MaterialTheme.colorScheme.error) }
+                { Text(stringResource(R.string.name_required_error), color = MaterialTheme.colorScheme.error) }
             } else null,
             singleLine = true,
             shape = RoundedCornerShape(14.dp),
@@ -473,7 +463,7 @@ private fun NameGenderPage(
         )
 
         Text(
-            text = if (selectedLanguage == "en") "I am:" else "أنا:",
+            text = stringResource(R.string.gender_prompt),
             fontSize = 14.sp,
             fontWeight = FontWeight.SemiBold,
             color = Color(0xFF334155)
@@ -484,7 +474,7 @@ private fun NameGenderPage(
             horizontalArrangement = Arrangement.spacedBy(14.dp)
         ) {
             GenderCard(
-                label = if (selectedLanguage == "en") "Male" else "ذكر",
+                label = stringResource(R.string.gender_male),
                 selected = genderInput == "male",
                 color = Color(0xFF0E7075),
                 bgColor = Color(0xFFE0F2F1),
@@ -492,7 +482,7 @@ private fun NameGenderPage(
             ) { onGenderChange("male") }
 
             GenderCard(
-                label = if (selectedLanguage == "en") "Female" else "أنثى",
+                label = stringResource(R.string.gender_female),
                 selected = genderInput == "female",
                 color = Color(0xFF0E7075),
                 bgColor = Color(0xFFE0F2F1),
@@ -568,7 +558,7 @@ private fun ImportRelativesPage(
                 Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
                 Spacer(modifier = Modifier.width(6.dp))
                 Text(
-                    if (selectedLanguage == "en") "From Contacts 📱" else "من جهات الاتصال 📱",
+                    stringResource(R.string.from_contacts),
                     fontWeight = FontWeight.Bold,
                     fontSize = 13.sp
                 )
@@ -587,7 +577,7 @@ private fun ImportRelativesPage(
                     .height(50.dp)
             ) {
                 Text(
-                    if (selectedLanguage == "en") "Manual ✍️" else "إدخال يدوي ✍️",
+                    stringResource(R.string.manual_entry),
                     fontWeight = FontWeight.Bold,
                     fontSize = 13.sp
                 )
@@ -598,7 +588,7 @@ private fun ImportRelativesPage(
 
         if (showRelativeError) {
             Text(
-                if (selectedLanguage == "en") "⚠️ Please add at least one relative." else "⚠️ يرجى إضافة قريب واحد على الأقل.",
+                stringResource(R.string.min_relative_error),
                 fontSize = 12.sp,
                 color = Color(0xFFD32F2F),
                 fontWeight = FontWeight.Medium
@@ -621,14 +611,14 @@ private fun ImportRelativesPage(
                     Text("📋", fontSize = 38.sp)
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        if (selectedLanguage == "en") "No relatives added yet" else "لا يوجد أقارب مضافون بعد",
+                        stringResource(R.string.no_relatives_onboarding),
                         fontSize = 14.sp,
                         fontWeight = FontWeight.SemiBold,
                         color = Color(0xFF64748B)
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        if (selectedLanguage == "en") "Tap the button above to get started" else "اضغط الزر أعلاه للبدء",
+                        stringResource(R.string.tap_button_onboarding),
                         fontSize = 12.sp,
                         color = Color(0xFFB0B8C1),
                         textAlign = TextAlign.Center,
@@ -638,10 +628,7 @@ private fun ImportRelativesPage(
             }
         } else {
             Text(
-                if (selectedLanguage == "en")
-                    "Added (${currentRelatives.size}):"
-                else
-                    "المضافون (${currentRelatives.size}):",
+                pluralStringResource(R.plurals.added_relatives_count, currentRelatives.size, currentRelatives.size),
                 fontSize = 13.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = Color(0xFF334155)
@@ -720,16 +707,11 @@ private fun SummaryPage(selectedLanguage: String) {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        val features = if (selectedLanguage == "en") listOf(
-            Pair("🔔", "Smart reminders based on kinship closeness"),
-            Pair("📞", "Auto-detects calls via your call log"),
-            Pair("🔒", "100% private — data stays on your device"),
-            Pair("✨", "Free forever, no ads, no subscriptions")
-        ) else listOf(
-            Pair("🔔", "تذكيرات ذكية بناءً على درجة القرابة"),
-            Pair("📞", "كشف تلقائي للمكالمات عبر سجل الهاتف"),
-            Pair("🔒", "خصوصية كاملة — بياناتك تبقى على جهازك"),
-            Pair("✨", "مجاني للأبد، بدون إعلانات أو اشتراكات")
+        val features = listOf(
+            Pair("🔔", stringResource(R.string.feature_smart_reminders)),
+            Pair("📞", stringResource(R.string.feature_call_detect)),
+            Pair("🔒", stringResource(R.string.feature_private)),
+            Pair("✨", stringResource(R.string.feature_free))
         )
 
         features.forEach { (emoji, text) ->

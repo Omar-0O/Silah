@@ -24,13 +24,18 @@ import com.example.ui.theme.SoftGold
 import java.text.SimpleDateFormat
 import java.util.*
 
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.ui.draw.clip
+import com.example.ui.theme.SilaShapes
+import com.example.ui.theme.spacing
+
 /**
- * Commitment Header Card (Stitch-style)
+ * Commitment Header Card
  * Features:
  * - Deep Olive gradient background (Deep Forest Green → Dark Emerald)
- * - Animated Circular Progress Arc (SoftGold)
- * - Personalized greeting
- * - Kin-tie stats
+ * - Spring-animated Circular Progress Arc (SoftGold)
+ * - Personalized greeting & rotating Quran Ayahs
+ * - Glassmorphic Kin-tie stat chips
  */
 @Composable
 fun CommitmentHeaderCard(
@@ -42,14 +47,19 @@ fun CommitmentHeaderCard(
     totalRelativesCount: Int = 0,
     modifier: Modifier = Modifier
 ) {
+    val spacing = MaterialTheme.spacing
+
     // Commitment score: % of relatives contacted at least once
     val commitmentPct = if (totalRelativesCount == 0) 0f
                         else (uniqueRelativesContacted.toFloat() / totalRelativesCount).coerceIn(0f, 1f)
 
-    // Animate the arc
+    // Animate the arc with spring physics for natural feel
     val animatedArc by animateFloatAsState(
         targetValue = commitmentPct,
-        animationSpec = tween(1400, easing = FastOutSlowInEasing),
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioLowBouncy,
+            stiffness = Spring.StiffnessLow
+        ),
         label = "commitment_arc"
     )
 
@@ -60,20 +70,13 @@ fun CommitmentHeaderCard(
     }
 
     // Time-based greeting
-    val greeting = remember(lang, userName) {
-        val hour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
-        val timeGreeting = if (lang == "en") when {
-            hour < 12 -> "Good morning"
-            hour < 17 -> "Good afternoon"
-            else      -> "Good evening"
-        } else when {
-            hour < 12 -> "صباح الخير"
-            hour < 17 -> "مساء الخير"
-            else      -> "مساء النور"
-        }
-        val name = if (userName.isNotBlank()) userName else if (lang == "en") "" else ""
-        if (name.isNotBlank()) "$timeGreeting، $name 🌿" else "$timeGreeting 🌿"
+    val hour = remember { Calendar.getInstance().get(Calendar.HOUR_OF_DAY) }
+    val timeGreeting = when {
+        hour < 12 -> androidx.compose.ui.res.stringResource(com.example.R.string.greeting_morning)
+        hour < 17 -> androidx.compose.ui.res.stringResource(com.example.R.string.greeting_afternoon)
+        else      -> androidx.compose.ui.res.stringResource(com.example.R.string.greeting_evening)
     }
+    val greeting = if (userName.isNotBlank()) "$timeGreeting، $userName 🌿" else "$timeGreeting 🌿"
 
     // Quran Ayahs on Kinship Ties (rotates on each app session)
     val quranAyahs = remember {
@@ -89,24 +92,25 @@ fun CommitmentHeaderCard(
     val selectedAyah = remember { quranAyahs.random() }
 
     Card(
-        shape = RoundedCornerShape(24.dp),
+        shape = SilaShapes.CardLarge,
         colors = CardDefaults.cardColors(containerColor = Color.Transparent),
+        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.15f)),
         modifier = modifier
             .fillMaxWidth()
             .shadow(
-                16.dp,
-                RoundedCornerShape(24.dp),
-                ambientColor = Color(0xFF1E5A35).copy(alpha = 0.35f),
-                spotColor = Color(0xFF1E5A35).copy(alpha = 0.25f)
+                elevation = 12.dp,
+                shape = SilaShapes.CardLarge,
+                ambientColor = Color(0xFF16503A).copy(alpha = 0.25f),
+                spotColor = Color(0xFF0D3324).copy(alpha = 0.35f)
             )
+            .clip(SilaShapes.CardLarge)
             .background(
                 Brush.linearGradient(
                     colors = listOf(Color(0xFF16503A), Color(0xFF0D3324), Color(0xFF082416))
-                ),
-                shape = RoundedCornerShape(24.dp)
+                )
             )
     ) {
-        Column(modifier = Modifier.padding(20.dp)) {
+        Column(modifier = Modifier.padding(spacing.xl)) {
 
             // ── Top Row: Date + Arc ─────────────────────────────────────────
             Row(
@@ -195,7 +199,7 @@ fun CommitmentHeaderCard(
                             color = SoftGold
                         )
                         Text(
-                            text = if (lang == "en") "Tied" else "واصل",
+                            text = androidx.compose.ui.res.stringResource(com.example.R.string.tied_label),
                             fontSize = 9.sp,
                             color = Color.White.copy(alpha = 0.6f),
                             fontWeight = FontWeight.Medium
@@ -215,17 +219,17 @@ fun CommitmentHeaderCard(
             ) {
                 StatChip(
                     value = totalLogsCount.toString(),
-                    label = if (lang == "en") "Total Logs" else "إجمالي الصلات",
+                    label = androidx.compose.ui.res.stringResource(com.example.R.string.total_logs_stat),
                     modifier = Modifier.weight(1f)
                 )
                 StatChip(
                     value = uniqueDaysCount.toString(),
-                    label = if (lang == "en") "Days Active" else "أيام الصلة",
+                    label = androidx.compose.ui.res.stringResource(com.example.R.string.days_active_stat),
                     modifier = Modifier.weight(1f)
                 )
                 StatChip(
                     value = uniqueRelativesContacted.toString(),
-                    label = if (lang == "en") "Relatives" else "أقارب",
+                    label = androidx.compose.ui.res.stringResource(com.example.R.string.relatives_stat),
                     modifier = Modifier.weight(1f)
                 )
             }
@@ -239,26 +243,32 @@ private fun StatChip(
     label: String,
     modifier: Modifier = Modifier
 ) {
-    Column(
+    Surface(
+        shape = SilaShapes.ActionCard,
+        color = Color.White.copy(alpha = 0.12f),
+        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.18f)),
         modifier = modifier
-            .background(Color(0x20FFFFFF), RoundedCornerShape(14.dp))
-            .padding(vertical = 12.dp, horizontal = 6.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
-        Text(
-            text = value,
-            fontSize = 20.sp,
-            fontWeight = FontWeight.Black,
-            color = Color.White
-        )
-        Text(
-            text = label,
-            fontSize = 10.sp,
-            color = Color(0xFFD0E0D5),
-            textAlign = TextAlign.Center,
-            lineHeight = 12.sp,
-            fontWeight = FontWeight.Bold
-        )
+        Column(
+            modifier = Modifier
+                .padding(vertical = 12.dp, horizontal = 6.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            Text(
+                text = value,
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Black,
+                color = Color.White
+            )
+            Text(
+                text = label,
+                fontSize = 10.sp,
+                color = Color(0xFFDCECE1),
+                textAlign = TextAlign.Center,
+                lineHeight = 13.sp,
+                fontWeight = FontWeight.Bold
+            )
+        }
     }
 }

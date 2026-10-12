@@ -12,7 +12,7 @@ import kotlinx.coroutines.Dispatchers
 @Database(
     entities = [Relative::class, CommunicationLog::class, QuickTemplate::class, FamilyMemory::class],
     version = 4,
-    exportSchema = false
+    exportSchema = true
 )
 abstract class AppDatabase : RoomDatabase() {
 
@@ -130,7 +130,7 @@ abstract class AppDatabase : RoomDatabase() {
                     "('شكر وتقدير', 'أتقدم إليكم بخالص الشكر والتقدير والمحبة على طيب تواصلكم ولطفكم، دمتم لي سنداً وذخراً في هذه الحياة.', 'شكر')"
                 )
             } catch (e: Exception) {
-                e.printStackTrace()
+                com.example.core.util.SilaLogger.e("AppDatabase", "Failed to seed default templates", e)
             }
         }
     }

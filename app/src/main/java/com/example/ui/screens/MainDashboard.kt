@@ -53,44 +53,17 @@ import com.example.ui.components.SilaNavBarScrollState
 import com.example.ui.components.rememberSilaNavBarScrollState
 import com.example.ui.components.SilaTab
 import dev.chrisbanes.haze.rememberHazeState
+import androidx.compose.ui.res.stringResource
+import com.example.R
 import dev.chrisbanes.haze.hazeSource
 
 // Helper: pick the right string based on language
 fun String.ifEn(lang: String, en: String): String = if (lang == "en") en else this
 
-// ── App Navigation (Splash → Onboarding → Main) ───────────────────────────────
+// ── App Navigation (Splash → Onboarding → Main via Navigation Compose) ───────────
 @Composable
 fun AppNavigation(viewModel: RelativeViewModel) {
-    val context = androidx.compose.ui.platform.LocalContext.current
-    val prefs = remember(context) { context.getSharedPreferences("app_settings", android.content.Context.MODE_PRIVATE) }
-    
-    var onboardingDone by remember {
-        mutableStateOf(
-            try { prefs.getBoolean("onboarding_done", false) } catch (e: Exception) { false }
-        )
-    }
-
-    var forceShowOnboarding by remember { mutableStateOf(false) }
-    var showSplash by remember { mutableStateOf(true) }
-
-    // Show onboarding if not completed yet, OR if manually requested
-    val showOnboarding = forceShowOnboarding || !onboardingDone
-
-    when {
-        showSplash -> SplashScreen(onFinished = { showSplash = false })
-        showOnboarding -> OnboardingScreen(
-            viewModel = viewModel,
-            onFinished = {
-                prefs.edit().putBoolean("onboarding_done", true).commit()
-                onboardingDone = true
-                forceShowOnboarding = false
-            }
-        )
-        else -> MainDashboardScreen(
-            viewModel = viewModel,
-            onReplayOnboarding = { forceShowOnboarding = true }
-        )
-    }
+    com.example.core.navigation.SilaNavGraph(viewModel = viewModel)
 }
 
 // ── Main Dashboard Screen with Bottom Nav ────────────────────────────────────
@@ -125,36 +98,14 @@ fun MainDashboardScreen(
     var selectedTab by remember { mutableStateOf(SilaTab.DASHBOARD) }
 
     // Due relatives count for badge
-    val dueCount = remember(relatives) {
-        relatives.count { r ->
-            val diffDays = if (r.lastContactDate == 0L) Int.MAX_VALUE
-                           else ((System.currentTimeMillis() - r.lastContactDate) / 86400000).toInt()
-            diffDays >= r.contactIntervalDays
+    val dueCount by remember {
+        derivedStateOf {
+            relatives.count { r ->
+                val diffDays = if (r.lastContactDate == 0L) Int.MAX_VALUE
+                               else ((System.currentTimeMillis() - r.lastContactDate) / 86400000).toInt()
+                diffDays >= r.contactIntervalDays
+            }
         }
-    }
-
-    val selectedRelativeForDetail by viewModel.selectedRelativeForDetail.collectAsState()
-    val showWhyKinshipScreen by viewModel.showWhyKinshipScreen.collectAsState()
-
-    if (showWhyKinshipScreen) {
-        CompositionLocalProvider(LocalLayoutDirection provides layoutDirection) {
-            WhyKinshipScreen(
-                lang = selectedLanguage,
-                onBack = { viewModel.closeWhyKinshipScreen() }
-            )
-        }
-        return
-    }
-
-    if (selectedRelativeForDetail != null) {
-        CompositionLocalProvider(LocalLayoutDirection provides layoutDirection) {
-            RelativeDetailScreen(
-                relative = selectedRelativeForDetail!!,
-                viewModel = viewModel,
-                onBack = { viewModel.clearSelectedRelative() }
-            )
-        }
-        return
     }
 
     val navBarScrollState = rememberSilaNavBarScrollState()
@@ -325,8 +276,7 @@ fun LogsHistoryDialog(
             ) {
             Column(modifier = Modifier.padding(24.dp)) {
                 Text(
-                    text = if (lang == "en") "${relative.name}'s Communication Log 📜"
-                           else "سجل تواصل ${relative.name} 📜",
+                    text = stringResource(R.string.relative_comm_log_title, relative.name),
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.primary
@@ -339,8 +289,7 @@ fun LogsHistoryDialog(
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            if (lang == "en") "No communication recorded yet"
-                            else "لم يتم تسجيل تواصل مع هذا القريب بعد",
+                            text = stringResource(R.string.no_comm_recorded_relative),
                             fontSize = 13.sp,
                             color = MaterialTheme.colorScheme.secondary
                         )
@@ -350,7 +299,7 @@ fun LogsHistoryDialog(
                         modifier = Modifier.weight(1f),
                         verticalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
-                        items(relativeLogs, key = { log -> "${log.id}_${log.timestamp}" }) { log ->
+                        items(relativeLogs, key = { it.id }) { log ->
                             Card(
                                 shape = RoundedCornerShape(14.dp),
                                 colors = CardDefaults.cardColors(
@@ -403,7 +352,7 @@ fun LogsHistoryDialog(
                     shape = RoundedCornerShape(14.dp),
                     modifier = Modifier.align(Alignment.End)
                 ) {
-                    Text(if (lang == "en") "Close" else "إغلاق", fontWeight = FontWeight.Bold)
+                    Text(stringResource(R.string.close), fontWeight = FontWeight.Bold)
                 }
             }
         }

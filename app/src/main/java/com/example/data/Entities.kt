@@ -1,8 +1,10 @@
 package com.example.data
 
+import androidx.compose.runtime.Immutable
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 
+@Immutable
 @Entity(tableName = "relatives")
 data class Relative(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
@@ -15,6 +17,7 @@ data class Relative(
     val photoUri: String? = null
 )
 
+@Immutable
 @Entity(tableName = "communication_logs")
 data class CommunicationLog(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
@@ -24,6 +27,7 @@ data class CommunicationLog(
     val notes: String = ""
 )
 
+@Immutable
 @Entity(tableName = "quick_templates")
 data class QuickTemplate(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
@@ -32,6 +36,7 @@ data class QuickTemplate(
     val category: String // e.g., "تهنئة", "يوم الجمعة", "مناسبات"
 )
 
+@Immutable
 @Entity(tableName = "family_memories")
 data class FamilyMemory(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,

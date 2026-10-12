@@ -3,6 +3,7 @@ plugins {
   alias(libs.plugins.kotlin.compose)
   alias(libs.plugins.google.devtools.ksp)
   alias(libs.plugins.roborazzi)
+  alias(libs.plugins.hilt.android)
 }
 
 android {
@@ -53,10 +54,22 @@ android {
     compose = true
     buildConfig = true
   }
+  testBuildType = "release"
   testOptions { unitTests { isIncludeAndroidResources = true } }
 }
 
+
+composeCompiler {
+  reportsDestination = layout.buildDirectory.dir("compose_compiler")
+  metricsDestination = layout.buildDirectory.dir("compose_compiler")
+}
+
+ksp {
+  arg("room.schemaLocation", "$projectDir/schemas")
+}
+
 dependencies {
+  implementation(libs.kotlinx.collections.immutable)
   implementation(platform(libs.androidx.compose.bom))
   implementation(libs.androidx.activity.compose)
   implementation(libs.androidx.compose.material.icons.core)
@@ -70,9 +83,16 @@ dependencies {
   implementation(libs.androidx.lifecycle.runtime.compose)
   implementation(libs.androidx.lifecycle.runtime.ktx)
   implementation(libs.androidx.lifecycle.viewmodel.compose)
+  implementation(libs.androidx.navigation.compose)
   implementation(libs.androidx.room.ktx)
   implementation(libs.androidx.room.runtime)
   implementation(libs.androidx.work.runtime.ktx)
+  implementation(libs.androidx.datastore.preferences)
+  implementation(platform(libs.firebase.bom))
+  implementation(libs.firebase.crashlytics)
+  implementation(libs.hilt.android)
+  implementation(libs.androidx.hilt.navigation.compose)
+  implementation(libs.androidx.hilt.work)
   implementation(libs.kotlinx.coroutines.android)
   implementation(libs.kotlinx.coroutines.core)
   implementation("io.coil-kt:coil-compose:2.7.0")
@@ -95,5 +115,8 @@ dependencies {
   androidTestImplementation(libs.androidx.runner)
   debugImplementation(libs.androidx.compose.ui.test.manifest)
   debugImplementation(libs.androidx.compose.ui.tooling)
+  debugImplementation(libs.leakcanary.android)
   "ksp"(libs.androidx.room.compiler)
+  "ksp"(libs.hilt.compiler)
+  "ksp"(libs.androidx.hilt.compiler)
 }

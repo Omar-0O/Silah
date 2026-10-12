@@ -19,6 +19,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.res.stringResource
+import com.example.R
 import com.example.ui.theme.PrimaryGreen
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -28,6 +30,9 @@ import com.example.data.Relative
 import com.example.utils.DateUtils
 import com.example.viewmodel.RelativeStatus
 import com.example.viewmodel.RelativeViewModel
+
+import com.example.ui.theme.SilaShapes
+import com.example.ui.theme.spacing
 
 @Composable
 fun RelativeCard(
@@ -40,29 +45,30 @@ fun RelativeCard(
     val status = viewModel.getRelativeStatus(relative)
     val lang by viewModel.selectedLanguage.collectAsState()
     val statusColor = status.color
+    val spacing = MaterialTheme.spacing
 
     Card(
         modifier = modifier
             .fillMaxWidth()
             .shadow(
                 elevation = 3.dp,
-                shape = RoundedCornerShape(20.dp),
+                shape = SilaShapes.Card,
                 ambientColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.05f),
                 spotColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.08f)
             )
-            .clip(RoundedCornerShape(20.dp))
+            .clip(SilaShapes.Card)
             .clickable {
                 view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
                 onCardClick?.invoke() ?: run { viewModel.selectRelativeForDetail(relative) }
             },
-        shape = RoundedCornerShape(20.dp),
+        shape = SilaShapes.Card,
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.12f))
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 14.dp),
+                .padding(horizontal = spacing.lg, vertical = 14.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(14.dp)
         ) {
@@ -104,7 +110,7 @@ fun RelativeCard(
                     modifier = Modifier.padding(top = 3.dp)
                 ) {
                     Surface(
-                        shape = RoundedCornerShape(50.dp),
+                        shape = SilaShapes.Pill,
                         color = statusColor.copy(alpha = 0.12f)
                     ) {
                         Row(
@@ -133,9 +139,9 @@ fun RelativeCard(
 
                     Text(
                         text = if (relative.lastContactDate == 0L) {
-                            if (lang == "en") "No contact yet" else "لم تتواصل بعد"
+                            stringResource(R.string.no_contact_yet)
                         } else {
-                            DateUtils.formatRelativeTimeExact(relative.lastContactDate, lang)
+                            DateUtils.formatRelativeTime(LocalContext.current, relative.lastContactDate)
                         },
                         fontSize = 11.sp,
                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.65f),
@@ -168,7 +174,7 @@ fun RelativeCard(
                     Box(contentAlignment = Alignment.Center) {
                         Icon(
                             imageVector = Icons.Default.Phone,
-                            contentDescription = if (lang == "en") "Direct Call" else "اتصال مباشر",
+                            contentDescription = stringResource(R.string.direct_call),
                             tint = PrimaryGreen,
                             modifier = Modifier.size(18.dp)
                         )

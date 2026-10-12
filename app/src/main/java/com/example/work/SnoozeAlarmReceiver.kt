@@ -36,7 +36,7 @@ class SnoozeAlarmReceiver : BroadcastReceiver() {
                     userName = userName
                 )
             } catch (e: Exception) {
-                e.printStackTrace()
+                com.example.core.util.SilaLogger.e("SnoozeAlarmReceiver", "Error in snooze alarm receiver", e)
             } finally {
                 pendingResult.finish()
             }

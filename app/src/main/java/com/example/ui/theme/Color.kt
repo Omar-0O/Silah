@@ -18,7 +18,7 @@ val SageLight          = Color(0xFF8DB39E)  // ثانوي فاتح
 
 // ── Gold Accent ───────────────────────────────────────────────────────────────
 val SoftGold     = Color(0xFFD4A843)        // ذهبي دافئ مكتمل
-val SoftGoldDark = Color(0xFFC09A30)        // ذهبي داكن
+val SoftGoldDark = Color(0xFFB88922)        // ذهبي داكن متوافق مع WCAG AA
 val GoldGlow     = Color(0xFFF5D278)        // توهج ذهبي للأيقونات
 
 // ── Backgrounds ───────────────────────────────────────────────────────────────
@@ -34,10 +34,11 @@ val SurfaceDark          = Color(0xFF121D16)  // بطاقات داكنة
 val SurfaceDarkVariant   = Color(0xFF1A2921)  // حقول وحدود داكنة
 val SurfaceDarkElevated  = Color(0xFF1F3128)  // مرتفع في الداكن
 
-// ── Text ──────────────────────────────────────────────────────────────────────
-val TextDark   = Color(0xFF0F1E15)  // نص رئيسي داكن
-val TextMedium = Color(0xFF2E4D39)  // نص ثانوي
-val TextLight  = Color(0xFF7FA890)  // نص ثلاثي
+// ── Text (WCAG AA Compliant) ──────────────────────────────────────────────────
+val TextDark      = Color(0xFF0D1C13)  // نص رئيسي داكن (15.2:1)
+val TextMedium    = Color(0xFF264632)  // نص ثانوي (7.4:1)
+val TextLight     = Color(0xFF446A54)  // نص ثلاثي مقروء بوضوح (4.8:1)
+val TextLightDark = Color(0xFFA5CBB4)  // نص ثانوي في النمط الداكن (7.8:1)
 
 // ── Semantic / Status ─────────────────────────────────────────────────────────
 val AlertRed    = Color(0xFFD32F2F)

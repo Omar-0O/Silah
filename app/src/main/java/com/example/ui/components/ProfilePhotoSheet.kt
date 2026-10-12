@@ -25,6 +25,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.res.stringResource
+import com.example.R
 import com.example.ui.theme.AlertRed
 import com.example.ui.theme.PrimaryGreen
 import java.io.File
@@ -60,7 +62,7 @@ fun ProfilePhotoSheet(
                 view.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
                 Toast.makeText(
                     context,
-                    if (lang == "en") "Profile photo updated! 📸" else "تم تحديث الصورة الشخصية بنجاح 📸",
+                    context.getString(R.string.profile_photo_updated),
                     Toast.LENGTH_SHORT
                 ).show()
                 onDismiss()
@@ -68,7 +70,7 @@ fun ProfilePhotoSheet(
                 android.util.Log.e("SilaPhoto", "Error in ProfilePhotoSheet", e)
                 Toast.makeText(
                     context,
-                    if (lang == "en") "Failed to load image" else "تعذر تحميل الصورة، يرجى المحاولة مرة أخرى",
+                    context.getString(R.string.image_load_failed),
                     Toast.LENGTH_SHORT
                 ).show()
             }
@@ -90,7 +92,7 @@ fun ProfilePhotoSheet(
         ) {
             // Header Title
             Text(
-                text = if (lang == "en") "Profile Photo" else "الصورة الشخصية",
+                text = stringResource(R.string.profile_photo_title),
                 fontSize = 19.sp,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurface,
@@ -98,8 +100,7 @@ fun ProfilePhotoSheet(
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
-                text = if (lang == "en") "Upload a personal picture or leave it blank with your initials"
-                else "يمكنك رفع صورة شخصية لك أو تركها بحرف اسمك",
+                text = stringResource(R.string.profile_photo_desc),
                 fontSize = 12.sp,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center
@@ -157,13 +158,13 @@ fun ProfilePhotoSheet(
 
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            text = if (lang == "en") "Choose from Gallery" else "اختيار صورة من المعرض",
+                            text = stringResource(R.string.choose_from_gallery),
                             fontSize = 15.sp,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
-                            text = if (lang == "en") "Pick a photo from your device" else "اختر صورة شخصية من جهازك",
+                            text = stringResource(R.string.choose_from_gallery_desc),
                             fontSize = 12.sp,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -189,7 +190,7 @@ fun ProfilePhotoSheet(
                             onRemovePhoto()
                             Toast.makeText(
                                 context,
-                                if (lang == "en") "Profile photo removed" else "تمت إزالة الصورة الشخصية",
+                                context.getString(R.string.profile_photo_removed),
                                 Toast.LENGTH_SHORT
                             ).show()
                             onDismiss()
@@ -219,13 +220,13 @@ fun ProfilePhotoSheet(
 
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                text = if (lang == "en") "Remove Photo" else "إزالة الصورة الحالية",
+                                text = stringResource(R.string.remove_photo_title),
                                 fontSize = 15.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = AlertRed
                             )
                             Text(
-                                text = if (lang == "en") "Revert to name monogram" else "العودة للرمز التعبيري بالحرف",
+                                text = stringResource(R.string.remove_photo_desc),
                                 fontSize = 12.sp,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -245,7 +246,7 @@ fun ProfilePhotoSheet(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text(
-                    text = if (lang == "en") "Cancel" else "إلغاء",
+                    text = stringResource(R.string.cancel),
                     fontSize = 14.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )

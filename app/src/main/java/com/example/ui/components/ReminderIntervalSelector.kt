@@ -30,6 +30,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.ui.theme.PrimaryGreen
 import com.example.ui.theme.SoftGold
+import androidx.compose.ui.res.stringResource
+import com.example.R
 
 /**
  * World-class reusable Reminder Interval Selector & Customizer for Sila.
@@ -57,19 +59,13 @@ fun ReminderIntervalSelector(
         mutableStateOf(!standardIntervals.contains(intervalDays))
     }
 
-    val presets = remember(lang) {
-        if (lang == "en") listOf(
-            Triple(1, "Daily", "⚡"),
-            Triple(3, "3 Days", "🌿"),
-            Triple(7, "Weekly", "📅"),
-            Triple(14, "2 Weeks", "🗓️"),
-            Triple(30, "Monthly", "🌙")
-        ) else listOf(
-            Triple(1, "يومياً", "⚡"),
-            Triple(3, "كل 3 أيام", "🌿"),
-            Triple(7, "أسبوعياً", "📅"),
-            Triple(14, "أسبوعين", "🗓️"),
-            Triple(30, "شهرياً", "🌙")
+    val presets = remember {
+        listOf(
+            Triple(1, R.string.interval_daily, "⚡"),
+            Triple(3, R.string.interval_3_days, "🌿"),
+            Triple(7, R.string.interval_weekly, "📅"),
+            Triple(14, R.string.interval_2_weeks, "🗓️"),
+            Triple(30, R.string.interval_monthly, "🌙")
         )
     }
 
@@ -94,7 +90,7 @@ fun ReminderIntervalSelector(
                     modifier = Modifier.size(16.dp)
                 )
                 Text(
-                    text = if (lang == "en") "Reminder Frequency:" else "معدل التذكير الدوري:",
+                    text = stringResource(R.string.interval_frequency_label),
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface
@@ -108,12 +104,13 @@ fun ReminderIntervalSelector(
                 border = BorderStroke(0.5.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.2f))
             ) {
                 Text(
-                    text = when {
-                        intervalDays == 1 -> if (lang == "en") "Every Day" else "كل يوم"
-                        intervalDays == 7 -> if (lang == "en") "Every Week" else "كل أسبوع"
-                        intervalDays == 14 -> if (lang == "en") "Every 2 Weeks" else "كل أسبوعين"
-                        intervalDays == 30 -> if (lang == "en") "Every Month" else "كل شهر"
-                        else -> if (lang == "en") "Every $intervalDays days" else "كل $intervalDays ${if (intervalDays <= 10) "أيام" else "يوماً"}"
+                    text = when (intervalDays) {
+                        1 -> stringResource(R.string.interval_daily)
+                        3 -> stringResource(R.string.interval_3_days)
+                        7 -> stringResource(R.string.interval_weekly)
+                        14 -> stringResource(R.string.interval_2_weeks)
+                        30 -> stringResource(R.string.interval_monthly)
+                        else -> stringResource(R.string.interval_days_formatted, intervalDays)
                     },
                     fontSize = 11.sp,
                     fontWeight = FontWeight.Bold,
@@ -128,7 +125,7 @@ fun ReminderIntervalSelector(
             horizontalArrangement = Arrangement.spacedBy(6.dp),
             contentPadding = PaddingValues(horizontal = 1.dp)
         ) {
-            items(presets) { (days, label, emoji) ->
+            items(presets) { (days, labelRes, emoji) ->
                 val isSelected = intervalDays == days && !showCustomControls
                 val containerColor by animateColorAsState(
                     targetValue = if (isSelected) PrimaryGreen else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f),
@@ -160,7 +157,7 @@ fun ReminderIntervalSelector(
                     ) {
                         Text(emoji, fontSize = 11.sp)
                         Text(
-                            text = label,
+                            text = stringResource(labelRes),
                             fontSize = 11.sp,
                             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
                             color = contentColor
@@ -206,7 +203,7 @@ fun ReminderIntervalSelector(
                             modifier = Modifier.size(13.dp)
                         )
                         Text(
-                            text = if (lang == "en") "Custom..." else "مخصص...",
+                            text = stringResource(R.string.interval_custom),
                             fontSize = 11.sp,
                             fontWeight = if (isCustomSelected) FontWeight.Bold else FontWeight.Medium,
                             color = customContent
@@ -242,7 +239,7 @@ fun ReminderIntervalSelector(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = if (lang == "en") "Specify Interval (Days):" else "حدد الفترة بالأيام:",
+                            text = stringResource(R.string.interval_specify_days),
                             fontSize = 11.sp,
                             fontWeight = FontWeight.SemiBold,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -268,7 +265,7 @@ fun ReminderIntervalSelector(
                             }
 
                             Text(
-                                text = "$intervalDays ${if (lang == "en") "Days" else if (intervalDays <= 10) "أيام" else "يوماً"}",
+                                text = stringResource(R.string.interval_days_formatted, intervalDays),
                                 fontSize = 13.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.primary
@@ -316,7 +313,7 @@ fun ReminderIntervalSelector(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = if (lang == "en") "Quick Steps:" else "خطوات سريعة:",
+                            text = stringResource(R.string.interval_quick_steps),
                             fontSize = 10.sp,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -332,7 +329,7 @@ fun ReminderIntervalSelector(
                                     border = BorderStroke(0.5.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
                                 ) {
                                     Text(
-                                        text = "$targetDay ${if (lang == "en") "d" else "ي"}",
+                                        text = "$targetDay",
                                         fontSize = 9.sp,
                                         fontWeight = FontWeight.Bold,
                                         color = if (intervalDays == targetDay) Color.White else MaterialTheme.colorScheme.onSurface,
@@ -347,25 +344,11 @@ fun ReminderIntervalSelector(
         }
 
         // Smart Kinship Advice Tip
-        val adviceText = remember(relationshipDegree, intervalDays, lang) {
-            when {
-                relationshipDegree in listOf("والدان", "Parents") -> {
-                    if (lang == "en") "💚 Recommended for parents: Daily or every 3 days for filial piety."
-                    else "💚 موصى به للوالدين: يومياً أو كل 3 أيام لبرهما ودوام الصلة."
-                }
-                relationshipDegree in listOf("أشقاء", "Siblings") -> {
-                    if (lang == "en") "🌿 Recommended for siblings: Weekly to preserve close kinship."
-                    else "🌿 موصى به للإخوة والأخوات: أسبوعياً لحفظ المودة والتآخي."
-                }
-                relationshipDegree in listOf("أعمام/أخوال", "Uncles/Aunts") -> {
-                    if (lang == "en") "🌸 Recommended for extended family: Every 2 to 4 weeks."
-                    else "🌸 موصى به للأعمام والأخوال: كل أسبوعين إلى شهر لإحياء صلة الرحم."
-                }
-                else -> {
-                    if (lang == "en") "🔔 Silah will notify you when $intervalDays days pass without contact."
-                    else "🔔 ستتلقى تنبيهاً لطيفاً عند مرور $intervalDays ${if (intervalDays <= 10) "أيام" else "يوماً"} دون تواصل."
-                }
-            }
+        val adviceText = when {
+            relationshipDegree in listOf("والدان", "Parents") -> stringResource(R.string.advice_parents)
+            relationshipDegree in listOf("أشقاء", "Siblings") -> stringResource(R.string.advice_siblings)
+            relationshipDegree in listOf("أعمام/أخوال", "Uncles/Aunts") -> stringResource(R.string.advice_uncles)
+            else -> stringResource(R.string.advice_general, intervalDays)
         }
 
         Surface(

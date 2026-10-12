@@ -30,10 +30,12 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import com.example.R
 import com.example.ui.components.ProfilePhotoSheet
 import com.example.ui.components.SilaUserAvatar
 import com.example.ui.theme.PrimaryGreen
@@ -123,7 +125,7 @@ fun ProfileTabScreen(
                     verticalArrangement = Arrangement.spacedBy(14.dp)
                 ) {
                     Text(
-                        text = if (selectedLanguage == "en") "Edit Your Name" else "تعديل اسمك",
+                        text = stringResource(R.string.edit_your_name),
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary
@@ -133,7 +135,7 @@ fun ProfileTabScreen(
                         onValueChange = { editedName = it },
                         singleLine = true,
                         shape = RoundedCornerShape(14.dp),
-                        placeholder = { Text(if (selectedLanguage == "en") "Your Name" else "اسمك الكريم") },
+                        placeholder = { Text(stringResource(R.string.your_name_label)) },
                         modifier = Modifier.fillMaxWidth()
                     )
                     Row(
@@ -142,7 +144,7 @@ fun ProfileTabScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         TextButton(onClick = { showEditNameDialog = false }) {
-                            Text(if (selectedLanguage == "en") "Cancel" else "إلغاء")
+                            Text(stringResource(R.string.cancel))
                         }
                         Spacer(modifier = Modifier.width(8.dp))
                         Button(
@@ -155,7 +157,7 @@ fun ProfileTabScreen(
                             colors = ButtonDefaults.buttonColors(containerColor = SoftGold, contentColor = Color(0xFF141816)),
                             shape = RoundedCornerShape(12.dp)
                         ) {
-                            Text(if (selectedLanguage == "en") "Save" else "حفظ", fontWeight = FontWeight.Bold)
+                            Text(stringResource(R.string.save), fontWeight = FontWeight.Bold)
                         }
                     }
                 }
@@ -301,7 +303,7 @@ fun ProfileTabScreen(
             // ── 2. Settings Section Title ────────────────────────────────────
             item {
                 Text(
-                    text = if (selectedLanguage == "en") "Settings & Preferences ⚙️" else "الإعدادات والتفضيلات ⚙️",
+                    text = stringResource(R.string.settings_preferences_title),
                     fontSize = 15.sp,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.primary,
@@ -329,12 +331,12 @@ fun ProfileTabScreen(
                         ) {
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(
-                                    if (selectedLanguage == "en") "Language" else "لغة التطبيق",
+                                    stringResource(R.string.display_lang_title),
                                     fontSize = 14.sp,
                                     fontWeight = FontWeight.Bold
                                 )
                                 Text(
-                                    if (selectedLanguage == "en") "Display language" else "اختر لغة عرض الواجهة",
+                                    stringResource(R.string.display_lang_desc),
                                     fontSize = 11.sp,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
@@ -372,12 +374,12 @@ fun ProfileTabScreen(
                         ) {
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(
-                                    if (selectedLanguage == "en") "Dark Mode" else "الوضع الداكن",
+                                    stringResource(R.string.dark_mode),
                                     fontSize = 14.sp,
                                     fontWeight = FontWeight.Bold
                                 )
                                 Text(
-                                    if (selectedLanguage == "en") "Comfortable viewing in low light" else "واجهة مريحة للعين في الإضاءة الخافتة",
+                                    stringResource(R.string.dark_mode_desc),
                                     fontSize = 11.sp,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
@@ -408,7 +410,7 @@ fun ProfileTabScreen(
                         verticalArrangement = Arrangement.spacedBy(14.dp)
                     ) {
                         Text(
-                            text = if (selectedLanguage == "en") "Daily Reminder Time ⏰" else "وقت التذكير اليومي ⏰",
+                            text = stringResource(R.string.reminder_time_title),
                             fontSize = 14.sp,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.primary
@@ -564,12 +566,12 @@ fun ProfileTabScreen(
                         ) {
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(
-                                    if (selectedLanguage == "en") "Due Relatives Alert" else "تنبيه موعد التواصل",
+                                    stringResource(R.string.notify_due_title),
                                     fontSize = 13.sp,
                                     fontWeight = FontWeight.SemiBold
                                 )
                                 Text(
-                                    if (selectedLanguage == "en") "Notify when relatives are due for kinship" else "تنبيه عند حلول موعد التواصل مع الأقارب",
+                                    stringResource(R.string.notify_due_desc),
                                     fontSize = 10.sp,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
@@ -589,12 +591,12 @@ fun ProfileTabScreen(
                         ) {
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(
-                                    if (selectedLanguage == "en") "Inspirational Quotes" else "رسائل التشجيع والأحاديث",
+                                    stringResource(R.string.notify_encouragement_title),
                                     fontSize = 13.sp,
                                     fontWeight = FontWeight.SemiBold
                                 )
                                 Text(
-                                    if (selectedLanguage == "en") "Weekly kinship virtues & reminders" else "أحاديث وفضائل صلة الرحم أسبوعياً",
+                                    stringResource(R.string.notify_encouragement_desc),
                                     fontSize = 10.sp,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
@@ -622,7 +624,7 @@ fun ProfileTabScreen(
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         Text(
-                            text = if (selectedLanguage == "en") "Data & Backup 💾" else "البيانات والنسخ الاحتياطي 💾",
+                            text = stringResource(R.string.backup_restore),
                             fontSize = 14.sp,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.primary
@@ -640,7 +642,7 @@ fun ProfileTabScreen(
                             ) {
                                 Icon(Icons.Outlined.FileDownload, contentDescription = null, modifier = Modifier.size(16.dp))
                                 Spacer(modifier = Modifier.width(4.dp))
-                                Text(if (selectedLanguage == "en") "Export JSON" else "نسخ احتياطي", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                Text(stringResource(R.string.export_backup), fontSize = 11.sp, fontWeight = FontWeight.Bold)
                             }
 
                             Button(
@@ -655,7 +657,7 @@ fun ProfileTabScreen(
                             ) {
                                 Icon(Icons.Outlined.FileUpload, contentDescription = null, modifier = Modifier.size(16.dp))
                                 Spacer(modifier = Modifier.width(4.dp))
-                                Text(if (selectedLanguage == "en") "Import Data" else "استعادة بيانات", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                Text(stringResource(R.string.import_backup), fontSize = 11.sp, fontWeight = FontWeight.Bold)
                             }
                         }
                     }
@@ -681,13 +683,13 @@ fun ProfileTabScreen(
                     ) {
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                text = if (selectedLanguage == "en") "🤍 Support Sila" else "🤍 ادعم صِلَةِ",
+                                text = stringResource(R.string.support_sila),
                                 fontSize = 14.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.primary
                             )
                             Text(
-                                text = if (selectedLanguage == "en") "Keep Sila free & ad-free" else "ساعد في بقاء التطبيق مجانياً وخالياً من الإعلانات",
+                                text = stringResource(R.string.support_sila_desc),
                                 fontSize = 11.sp,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )

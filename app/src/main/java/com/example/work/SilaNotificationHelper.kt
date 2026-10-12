@@ -31,19 +31,19 @@ object SilaNotificationHelper {
 
             val channelDue = NotificationChannel(
                 CHANNEL_ID_DUE,
-                if (lang == "en") "Daily Kinship Reminders" else "تذكيرات صلة الرحم اليومية",
+                context.getString(R.string.channel_due_name),
                 NotificationManager.IMPORTANCE_HIGH
             ).apply {
-                description = if (lang == "en") "Daily reminders to connect with your relatives" else "قناة تنبيهات لتذكيرك بالتواصل مع أرحامك اليوم"
+                description = context.getString(R.string.channel_due_desc)
                 enableVibration(true)
             }
 
             val channelReminders = NotificationChannel(
                 CHANNEL_ID_REMINDERS,
-                if (lang == "en") "General Kinship Reminders" else "تذكيرات صلة الرحم العامة",
+                context.getString(R.string.channel_reminders_name),
                 NotificationManager.IMPORTANCE_HIGH
             ).apply {
-                description = if (lang == "en") "General reminders for kinship connection" else "قناة تذكيرات دورية بصلة الأرحام"
+                description = context.getString(R.string.channel_reminders_desc)
                 enableVibration(true)
             }
 
@@ -105,7 +105,7 @@ object SilaNotificationHelper {
 
             notificationManager.notify(notificationId, builder.build())
         } catch (e: Exception) {
-            e.printStackTrace()
+            com.example.core.util.SilaLogger.e("SilaNotificationHelper", "Failed to send notification", e)
         }
     }
 
@@ -187,7 +187,7 @@ object SilaNotificationHelper {
         )
         builder.addAction(
             R.drawable.ic_notification_sila,
-            if (lang == "en") "📞 Call Now" else "📞 اتصال مباشر",
+            context.getString(R.string.notif_action_call),
             pendingIntent
         )
     }
@@ -214,7 +214,7 @@ object SilaNotificationHelper {
         )
         builder.addAction(
             R.drawable.ic_notification_sila,
-            if (lang == "en") "💬 WhatsApp" else "💬 واتساب",
+            context.getString(R.string.notif_action_whatsapp),
             pendingIntent
         )
     }
@@ -268,7 +268,7 @@ object SilaNotificationHelper {
         )
         builder.addAction(
             R.drawable.ic_notification_sila,
-            if (lang == "en") "📱 Connect Now" else "📱 تواصل الآن",
+            context.getString(R.string.notif_action_connect),
             pendingIntent
         )
     }
@@ -291,7 +291,7 @@ object SilaNotificationHelper {
         )
         builder.addAction(
             R.drawable.ic_notification_sila,
-            if (lang == "en") "📇 Open Relatives List" else "📇 فتح قائمة الأقارب",
+            context.getString(R.string.notif_action_open_list),
             pendingIntent
         )
     }

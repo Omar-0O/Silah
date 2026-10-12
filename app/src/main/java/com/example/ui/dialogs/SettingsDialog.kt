@@ -19,6 +19,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import android.app.TimePickerDialog
 import androidx.compose.ui.platform.LocalContext
 import com.example.ui.theme.SoftGold
@@ -39,6 +40,9 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.LayoutDirection
 
+import androidx.compose.ui.res.stringResource
+import com.example.R
+
 @Composable
 fun SettingsDialog(
     viewModel: RelativeViewModel,
@@ -56,13 +60,26 @@ fun SettingsDialog(
         Pair("en", "🇬🇧 English (الإنجليزية)")
     )
 
-    Dialog(onDismissRequest = onDismiss) {
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(usePlatformDefaultWidth = false)
+    ) {
         CompositionLocalProvider(LocalLayoutDirection provides layoutDirection) {
-            Card(
-                shape = RoundedCornerShape(24.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                modifier = Modifier.fillMaxWidth()
+            BoxWithConstraints(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .imePadding()
+                    .padding(16.dp),
+                contentAlignment = Alignment.Center
             ) {
+                val isTablet = maxWidth > 600.dp
+                val dialogWidth = if (isTablet) 540.dp else maxWidth
+
+                Card(
+                    shape = RoundedCornerShape(24.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                    modifier = Modifier.width(dialogWidth).fillMaxWidth()
+                ) {
                 Column(
                     modifier = Modifier
                         .padding(24.dp)
@@ -70,7 +87,7 @@ fun SettingsDialog(
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     Text(
-                        text = if (selectedLanguage == "en") "Silah Settings ⚙️" else "إعدادات تطبيق صِلَةِ ⚙️",
+                        text = stringResource(R.string.settings_dialog_title),
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary
@@ -84,12 +101,12 @@ fun SettingsDialog(
                     ) {
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                if (selectedLanguage == "en") "App Language" else "لغة التطبيق (Language)",
+                                stringResource(R.string.settings_lang_title),
                                 fontSize = 14.sp,
                                 fontWeight = FontWeight.Bold
                             )
                             Text(
-                                if (selectedLanguage == "en") "Choose display language" else "اختر لغة عرض الواجهة",
+                                stringResource(R.string.settings_lang_desc),
                                 fontSize = 11.sp,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -127,12 +144,12 @@ fun SettingsDialog(
                     ) {
                         Column {
                             Text(
-                                if (selectedLanguage == "en") "Dark Mode" else "الوضع الداكن (Dark Mode)",
+                                stringResource(R.string.settings_dark_mode),
                                 fontSize = 14.sp,
                                 fontWeight = FontWeight.Bold
                             )
                             Text(
-                                if (selectedLanguage == "en") "Eye-friendly interface in low light" else "واجهة مريحة للعين في الإضاءة الخافتة",
+                                stringResource(R.string.settings_dark_mode_desc),
                                 fontSize = 11.sp,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -163,16 +180,13 @@ fun SettingsDialog(
                         ) {
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(
-                                    text = if (selectedLanguage == "en") "🤍 Support Sila" else "🤍 ادعم صِلَةِ",
+                                    text = stringResource(R.string.settings_support_card_title),
                                     fontSize = 14.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = MaterialTheme.colorScheme.primary
                                 )
                                 Text(
-                                    text = if (selectedLanguage == "en")
-                                        "Help developer keep Sila free & ad-free"
-                                    else
-                                        "ساعد المطور في بقاء صِلَة مجاني وبدون إعلانات",
+                                    text = stringResource(R.string.settings_support_card_desc),
                                     fontSize = 11.sp,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
@@ -189,7 +203,7 @@ fun SettingsDialog(
                                 )
                             ) {
                                 Text(
-                                    if (selectedLanguage == "en") "Support" else "ادعم",
+                                    stringResource(R.string.settings_support_btn),
                                     fontSize = 12.sp,
                                     fontWeight = FontWeight.Bold
                                 )
@@ -201,7 +215,7 @@ fun SettingsDialog(
 
                     // ── Notifications Preferences Section ────────────────────────
                     Text(
-                        if (selectedLanguage == "en") "Notifications Settings 🔔" else "إعدادات التنبيهات 🔔",
+                        stringResource(R.string.settings_notif_title),
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Bold
                     )
@@ -236,12 +250,12 @@ fun SettingsDialog(
                     ) {
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                if (selectedLanguage == "en") "Kin Tie Reminders" else "تذكير صلة الرحم",
+                                stringResource(R.string.settings_kin_reminders),
                                 fontSize = 13.sp,
                                 fontWeight = FontWeight.SemiBold
                             )
                             Text(
-                                if (selectedLanguage == "en") "Notify when relatives are due for contact" else "التنبيه عند حلول موعد التواصل مع الأقارب",
+                                stringResource(R.string.settings_kin_reminders_desc),
                                 fontSize = 10.sp,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -298,13 +312,13 @@ fun SettingsDialog(
                                     }
                                     Column {
                                         Text(
-                                            text = if (selectedLanguage == "en") "Daily Reminder Time" else "وقت التذكير اليومي",
+                                            text = stringResource(R.string.settings_daily_time),
                                             fontSize = 13.sp,
                                             fontWeight = FontWeight.Bold,
                                             color = MaterialTheme.colorScheme.onSurface
                                         )
                                         Text(
-                                            text = if (selectedLanguage == "en") "Scheduled kinship alert time" else "الوقت المحدد لإرسال تنبيهات الأرحام",
+                                            text = stringResource(R.string.settings_daily_time_desc),
                                             fontSize = 10.sp,
                                             color = MaterialTheme.colorScheme.onSurfaceVariant
                                         )
@@ -364,11 +378,7 @@ fun SettingsDialog(
                                                 color = if (isAm) SoftGold.copy(alpha = 0.2f) else PrimaryGreen.copy(alpha = 0.15f)
                                             ) {
                                                 Text(
-                                                    text = if (selectedLanguage == "en") {
-                                                        if (isAm) "AM" else "PM"
-                                                    } else {
-                                                        if (isAm) "صباحاً (ص)" else "مساءً (م)"
-                                                    },
+                                                    text = if (isAm) stringResource(R.string.am_marker) else stringResource(R.string.pm_marker),
                                                     fontSize = 11.sp,
                                                     fontWeight = FontWeight.Bold,
                                                     color = if (isAm) Color(0xFF946F15) else PrimaryGreen,
@@ -394,7 +404,7 @@ fun SettingsDialog(
                                                 modifier = Modifier.size(12.dp)
                                             )
                                             Text(
-                                                text = if (selectedLanguage == "en") "Change" else "تعديل",
+                                                text = stringResource(R.string.settings_change),
                                                 fontSize = 11.sp,
                                                 fontWeight = FontWeight.Bold,
                                                 color = MaterialTheme.colorScheme.primary
@@ -406,7 +416,7 @@ fun SettingsDialog(
                                 // Quick Presets Row
                                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                                     Text(
-                                        text = if (selectedLanguage == "en") "Quick Presets:" else "أوقات مقترحة سريعة:",
+                                        text = stringResource(R.string.settings_quick_presets),
                                         fontSize = 10.sp,
                                         fontWeight = FontWeight.SemiBold,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -469,10 +479,7 @@ fun SettingsDialog(
 
                                     // Golden Hour Guidance Hint
                                     Text(
-                                        text = if (selectedLanguage == "en")
-                                            "✨ Golden Hour (6:00 - 8:00 PM): Ideal social leisure time after work and before sleep."
-                                        else
-                                            "✨ التوقيت الذهبي (٦:٠٠ - ٨:٠٠ م): أفضل أوقات الفراغ الاجتماعي وتجنب ساعات العمل والنوم.",
+                                        text = stringResource(R.string.settings_golden_hour),
                                         fontSize = 11.sp,
                                         color = PrimaryGreen,
                                         fontWeight = FontWeight.Medium,
@@ -483,10 +490,7 @@ fun SettingsDialog(
 
                                 // Note below
                                 Text(
-                                    text = if (selectedLanguage == "en")
-                                        "🔔 Silah will send your daily reminder at $formattedReminderTime, even if the app is closed."
-                                    else
-                                        "🔔 سيصلك تنبيه صلة الرحم يومياً عند الساعة $formattedReminderTime حتى لو كان التطبيق مغلقاً.",
+                                    text = stringResource(R.string.settings_reminder_note, formattedReminderTime),
                                     fontSize = 10.sp,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     lineHeight = 13.sp
@@ -503,12 +507,12 @@ fun SettingsDialog(
                     ) {
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                if (selectedLanguage == "en") "Encouragement Messages" else "رسائل التشجيع",
+                                stringResource(R.string.settings_encouragement),
                                 fontSize = 13.sp,
                                 fontWeight = FontWeight.SemiBold
                             )
                             Text(
-                                if (selectedLanguage == "en") "Weekly and milestone celebration messages" else "رسائل الإنجازات والتأملات الأسبوعية",
+                                stringResource(R.string.settings_encouragement_desc),
                                 fontSize = 10.sp,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -527,12 +531,12 @@ fun SettingsDialog(
                     ) {
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                if (selectedLanguage == "en") "Monthly Reminders" else "التذكيرات الشهرية",
+                                stringResource(R.string.settings_monthly),
                                 fontSize = 13.sp,
                                 fontWeight = FontWeight.SemiBold
                             )
                             Text(
-                                if (selectedLanguage == "en") "Periodic monthly inspiration reminders" else "تذكيرات إلهامية للتواصل بشكل دوري كل شهر",
+                                stringResource(R.string.settings_monthly_desc),
                                 fontSize = 10.sp,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -560,13 +564,13 @@ fun SettingsDialog(
                         ) {
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(
-                                    if (selectedLanguage == "en") "⚡ Ensure Delivery When Closed" else "⚡ لضمان وصول التنبيهات والتطبيق مغلق",
+                                    stringResource(R.string.settings_battery_title),
                                     fontSize = 12.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = MaterialTheme.colorScheme.primary
                                 )
                                 Text(
-                                    if (selectedLanguage == "en") "Disable battery optimization so reminders arrive reliably" else "استثنِ صِلَة من قيود توفير الطاقة حتى تصلك التنبيهات في موعدها",
+                                    stringResource(R.string.settings_battery_desc),
                                     fontSize = 10.sp,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
@@ -578,12 +582,12 @@ fun SettingsDialog(
                                         val intent = ReminderScheduler.createIgnoreBatteryOptimizationIntent(context)
                                         context.startActivity(intent)
                                     } catch (e: Exception) {
-                                        e.printStackTrace()
+                                        com.example.core.util.SilaLogger.e("SettingsDialog", "Failed to start battery optimization intent", e)
                                     }
                                 }
                             ) {
                                 Text(
-                                    if (selectedLanguage == "en") "Configure" else "ضبط",
+                                    stringResource(R.string.settings_battery_configure),
                                     fontSize = 12.sp,
                                     fontWeight = FontWeight.Bold
                                 )
@@ -600,7 +604,7 @@ fun SettingsDialog(
                             horizontalArrangement = Arrangement.spacedBy(6.dp)
                         ) {
                             Text(
-                                text = if (selectedLanguage == "en") "Backup & Restore" else "النسخ الاحتياطي والاستعادة",
+                                text = stringResource(R.string.backup_restore),
                                 fontSize = 14.sp,
                                 fontWeight = FontWeight.Bold
                             )
@@ -619,10 +623,7 @@ fun SettingsDialog(
                             border = BorderStroke(1.dp, MaterialTheme.colorScheme.secondary.copy(alpha = 0.3f))
                         ) {
                             Text(
-                                text = if (selectedLanguage == "en")
-                                    "You can export your relatives list as a JSON file and save it to Google Drive or anywhere else, then restore it later even if you change your phone or reinstall the app."
-                                else
-                                    "يمكنك تصدير قائمة أقاربك كملف JSON وحفظه في Google Drive أو أي مكان آخر، ثم استعادتها لاحقاً حتى لو غيّرت هاتفك أو أعدت تثبيت التطبيق.",
+                                text = stringResource(R.string.settings_backup_info),
                                 fontSize = 11.sp,
                                 color = MaterialTheme.colorScheme.onSecondaryContainer,
                                 lineHeight = 17.sp,
@@ -645,13 +646,12 @@ fun SettingsDialog(
                             Spacer(modifier = Modifier.width(8.dp))
                             Column {
                                 Text(
-                                    if (selectedLanguage == "en") "Export Backup 📤" else "تصدير نسخة احتياطية 📤",
+                                    stringResource(R.string.export_backup),
                                     fontSize = 13.sp,
                                     fontWeight = FontWeight.Bold
                                 )
                                 Text(
-                                    if (selectedLanguage == "en") "${relatives.size} relatives — will be saved as JSON"
-                                    else "${relatives.size} قريب — سيُحفظ كملف JSON",
+                                    stringResource(R.string.settings_export_subtitle, relatives.size),
                                     fontSize = 10.sp,
                                     color = MaterialTheme.colorScheme.secondary
                                 )
@@ -670,13 +670,12 @@ fun SettingsDialog(
                             Spacer(modifier = Modifier.width(8.dp))
                             Column {
                                 Text(
-                                    if (selectedLanguage == "en") "Restore from Backup 📥" else "استعادة من نسخة احتياطية 📥",
+                                    stringResource(R.string.import_backup),
                                     fontSize = 13.sp,
                                     fontWeight = FontWeight.Bold
                                 )
                                 Text(
-                                    if (selectedLanguage == "en") "Only new entries will be added (no duplicates)"
-                                    else "ستُضاف الأرقام الجديدة فقط (دون تكرار)",
+                                    stringResource(R.string.settings_import_subtitle),
                                     fontSize = 10.sp,
                                     color = Color(0xFFB45309)
                                 )
@@ -695,7 +694,7 @@ fun SettingsDialog(
                             colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.primary)
                         ) {
                             Text(
-                                if (selectedLanguage == "en") "View Introduction & Onboarding 🚀" else "عرض الشاشة التعريفية للأرحام 🚀",
+                                stringResource(R.string.settings_replay_onboarding),
                                 fontSize = 13.sp,
                                 fontWeight = FontWeight.Bold
                             )
@@ -715,7 +714,7 @@ fun SettingsDialog(
                             ),
                             shape = RoundedCornerShape(14.dp)
                         ) {
-                            Text(if (selectedLanguage == "en") "Close" else "إغلاق", fontWeight = FontWeight.Bold)
+                            Text(stringResource(R.string.close), fontWeight = FontWeight.Bold)
                         }
                     }
                 }
@@ -730,16 +729,13 @@ fun SettingsDialog(
                 onDismissRequest = { showImportConfirm = false },
                 title = {
                     Text(
-                        if (selectedLanguage == "en") "Restore from Backup" else "استعادة من نسخة احتياطية",
+                        stringResource(R.string.import_backup),
                         fontWeight = FontWeight.Bold
                     )
                 },
                 text = {
                     Text(
-                        if (selectedLanguage == "en")
-                            "New relatives from the backup file will be added. Relatives with the same phone number will not be duplicated.\n\nDo you want to continue?"
-                        else
-                            "سيتم إضافة الأقارب الجدد من ملف النسخة الاحتياطية. الأقارب الذين لديهم نفس رقم الهاتف لن يتكرروا.\n\nهل تريد المتابعة؟",
+                        stringResource(R.string.settings_import_confirm_msg),
                         lineHeight = 20.sp
                     )
                 },
@@ -753,18 +749,19 @@ fun SettingsDialog(
                         colors = ButtonDefaults.buttonColors(containerColor = SoftGold, contentColor = Color(0xFF141816))
                     ) {
                         Text(
-                            if (selectedLanguage == "en") "Yes, Choose File" else "نعم، اختر الملف",
+                            stringResource(R.string.settings_import_confirm_btn),
                             fontWeight = FontWeight.Bold
                         )
                     }
                 },
                 dismissButton = {
                     TextButton(onClick = { showImportConfirm = false }) {
-                        Text(if (selectedLanguage == "en") "Cancel" else "إلغاء")
+                        Text(stringResource(R.string.cancel))
                     }
                 },
                 shape = RoundedCornerShape(20.dp)
             )
+        }
         }
     }
 }

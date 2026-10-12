@@ -60,7 +60,7 @@ fun MilestoneDialog(
                     Spacer(modifier = Modifier.height(16.dp))
 
                     Text(
-                        text = "🎉 إنجاز رائع في صِلَةِ!",
+                        text = androidx.compose.ui.res.stringResource(com.example.R.string.milestone_great_job),
                         style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
                         color = MaterialTheme.colorScheme.onSurface,
                         textAlign = TextAlign.Center
@@ -69,7 +69,11 @@ fun MilestoneDialog(
                     Spacer(modifier = Modifier.height(8.dp))
 
                     Text(
-                        text = "تواصلت بحمد الله مع $milestoneCount من أقاربك! بارك الله فيك وحفظ روابطك العائلية. ✨",
+                        text = androidx.compose.ui.res.pluralStringResource(
+                            com.example.R.plurals.milestone_relatives_count,
+                            milestoneCount,
+                            milestoneCount
+                        ),
                         style = MaterialTheme.typography.bodyMedium.copy(lineHeight = 22.sp),
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         textAlign = TextAlign.Center
@@ -83,7 +87,7 @@ fun MilestoneDialog(
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(14.dp)
                         ) {
-                            Text("استمرار 💚", fontWeight = FontWeight.Bold)
+                            Text(androidx.compose.ui.res.stringResource(com.example.R.string.milestone_continue), fontWeight = FontWeight.Bold)
                         }
                     } else {
                         Button(
@@ -94,7 +98,7 @@ fun MilestoneDialog(
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(14.dp)
                         ) {
-                            Text("ادعم صِلَةِ", fontWeight = FontWeight.Bold)
+                            Text(androidx.compose.ui.res.stringResource(com.example.R.string.milestone_support), fontWeight = FontWeight.Bold)
                         }
 
                         Spacer(modifier = Modifier.height(8.dp))
@@ -104,7 +108,7 @@ fun MilestoneDialog(
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             Text(
-                                "ليس الآن",
+                                androidx.compose.ui.res.stringResource(com.example.R.string.milestone_not_now),
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }

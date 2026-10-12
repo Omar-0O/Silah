@@ -20,9 +20,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.R
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.example.ui.components.ProfilePhotoSheet
@@ -72,7 +74,9 @@ fun UserProfileDialog(
         Surface(
             modifier = Modifier
                 .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background),
+                .statusBarsPadding()
+                .navigationBarsPadding()
+                .imePadding(),
             color = MaterialTheme.colorScheme.background
         ) {
             Column(
@@ -116,7 +120,7 @@ fun UserProfileDialog(
                             ) {
                                 Icon(
                                     imageVector = Icons.Default.Edit,
-                                    contentDescription = if (lang == "en") "Change Avatar" else "تغيير الصورة",
+                                    contentDescription = stringResource(R.string.change_avatar),
                                     tint = Color(0xFF141816),
                                     modifier = Modifier.size(13.dp)
                                 )
@@ -131,7 +135,7 @@ fun UserProfileDialog(
                                 color = MaterialTheme.colorScheme.onBackground
                             )
                             Text(
-                                text = if (lang == "en") "Tap avatar to change" else "اضغط الصورة للتغيير",
+                                text = stringResource(R.string.tap_avatar_to_change),
                                 fontSize = 11.sp,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
                             )
@@ -192,13 +196,13 @@ fun UserProfileDialog(
                                     Spacer(modifier = Modifier.width(12.dp))
                                     Column {
                                         Text(
-                                            text = if (lang == "en") "Save Progress & Share Achievements" else "أحفظ تقدمك وشارك إنجازك",
+                                            text = stringResource(R.string.cloud_sync_title),
                                             fontSize = 14.sp,
                                             fontWeight = FontWeight.Bold,
                                             color = MaterialTheme.colorScheme.onSurface
                                         )
                                         Text(
-                                            text = if (lang == "en") "Account creation and cloud sync coming soon" else "إنشاء الحساب ومزامنة الأصدقاء قريباً",
+                                            text = stringResource(R.string.cloud_sync_desc),
                                             fontSize = 11.sp,
                                             color = MaterialTheme.colorScheme.onSurfaceVariant
                                         )
@@ -210,7 +214,7 @@ fun UserProfileDialog(
                                     shape = RoundedCornerShape(12.dp)
                                 ) {
                                     Text(
-                                        text = if (lang == "en") "Soon" else "قريباً",
+                                        text = stringResource(R.string.soon),
                                         fontSize = 11.sp,
                                         fontWeight = FontWeight.Bold,
                                         color = Color.White,
@@ -235,7 +239,7 @@ fun UserProfileDialog(
                                 horizontalAlignment = Alignment.CenterHorizontally
                             ) {
                                 Text(
-                                    text = if (lang == "en") "Monthly Connection Log 🌸" else "سجل التواصل الشهر الحالي 🌸",
+                                    text = stringResource(R.string.monthly_log_title),
                                     fontSize = 16.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = PrimaryGreen
@@ -352,7 +356,7 @@ fun UserProfileDialog(
                                                 .background(Color(0xFF10B981))
                                         )
                                         Text(
-                                            text = if (lang == "en") "Connected" else "صلت فيه الرحم",
+                                            text = stringResource(R.string.connected_legend),
                                             fontSize = 11.sp,
                                             fontWeight = FontWeight.Bold,
                                             color = Color(0xFF047857)
@@ -371,7 +375,7 @@ fun UserProfileDialog(
                                                 .background(Color(0xFFEF4444))
                                         )
                                         Text(
-                                            text = if (lang == "en") "No contact" else "لم تصل فيه",
+                                            text = stringResource(R.string.no_contact_legend),
                                             fontSize = 11.sp,
                                             fontWeight = FontWeight.Bold,
                                             color = Color(0xFFDC2626)
@@ -390,7 +394,7 @@ fun UserProfileDialog(
                                                 .background(Color(0xFFCBD5E1))
                                         )
                                         Text(
-                                            text = if (lang == "en") "Upcoming" else "أيام قادمة",
+                                            text = stringResource(R.string.upcoming_legend),
                                             fontSize = 11.sp,
                                             color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
                                         )

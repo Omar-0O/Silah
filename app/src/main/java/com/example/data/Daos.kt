@@ -40,6 +40,9 @@ interface CommunicationLogDao {
     @Query("SELECT * FROM communication_logs ORDER BY timestamp DESC")
     fun getAllLogs(): Flow<List<CommunicationLog>>
 
+    @Query("SELECT * FROM communication_logs ORDER BY timestamp DESC")
+    suspend fun getAllLogsOnce(): List<CommunicationLog>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertLog(log: CommunicationLog)
 
@@ -55,6 +58,9 @@ interface CommunicationLogDao {
 interface QuickTemplateDao {
     @Query("SELECT * FROM quick_templates")
     fun getAllTemplates(): Flow<List<QuickTemplate>>
+
+    @Query("SELECT * FROM quick_templates")
+    suspend fun getAllTemplatesOnce(): List<QuickTemplate>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertTemplate(template: QuickTemplate)

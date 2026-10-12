@@ -5,42 +5,53 @@ import android.app.NotificationManager
 import android.content.Context
 import android.os.Build
 import androidx.core.app.NotificationCompat
+import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
-import com.example.R
+import com.example.core.datastore.UserPreferencesRepository
+import com.example.core.util.SilaLogger
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedInject
 import java.util.concurrent.TimeUnit
 
-class UsageNotificationWorker(
-    private val context: Context,
-    workerParams: WorkerParameters
+@HiltWorker
+class UsageNotificationWorker @AssistedInject constructor(
+    @Assisted private val context: Context,
+    @Assisted workerParams: WorkerParameters,
+    private val userPreferencesRepository: UserPreferencesRepository
 ) : CoroutineWorker(context, workerParams) {
 
     override suspend fun doWork(): Result {
-        val prefs = context.getSharedPreferences("silah_prefs", Context.MODE_PRIVATE)
+        return try {
+            val prefs = userPreferencesRepository.getInitialPreferences()
 
-        val notifyEncouragement = prefs.getBoolean("pref_notify_encouragement", true)
-        val notifyMonthly = prefs.getBoolean("pref_notify_monthly", true)
+            val notifyEncouragement = prefs.prefNotifyEncouragement
+            val notifyMonthly = prefs.prefNotifyMonthly
 
-        if (!notifyEncouragement && !notifyMonthly) {
-            return Result.success()
+            if (!notifyEncouragement && !notifyMonthly) {
+                return Result.success()
+            }
+
+            val firstLaunchTime = if (prefs.appFirstLaunchTime != 0L) prefs.appFirstLaunchTime else System.currentTimeMillis()
+            val daysElapsed = TimeUnit.MILLISECONDS.toDays(System.currentTimeMillis() - firstLaunchTime)
+
+            val message = when {
+                daysElapsed == 7L && notifyEncouragement -> "أسبوع مضى على استخدامك لـ صِلَةِ 💚 شكراً لاتمامك وصل أقاربك!"
+                daysElapsed == 30L && notifyEncouragement -> "شهر كامل من الود والارتباط العائلي ✨ صلتك أثرها كبير!"
+                daysElapsed == 60L && notifyEncouragement -> "60 يوماً من الوفاء والارتباط 🌿 استمر في وصل الرحم!"
+                daysElapsed > 0 && daysElapsed % 30 == 0L && notifyMonthly -> "تذكير صِلَةِ الشهري: طمئن قلب قريب لك اليوم بدعوة أو اتصال 🤍"
+                else -> null
+            }
+
+            if (message != null) {
+                sendNotification(message)
+            }
+
+            Result.success()
+        } catch (e: Exception) {
+            SilaLogger.e("UsageNotificationWorker", "Error sending usage notification", e)
+            Result.failure()
         }
-
-        val firstLaunchTime = prefs.getLong("app_first_launch_time", System.currentTimeMillis())
-        val daysElapsed = TimeUnit.MILLISECONDS.toDays(System.currentTimeMillis() - firstLaunchTime)
-
-        val message = when {
-            daysElapsed == 7L && notifyEncouragement -> "أسبوع مضى على استخدامك لـ صِلَةِ 💚 شكراً لاتمامك وصل أقاربك!"
-            daysElapsed == 30L && notifyEncouragement -> "شهر كامل من الود والارتباط العائلي ✨ صلتك أثرها كبير!"
-            daysElapsed == 60L && notifyEncouragement -> "60 يوماً من الوفاء والارتباط 🌿 استمر في وصل الرحم!"
-            daysElapsed > 0 && daysElapsed % 30 == 0L && notifyMonthly -> "تذكير صِلَةِ الشهري: طمئن قلب قريب لك اليوم بدعوة أو اتصال 🤍"
-            else -> null
-        }
-
-        if (message != null) {
-            sendNotification(message)
-        }
-
-        return Result.success()
     }
 
     private fun sendNotification(text: String) {

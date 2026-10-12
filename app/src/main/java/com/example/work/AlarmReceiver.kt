@@ -65,7 +65,7 @@ class AlarmReceiver : BroadcastReceiver() {
                 // Reschedule for tomorrow
                 ReminderScheduler.scheduleDailyReminder(context)
             } catch (e: Exception) {
-                e.printStackTrace()
+                com.example.core.util.SilaLogger.e("AlarmReceiver", "Error in daily alarm receiver", e)
             } finally {
                 pendingResult.finish()
             }

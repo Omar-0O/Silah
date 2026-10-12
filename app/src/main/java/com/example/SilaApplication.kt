@@ -5,20 +5,39 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
 import android.os.Build
+import androidx.hilt.work.HiltWorkerFactory
+import androidx.work.Configuration
 import com.example.work.ReminderScheduler
+import com.example.work.WorkSchedulerManager
+import dagger.hilt.android.HiltAndroidApp
+import javax.inject.Inject
 
 /**
  * Custom Application class for Sila.
  * Pre-configures notification channels and ensures reminder scheduling is initialized
  * whenever any app component (Activity, Receiver, or Service) starts.
+ * Implements [Configuration.Provider] to supply [HiltWorkerFactory] to WorkManager.
  */
-class SilaApplication : Application() {
+@HiltAndroidApp
+class SilaApplication : Application(), Configuration.Provider {
+
+    @Inject
+    lateinit var workerFactory: HiltWorkerFactory
+
+    @Inject
+    lateinit var workSchedulerManager: WorkSchedulerManager
+
+    override val workManagerConfiguration: Configuration
+        get() = Configuration.Builder()
+            .setWorkerFactory(workerFactory)
+            .build()
 
     override fun onCreate() {
         super.onCreate()
 
         createNotificationChannels()
         ReminderScheduler.scheduleDailyReminder(this)
+        workSchedulerManager.initializeDefaultWorkers()
     }
 
     private fun createNotificationChannels() {

@@ -38,17 +38,15 @@ fun RecordLogBottomSheet(
     var selectedType by remember { mutableStateOf("مكالمة") }
     var notes by remember { mutableStateOf("") }
 
-    val commTypes = if (lang == "en") listOf(
-        Triple("مكالمة", "Phone Call 📞", Icons.Default.Call),
-        Triple("زيارة", "Family Visit 🏠", Icons.Default.People),
-        Triple("رسالة", "Message/WhatsApp ✉️", Icons.AutoMirrored.Filled.Chat),
-        Triple("هدية", "Gift/Occasion 🎁", Icons.Default.Star)
-    ) else listOf(
-        Triple("مكالمة", "مكالمة هاتفية 📞", Icons.Default.Call),
-        Triple("زيارة", "زيارة عائلية 🏠", Icons.Default.People),
-        Triple("رسالة", "رسالة نصية/واتساب ✉️", Icons.AutoMirrored.Filled.Chat),
-        Triple("هدية", "هدية/مناسبة 🎁", Icons.Default.Star)
+    val commTypes = listOf(
+        Triple("مكالمة", androidx.compose.ui.res.stringResource(com.example.R.string.comm_type_call), Icons.Default.Call),
+        Triple("زيارة", androidx.compose.ui.res.stringResource(com.example.R.string.comm_type_visit), Icons.Default.People),
+        Triple("رسالة", androidx.compose.ui.res.stringResource(com.example.R.string.comm_type_message), Icons.AutoMirrored.Filled.Chat),
+        Triple("هدية", androidx.compose.ui.res.stringResource(com.example.R.string.comm_type_gift), Icons.Default.Star)
     )
+
+    val defaultNote = androidx.compose.ui.res.stringResource(com.example.R.string.comm_default_blessed)
+    val successMsg = androidx.compose.ui.res.stringResource(com.example.R.string.comm_logged_success)
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -66,16 +64,14 @@ fun RecordLogBottomSheet(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             Text(
-                text = if (lang == "en") "Log Communication with ${relative.name} 🌸"
-                       else "تسجيل تواصل مع ${relative.name} 🌸",
+                text = androidx.compose.ui.res.stringResource(com.example.R.string.log_comm_title, relative.name),
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.primary
             )
 
             Text(
-                text = if (lang == "en") "Choose the type of contact and record it to keep your journey alive 💚"
-                       else "اختر طريقة التواصل وسجّلها لتبقى في ميزان حسناتك ومسيرتك 💚",
+                text = androidx.compose.ui.res.stringResource(com.example.R.string.log_comm_desc),
                 fontSize = 12.sp,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -103,7 +99,7 @@ fun RecordLogBottomSheet(
             OutlinedTextField(
                 value = notes,
                 onValueChange = { notes = it },
-                label = { Text(if (lang == "en") "Notes or impressions about this contact (optional)" else "ملاحظات أو انطباعات عن التواصل (اختياري)") },
+                label = { Text(androidx.compose.ui.res.stringResource(com.example.R.string.comm_notes_label)) },
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
                 maxLines = 3
@@ -114,11 +110,11 @@ fun RecordLogBottomSheet(
                     view.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
                     viewModel.recordCommunication(
                         relative.id, selectedType,
-                        notes.ifEmpty { if (lang == "en") "A blessed connection" else "تواصل طيب ومبارك" }
+                        notes.ifEmpty { defaultNote }
                     )
                     Toast.makeText(
                         context,
-                        if (lang == "en") "Contact logged successfully! ✨" else "تم حفظ تسجيل التواصل بنجاح! ✨",
+                        successMsg,
                         Toast.LENGTH_SHORT
                     ).show()
                     onDismiss()
@@ -131,7 +127,7 @@ fun RecordLogBottomSheet(
                     .height(50.dp)
             ) {
                 Text(
-                    if (lang == "en") "Save & Confirm Contact 🌸" else "حفظ وتأكيد التواصل 🌸",
+                    androidx.compose.ui.res.stringResource(com.example.R.string.save_confirm_comm),
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Bold
                 )

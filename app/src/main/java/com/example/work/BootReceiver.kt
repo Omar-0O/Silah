@@ -28,7 +28,7 @@ class BootReceiver : BroadcastReceiver() {
                 // Refresh widgets on boot
                 SilaAppWidgetProvider.triggerWidgetUpdate(context)
             } catch (e: Exception) {
-                e.printStackTrace()
+                com.example.core.util.SilaLogger.e("BootReceiver", "Failed to restore reminders on boot", e)
             }
         }
     }

@@ -18,15 +18,17 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.R
 import com.example.ui.theme.SoftGold
 
 @Composable
 fun SilaEmptyStateView(
     lang: String = "ar",
-    title: String = if (lang == "en") "Add your relatives to start keeping kin ties 💚" else "أضف أقاربك لتبدأ مسيرة صلة الرحم 💚",
-    subtitle: String = if (lang == "en") "Choose your relatives from contacts and set a reminder schedule for each one" else "اختر أقاربك من جهات الاتصال وحدد موعد التذكير المناسب لكل منهم",
+    title: String = stringResource(R.string.empty_relatives_title),
+    subtitle: String = stringResource(R.string.empty_relatives_subtitle),
     onImportContactsClick: (() -> Unit)? = null,
     onAddRelativeClick: (() -> Unit)? = null,
     modifier: Modifier = Modifier
@@ -43,6 +45,8 @@ fun SilaEmptyStateView(
     )
 
     val primaryColor = MaterialTheme.colorScheme.primary
+
+    val view = androidx.compose.ui.platform.LocalView.current
 
     Column(
         modifier = modifier
@@ -102,12 +106,15 @@ fun SilaEmptyStateView(
             ) {
                 if (onImportContactsClick != null) {
                     Button(
-                        onClick = onImportContactsClick,
+                        onClick = {
+                            view.performHapticFeedback(android.view.HapticFeedbackConstants.VIRTUAL_KEY)
+                            onImportContactsClick()
+                        },
                         colors = ButtonDefaults.buttonColors(
                             containerColor = SoftGold,
                             contentColor = Color(0xFF141816)
                         ),
-                        shape = RoundedCornerShape(16.dp),
+                        shape = com.example.ui.theme.SilaShapes.Button,
                         modifier = Modifier.fillMaxWidth(0.9f),
                         contentPadding = PaddingValues(vertical = 12.dp)
                     ) {
@@ -118,7 +125,7 @@ fun SilaEmptyStateView(
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            if (lang == "en") "Import Relatives from Phone 📲" else "استيراد الأقارب من الهاتف 📲",
+                            text = stringResource(R.string.import_relatives_phone),
                             fontWeight = FontWeight.Bold,
                             fontSize = 14.sp
                         )
@@ -127,8 +134,11 @@ fun SilaEmptyStateView(
 
                 if (onAddRelativeClick != null) {
                     OutlinedButton(
-                        onClick = onAddRelativeClick,
-                        shape = RoundedCornerShape(16.dp),
+                        onClick = {
+                            view.performHapticFeedback(android.view.HapticFeedbackConstants.VIRTUAL_KEY)
+                            onAddRelativeClick()
+                        },
+                        shape = com.example.ui.theme.SilaShapes.Button,
                         modifier = Modifier.fillMaxWidth(0.9f),
                         contentPadding = PaddingValues(vertical = 12.dp)
                     ) {
@@ -139,7 +149,7 @@ fun SilaEmptyStateView(
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            if (lang == "en") "Add Relative Manually +" else "إضافة قريب يدوياً ＋",
+                            text = stringResource(R.string.add_relative_manually),
                             fontWeight = FontWeight.Bold,
                             fontSize = 14.sp
                         )
@@ -153,7 +163,7 @@ fun SilaEmptyStateView(
         // Motivational Hadith
         Card(
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)),
-            shape = RoundedCornerShape(14.dp),
+            shape = com.example.ui.theme.SilaShapes.Button,
             modifier = Modifier.fillMaxWidth()
         ) {
             Text(

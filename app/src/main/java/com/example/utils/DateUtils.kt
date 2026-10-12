@@ -2,7 +2,38 @@ package com.example.utils
 
 import kotlin.math.abs
 
+import android.content.Context
+import com.example.R
+
 object DateUtils {
+
+    /**
+     * Formats a timestamp using Android strings & plurals resources.
+     */
+    fun formatRelativeTime(context: Context, timestamp: Long): String {
+        if (timestamp <= 0L) return context.getString(R.string.no_logs_title)
+        val now = System.currentTimeMillis()
+        val diffMs = now - timestamp
+        if (diffMs < 0) return context.resources.getQuantityString(R.plurals.days_ago, 0, 0)
+
+        val seconds = diffMs / 1000
+        val minutes = (seconds / 60).toInt()
+        val hours = (minutes / 60)
+        val days = (hours / 24)
+        val weeks = (days / 7)
+        val months = (days / 30)
+        val years = (days / 365)
+
+        return when {
+            seconds < 60 -> context.getString(R.string.just_now)
+            minutes < 60 -> context.resources.getQuantityString(R.plurals.minutes_ago, minutes, minutes)
+            hours < 24 -> context.resources.getQuantityString(R.plurals.hours_ago, hours, hours)
+            days < 7 -> context.resources.getQuantityString(R.plurals.days_ago, days, days)
+            weeks < 4 -> context.resources.getQuantityString(R.plurals.weeks_ago, weeks, weeks)
+            months < 12 -> context.resources.getQuantityString(R.plurals.months_ago, months, months)
+            else -> context.resources.getQuantityString(R.plurals.years_ago, years, years)
+        }
+    }
 
     /**
      * Formats a timestamp into a friendly, precise relative time string.

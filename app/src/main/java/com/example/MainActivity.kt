@@ -28,7 +28,9 @@ import android.content.pm.PackageManager
 import androidx.core.content.ContextCompat
 import android.net.Uri
 import android.provider.ContactsContract
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
     private val viewModel: RelativeViewModel by viewModels()
@@ -45,6 +47,19 @@ class MainActivity : ComponentActivity() {
             val selectedLanguage by viewModel.selectedLanguage.collectAsState()
             val backupResult by viewModel.backupResult.collectAsState()
             val layoutDirection = if (selectedLanguage == "en") LayoutDirection.Ltr else LayoutDirection.Rtl
+
+            val locale = androidx.compose.runtime.remember(selectedLanguage) { java.util.Locale.forLanguageTag(selectedLanguage) }
+            val configuration = androidx.compose.ui.platform.LocalConfiguration.current
+            val localizedConfiguration = androidx.compose.runtime.remember(configuration, locale) {
+                android.content.res.Configuration(configuration).apply {
+                    setLocale(locale)
+                    setLayoutDirection(locale)
+                }
+            }
+            val currentContext = androidx.compose.ui.platform.LocalContext.current
+            val localizedContext = androidx.compose.runtime.remember(currentContext, locale) {
+                currentContext.createConfigurationContext(localizedConfiguration)
+            }
 
             // ── Export: Opens Save-File dialog (SAF) ──────────────────────
             val exportLauncher = rememberLauncherForActivityResult(
@@ -92,7 +107,7 @@ class MainActivity : ComponentActivity() {
                         try {
                             viewModel.syncCallLogsWithRelatives(applicationContext)
                         } catch (e: Exception) {
-                            e.printStackTrace()
+                            com.example.core.util.SilaLogger.e("MainActivity", "Failed to sync call logs", e)
                         }
                     }
 
@@ -110,45 +125,52 @@ class MainActivity : ComponentActivity() {
                         try {
                             permissionLauncher.launch(ungrantedPermissions.toTypedArray())
                         } catch (e: Exception) {
-                            e.printStackTrace()
+                            com.example.core.util.SilaLogger.e("MainActivity", "Failed to launch permissions request", e)
                         }
                     }
 
-                    viewModel.setExportLauncher {
-                        try {
-                            exportLauncher.launch(viewModel.suggestedBackupName())
-                        } catch (e: Exception) {
-                            e.printStackTrace()
-                        }
-                    }
-                    viewModel.setImportLauncher {
-                        try {
-                            importLauncher.launch(arrayOf("application/json", "*/*"))
-                        } catch (e: Exception) {
-                            e.printStackTrace()
-                        }
-                    }
-                    viewModel.setContactPickerLauncher {
-                        try {
-                            val intent = Intent(
-                                Intent.ACTION_PICK,
-                                ContactsContract.CommonDataKinds.Phone.CONTENT_URI
-                            )
-                            contactPickerLauncher.launch(intent)
-                        } catch (e: Exception) {
+                } catch (e: Exception) {
+                    com.example.core.util.SilaLogger.e("MainActivity", "Error in main activity setup", e)
+                }
+            }
+
+            LaunchedEffect(viewModel) {
+                viewModel.appActions.collect { action ->
+                    when (action) {
+                        is com.example.viewmodel.AppAction.ExportBackup -> {
                             try {
-                                val fallbackIntent = Intent(
+                                exportLauncher.launch(viewModel.suggestedBackupName())
+                            } catch (e: Exception) {
+                                com.example.core.util.SilaLogger.e("MainActivity", "Failed to launch export", e)
+                            }
+                        }
+                        is com.example.viewmodel.AppAction.ImportBackup -> {
+                            try {
+                                importLauncher.launch(arrayOf("application/json", "*/*"))
+                            } catch (e: Exception) {
+                                com.example.core.util.SilaLogger.e("MainActivity", "Failed to launch import", e)
+                            }
+                        }
+                        is com.example.viewmodel.AppAction.PickContact -> {
+                            try {
+                                val intent = Intent(
                                     Intent.ACTION_PICK,
-                                    ContactsContract.Contacts.CONTENT_URI
+                                    ContactsContract.CommonDataKinds.Phone.CONTENT_URI
                                 )
-                                contactPickerLauncher.launch(fallbackIntent)
-                            } catch (e2: Exception) {
-                                e2.printStackTrace()
+                                contactPickerLauncher.launch(intent)
+                            } catch (e: Exception) {
+                                try {
+                                    val fallbackIntent = Intent(
+                                        Intent.ACTION_PICK,
+                                        ContactsContract.Contacts.CONTENT_URI
+                                    )
+                                    contactPickerLauncher.launch(fallbackIntent)
+                                } catch (e2: Exception) {
+                                    com.example.core.util.SilaLogger.e("MainActivity", "Failed to launch contact picker fallback", e2)
+                                }
                             }
                         }
                     }
-                } catch (e: Exception) {
-                    e.printStackTrace()
                 }
             }
 
@@ -160,7 +182,11 @@ class MainActivity : ComponentActivity() {
                 }
             }
 
-            CompositionLocalProvider(LocalLayoutDirection provides layoutDirection) {
+            CompositionLocalProvider(
+                androidx.compose.ui.platform.LocalConfiguration provides localizedConfiguration,
+                androidx.compose.ui.platform.LocalContext provides localizedContext,
+                LocalLayoutDirection provides layoutDirection
+            ) {
                 MyApplicationTheme(darkTheme = isDarkMode, fontName = "Almarai") {
                     Surface(
                         modifier = Modifier.fillMaxSize(),

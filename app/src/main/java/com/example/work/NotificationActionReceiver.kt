@@ -80,7 +80,7 @@ class NotificationActionReceiver : BroadcastReceiver() {
                         try {
                             context.startActivity(smsIntent)
                         } catch (ex: Exception) {
-                            ex.printStackTrace()
+                            com.example.core.util.SilaLogger.e("NotificationActionReceiver", "Failed to launch SMS fallback intent", ex)
                         }
                     }
                 }
@@ -103,8 +103,7 @@ class NotificationActionReceiver : BroadcastReceiver() {
                         .getString("selected_language", "ar") ?: "ar"
 
                     Handler(Looper.getMainLooper()).post {
-                        val toastMsg = if (lang == "en") "Reminder snoozed for 6 hours ⏰"
-                        else "هنذكرك بعد 6 ساعات ⏰"
+                        val toastMsg = context.getString(com.example.R.string.notif_snooze_toast)
                         Toast.makeText(context, toastMsg, Toast.LENGTH_SHORT).show()
                     }
                 }
@@ -157,7 +156,7 @@ class NotificationActionReceiver : BroadcastReceiver() {
                                 ).show()
                             }
                         } catch (e: Exception) {
-                            e.printStackTrace()
+                            com.example.core.util.SilaLogger.e("NotificationActionReceiver", "Failed to confirm contact from notification", e)
                         } finally {
                             pendingResult.finish()
                         }
@@ -210,7 +209,7 @@ class NotificationActionReceiver : BroadcastReceiver() {
                 )
             }
         } catch (e: Exception) {
-            e.printStackTrace()
+            com.example.core.util.SilaLogger.e("NotificationActionReceiver", "Failed to schedule snooze alarm", e)
         }
     }
 }

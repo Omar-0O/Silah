@@ -29,16 +29,36 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.R
 import com.example.data.Relative
 import com.example.ui.theme.SoftGold
 import com.example.utils.DateUtils
 import com.example.viewmodel.RelativeViewModel
 import androidx.core.graphics.toColorInt
 import androidx.core.net.toUri
+
+import android.view.HapticFeedbackConstants
+import androidx.compose.ui.platform.LocalView
+import com.example.ui.theme.SilaShapes
+import com.example.ui.theme.SoftGoldDark
+import com.example.ui.theme.spacing
+
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
+
+private enum class CarouselDisplayState {
+    EMPTY,
+    ALL_CONNECTED,
+    LIST
+}
 
 @Composable
 fun DueRelativesCarousel(
@@ -48,13 +68,15 @@ fun DueRelativesCarousel(
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
+    val view = LocalView.current
     val lang by viewModel.selectedLanguage.collectAsState()
+    val spacing = MaterialTheme.spacing
 
     Column(modifier = modifier.fillMaxWidth()) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(6.dp),
-            modifier = Modifier.padding(bottom = 12.dp)
+            horizontalArrangement = Arrangement.spacedBy(spacing.sm),
+            modifier = Modifier.padding(bottom = spacing.md)
         ) {
             Box(
                 modifier = Modifier
@@ -69,8 +91,8 @@ fun DueRelativesCarousel(
                     )
             )
             Text(
-                text = if (totalRelativesCount == 0) (if (lang == "en") "Start Kinship Connection 🌿" else "ابدأ صِلَة أرحامك 🌿")
-                       else (if (lang == "en") "Due to Connect ✨" else "حان وقتُ وَصْلِهِم ✨"),
+                text = if (totalRelativesCount == 0) stringResource(R.string.start_kinship_connection)
+                       else stringResource(R.string.due_to_connect),
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onBackground
@@ -79,109 +101,131 @@ fun DueRelativesCarousel(
                 Badge(
                     containerColor = Color(0xFFE57373).copy(alpha = 0.2f),
                     contentColor = Color(0xFFD32F2F),
-                    modifier = Modifier.padding(start = 4.dp)
+                    modifier = Modifier.padding(start = spacing.xs)
                 ) {
                     Text(" ${dueRelatives.size} ", fontSize = 11.sp, fontWeight = FontWeight.Bold)
                 }
             }
         }
 
-        when {
-            totalRelativesCount == 0 -> {
-                Card(
-                    shape = RoundedCornerShape(20.dp),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable { viewModel.showAddRelativeDialog.value = true }
-                        .border(1.dp, SoftGold.copy(alpha = 0.35f), RoundedCornerShape(20.dp))
-                ) {
-                    Row(
-                        modifier = Modifier.padding(16.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+        val carouselState = when {
+            totalRelativesCount == 0 -> CarouselDisplayState.EMPTY
+            dueRelatives.isEmpty() -> CarouselDisplayState.ALL_CONNECTED
+            else -> CarouselDisplayState.LIST
+        }
+
+        AnimatedContent(
+            targetState = carouselState,
+            transitionSpec = {
+                fadeIn(animationSpec = tween(220)) togetherWith fadeOut(animationSpec = tween(180))
+            },
+            label = "due_carousel_transition"
+        ) { displayState ->
+            when (displayState) {
+                CarouselDisplayState.EMPTY -> {
+                    Card(
+                        shape = SilaShapes.Card,
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
+                                viewModel.showAddRelativeDialog.value = true
+                            }
+                            .border(1.dp, SoftGold.copy(alpha = 0.35f), SilaShapes.Card)
                     ) {
-                        Icon(
-                            imageVector = Icons.Outlined.Person,
-                            contentDescription = null,
-                            tint = SoftGold,
-                            modifier = Modifier.size(36.dp)
-                        )
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = if (lang == "en") "No relatives added yet 🌿" else "لم تقم بإضافة أقارب بعد 🌿",
-                                fontSize = 14.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurface
+                        Row(
+                            modifier = Modifier.padding(spacing.lg),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(spacing.md)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Outlined.Person,
+                                contentDescription = null,
+                                tint = SoftGold,
+                                modifier = Modifier.size(36.dp)
                             )
-                            Spacer(modifier = Modifier.height(2.dp))
-                            Text(
-                                text = if (lang == "en") "Tap here to add your first relative and start organizing your family ties."
-                                       else "اضغط هنا لإضافة أول قريب، وتبدأ بتوثيق صِلَة أرحامك ومتابعتهم بكل يُسْر.",
-                                fontSize = 12.sp,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = stringResource(R.string.no_relatives_home_title),
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                                Spacer(modifier = Modifier.height(2.dp))
+                                Text(
+                                    text = stringResource(R.string.no_relatives_home_desc),
+                                    fontSize = 12.sp,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
                         }
                     }
                 }
-            }
-            dueRelatives.isEmpty() -> {
-                Card(
-                    shape = RoundedCornerShape(20.dp),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f)),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .border(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.25f), RoundedCornerShape(20.dp))
-                ) {
-                    Row(
-                        modifier = Modifier.padding(16.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                CarouselDisplayState.ALL_CONNECTED -> {
+                    Card(
+                        shape = SilaShapes.Card,
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f)),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .border(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.25f), SilaShapes.Card)
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.CheckCircle,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(36.dp)
-                        )
-                        Column {
-                            Text(
-                                text = if (lang == "en") "All relatives are connected! 🎉" else "جميع أرحامك موصولون بالكامل! 🎉",
-                                fontSize = 14.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.primary
+                        Row(
+                            modifier = Modifier.padding(spacing.lg),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(spacing.md)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.CheckCircle,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(36.dp)
                             )
-                            Text(
-                                text = if (lang == "en") "Great job staying in touch with your family!" else "ما شاء الله، التزامك رائع ويقرب المسافات. طابت أيامك ببركة الود والرحمة.",
-                                fontSize = 12.sp,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
+                            Column {
+                                Text(
+                                    text = stringResource(R.string.all_connected_title),
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                                Text(
+                                    text = stringResource(R.string.all_connected_desc),
+                                    fontSize = 12.sp,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
                         }
                     }
                 }
-            }
-            else -> {
-                LazyRow(
-                    horizontalArrangement = Arrangement.spacedBy(14.dp),
-                    modifier = Modifier.fillMaxWidth(),
-                    contentPadding = PaddingValues(vertical = 8.dp, horizontal = 4.dp)
-                ) {
-                    items(dueRelatives, key = { relative -> "${relative.id}_${relative.name}_${relative.phone}" }) { relative ->
+                CarouselDisplayState.LIST -> {
+                    LazyRow(
+                        horizontalArrangement = Arrangement.spacedBy(spacing.md),
+                        modifier = Modifier.fillMaxWidth(),
+                        contentPadding = PaddingValues(vertical = spacing.sm, horizontal = spacing.xxs)
+                    ) {
+                        items(dueRelatives, key = { it.id }) { relative ->
                         val status = viewModel.getRelativeStatus(relative)
                         val statusBgColor = status.color.copy(alpha = 0.15f)
                         val statusTextColor = status.color
 
-
                         Card(
                             modifier = Modifier
                                 .width(285.dp)
-                                .shadow(6.dp, RoundedCornerShape(22.dp), ambientColor = Color.Black.copy(alpha = 0.05f))
-                                .clickable { viewModel.showLogsHistoryDialog.value = relative },
-                            shape = RoundedCornerShape(22.dp),
+                                .shadow(
+                                    elevation = 4.dp,
+                                    shape = SilaShapes.Card,
+                                    ambientColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.05f),
+                                    spotColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.08f)
+                                )
+                                .clickable {
+                                    view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
+                                    viewModel.showLogsHistoryDialog.value = relative
+                                },
+                            shape = SilaShapes.Card,
                             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                            border = BorderStroke(1.dp, SoftGold.copy(alpha = 0.25f))
+                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.15f))
                         ) {
-                            Column(modifier = Modifier.padding(16.dp)) {
+                            Column(modifier = Modifier.padding(spacing.lg)) {
                                 // 1. Status & Degree Header
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
@@ -190,9 +234,9 @@ fun DueRelativesCarousel(
                                 ) {
                                     Box(
                                         modifier = Modifier
-                                            .clip(RoundedCornerShape(8.dp))
+                                            .clip(SilaShapes.Chip)
                                             .background(statusBgColor)
-                                            .padding(horizontal = 8.dp, vertical = 4.dp)
+                                            .padding(horizontal = spacing.sm, vertical = spacing.xs)
                                     ) {
                                         Text(
                                             text = if (lang == "en") status.labelEn else status.label,
@@ -210,7 +254,7 @@ fun DueRelativesCarousel(
                                     )
                                 }
 
-                                Spacer(modifier = Modifier.height(12.dp))
+                                Spacer(modifier = Modifier.height(spacing.md))
 
                                 // 2. Relative Avatar, Name & Last Contact Date
                                 Row(
@@ -221,7 +265,7 @@ fun DueRelativesCarousel(
                                     RelativeAvatar(
                                         name = relative.name,
                                         photoUri = relative.photoUri,
-                                        size = 44.dp,
+                                        size = 46.dp,
                                         fontSize = 18.sp
                                     )
                                     Column(modifier = Modifier.weight(1f)) {
@@ -235,26 +279,23 @@ fun DueRelativesCarousel(
                                         )
                                         Spacer(modifier = Modifier.height(2.dp))
                                         Text(
-                                            text = if (lang == "en")
-                                                "Last: ${DateUtils.formatRelativeTimeExact(relative.lastContactDate, lang)}"
-                                            else
-                                                "آخر تواصل: ${DateUtils.formatRelativeTimeExact(relative.lastContactDate, lang)}",
+                                            text = stringResource(R.string.last_contact_prefix, DateUtils.formatRelativeTimeExact(relative.lastContactDate, lang)),
                                             fontSize = 11.sp,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75f),
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                                             maxLines = 1,
                                             overflow = TextOverflow.Ellipsis
                                         )
                                     }
                                 }
 
-                                Spacer(modifier = Modifier.height(14.dp))
+                                Spacer(modifier = Modifier.height(spacing.md))
 
                                 HorizontalDivider(
                                     thickness = 0.5.dp,
-                                    color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)
+                                    color = MaterialTheme.colorScheme.outline.copy(alpha = 0.15f)
                                 )
 
-                                Spacer(modifier = Modifier.height(12.dp))
+                                Spacer(modifier = Modifier.height(spacing.md))
 
                                 // 3. Action Buttons Row (Call, WhatsApp, Log)
                                 Row(
@@ -265,18 +306,19 @@ fun DueRelativesCarousel(
                                     // Call Action
                                     Surface(
                                         onClick = {
+                                            view.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
                                             try {
                                                 context.startActivity(Intent(Intent.ACTION_DIAL).apply {
                                                     data = Uri.parse("tel:${relative.phone}")
                                                 })
                                             } catch (e: Exception) {
-                                                Toast.makeText(context, if (lang == "en") "Unable to open dialer" else "تعذر فتح لوحة الاتصال", Toast.LENGTH_SHORT).show()
+                                                Toast.makeText(context, context.getString(R.string.dialer_error), Toast.LENGTH_SHORT).show()
                                             }
                                         },
-                                        shape = RoundedCornerShape(12.dp),
+                                        shape = SilaShapes.Button,
                                         color = MaterialTheme.colorScheme.primary,
                                         contentColor = Color.White,
-                                        modifier = Modifier.weight(1f).height(36.dp)
+                                        modifier = Modifier.weight(1f).height(38.dp)
                                     ) {
                                         Row(
                                             verticalAlignment = Alignment.CenterVertically,
@@ -285,12 +327,12 @@ fun DueRelativesCarousel(
                                         ) {
                                             Icon(
                                                 imageVector = Icons.Outlined.Call,
-                                                contentDescription = if (lang == "en") "Call" else "اتصال",
+                                                contentDescription = stringResource(R.string.action_call),
                                                 modifier = Modifier.size(14.dp)
                                             )
                                             Spacer(modifier = Modifier.width(4.dp))
                                             Text(
-                                                text = if (lang == "en") "Call" else "اتصال",
+                                                text = stringResource(R.string.action_call),
                                                 fontSize = 11.sp,
                                                 fontWeight = FontWeight.Bold,
                                                 maxLines = 1,
@@ -302,6 +344,7 @@ fun DueRelativesCarousel(
                                     // WhatsApp Action
                                     Surface(
                                         onClick = {
+                                            view.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
                                             try {
                                                 var cleanPhone = relative.phone.replace("""[\s\-\(\)]""".toRegex(), "")
                                                 val formattedPhone = when {
@@ -316,17 +359,17 @@ fun DueRelativesCarousel(
                                                     data = "https://api.whatsapp.com/send?phone=$formattedPhone".toUri()
                                                 }
                                                 context.startActivity(intent)
-                                                val commType = if (lang == "en") "Message" else "رسالة"
-                                                val note = if (lang == "en") "Quick WhatsApp message" else "تواصل سريع ومباشر عبر الواتساب"
+                                                val commType = context.getString(R.string.message)
+                                                val note = context.getString(R.string.comm_whatsapp_quick)
                                                 viewModel.recordCommunication(relative.id, commType, note)
                                             } catch (e: Exception) {
-                                                Toast.makeText(context, if (lang == "en") "WhatsApp not installed" else "تطبيق الواتساب غير مثبت على الجهاز", Toast.LENGTH_SHORT).show()
+                                                Toast.makeText(context, context.getString(R.string.whatsapp_not_installed), Toast.LENGTH_SHORT).show()
                                             }
                                         },
-                                        shape = RoundedCornerShape(12.dp),
+                                        shape = SilaShapes.Button,
                                         color = Color(0xFF1B8A4A),
                                         contentColor = Color.White,
-                                        modifier = Modifier.weight(1f).height(36.dp)
+                                        modifier = Modifier.weight(1f).height(38.dp)
                                     ) {
                                         Row(
                                             verticalAlignment = Alignment.CenterVertically,
@@ -335,12 +378,12 @@ fun DueRelativesCarousel(
                                         ) {
                                             Icon(
                                                 imageVector = Icons.AutoMirrored.Outlined.Chat,
-                                                contentDescription = if (lang == "en") "WhatsApp" else "واتس",
+                                                contentDescription = stringResource(R.string.action_whatsapp),
                                                 modifier = Modifier.size(14.dp)
                                             )
                                             Spacer(modifier = Modifier.width(4.dp))
                                             Text(
-                                                text = if (lang == "en") "WhatsApp" else "واتس",
+                                                text = stringResource(R.string.action_whatsapp),
                                                 fontSize = 11.sp,
                                                 fontWeight = FontWeight.Bold,
                                                 maxLines = 1,
@@ -349,13 +392,17 @@ fun DueRelativesCarousel(
                                         }
                                     }
 
-                                    // Log Record Action
+                                    // Log Record Action (WCAG AA Compliant contrast)
                                     Surface(
-                                        onClick = { viewModel.showRecordLogDialog.value = relative },
-                                        shape = RoundedCornerShape(12.dp),
-                                        color = SoftGold.copy(alpha = 0.25f),
-                                        contentColor = Color(0xFF7A5200),
-                                        modifier = Modifier.weight(1f).height(36.dp)
+                                        onClick = {
+                                            view.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
+                                            viewModel.showRecordLogDialog.value = relative
+                                        },
+                                        shape = SilaShapes.Button,
+                                        color = SoftGold.copy(alpha = 0.22f),
+                                        contentColor = SoftGoldDark,
+                                        border = BorderStroke(1.dp, SoftGold.copy(alpha = 0.35f)),
+                                        modifier = Modifier.weight(1f).height(38.dp)
                                     ) {
                                         Row(
                                             verticalAlignment = Alignment.CenterVertically,
@@ -364,12 +411,12 @@ fun DueRelativesCarousel(
                                         ) {
                                             Icon(
                                                 imageVector = Icons.Outlined.CheckCircle,
-                                                contentDescription = if (lang == "en") "Log" else "سجّل",
+                                                contentDescription = stringResource(R.string.action_log),
                                                 modifier = Modifier.size(14.dp)
                                             )
                                             Spacer(modifier = Modifier.width(4.dp))
                                             Text(
-                                                text = if (lang == "en") "Log" else "سجّل",
+                                                text = stringResource(R.string.action_log),
                                                 fontSize = 11.sp,
                                                 fontWeight = FontWeight.Bold,
                                                 maxLines = 1,
@@ -385,4 +432,5 @@ fun DueRelativesCarousel(
             }
         }
     }
+}
 }

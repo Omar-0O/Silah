@@ -1,5 +1,7 @@
 <resources>
     <string name="app_name">Silah</string>
+    <string name="app_tagline">Your Smart Companion for Family Kinship</string>
+    <string name="app_logo_desc">Silah Logo</string>
     <string name="relatives_tab">Relatives</string>
     <string name="challenges_tab">Challenges</string>
     <string name="settings_title">Silah Settings</string>
@@ -11,5 +13,416 @@
     <string name="backup_restore">Backup &amp; Restore</string>
     <string name="export_backup">Export Backup 📤</string>
     <string name="import_backup">Restore Backup 📥</string>
+    <string name="support_sila">Support Silah 🤍</string>
+    <string name="support_sila_desc">Help keep Silah 100% free with no ads</string>
+    <string name="milestone_title">New Kinship Milestone! ✨</string>
+    <string name="milestone_great_job">🎉 Fantastic Milestone in Silah!</string>
+    <string name="milestone_continue">Continue 💚</string>
+    <string name="milestone_support">Support Silah</string>
+    <string name="milestone_not_now">Not Now</string>
     <string name="close">Close</string>
+    <string name="back">Back</string>
+    <string name="save">Save</string>
+    <string name="cancel">Cancel</string>
+    <string name="edit">Edit</string>
+    <string name="delete">Delete</string>
+    <string name="search">Search</string>
+    <string name="clear">Clear</string>
+    <string name="continue_text">Continue</string>
+    <string name="get_started">Get Started 🌸</string>
+    <string name="soon">Soon</string>
+    <string name="optional">Optional</string>
+    <string name="import_text">Import</string>
+    <string name="manual_entry">Manual Entry ✍️</string>
+    <string name="from_contacts">From Contacts 📱</string>
+    <string name="search_hint">Search name or phone...</string>
+    <string name="no_search_results_title">No results matching \"%s\"</string>
+    <string name="no_search_results_subtitle">Try searching with a different name or phone number</string>
+    <string name="no_category_results_title">No relatives under this category</string>
+    <string name="no_category_results_subtitle">Tap \"All\" to see all your relatives</string>
+    <string name="add_relative_fab_desc">Add new relative</string>
+
+    <!-- Tabs -->
+    <string name="tab_home">Home</string>
+    <string name="tab_relatives">Relatives</string>
+    <string name="tab_profile">Profile</string>
+
+    <!-- Categories -->
+    <string name="category_all">All</string>
+    <string name="category_parents">Parents</string>
+    <string name="category_siblings">Siblings</string>
+    <string name="category_uncles_aunts">Uncles/Aunts</string>
+    <string name="category_other">Other Relatives</string>
+
+    <!-- Commitment Header & Home -->
+    <string name="tied_label">Tied</string>
+    <string name="total_logs_stat">Total Logs</string>
+    <string name="days_active_stat">Days Active</string>
+    <string name="relatives_stat">Relatives</string>
+    <string name="greeting_morning">Good morning</string>
+    <string name="greeting_afternoon">Good afternoon</string>
+    <string name="greeting_evening">Good evening</string>
+    <string name="start_kinship_connection">Start Kinship Connection 🌿</string>
+    <string name="due_to_connect">Due to Connect ✨</string>
+    <string name="no_relatives_home_title">No relatives added yet 🌿</string>
+    <string name="no_relatives_home_desc">Tap here to add your first relative and start organizing your family ties.</string>
+    <string name="all_connected_title">All relatives are connected! 🎉</string>
+    <string name="all_connected_desc">Great job staying in touch with your family! Keep the warmth blooming.</string>
+    <string name="last_contact_prefix">Last: %s</string>
+    <string name="streak_zero_desc">Connect today to start your streak! 🌸</string>
+    <string name="streak_active_desc">Keep the warmth of family ties blooming! 🌿</string>
+
+    <!-- Actions -->
+    <string name="action_call">Call</string>
+    <string name="action_whatsapp">WhatsApp</string>
+    <string name="action_log">Log</string>
+    <string name="action_reminder">Reminder</string>
+    <string name="action_quick_templates">Templates</string>
+
+    <!-- Relative Profile & Detail -->
+    <string name="relative_profile_title">Relative Profile</string>
+    <string name="delete_relative_title">Delete Relative</string>
+    <string name="delete_relative_msg">Are you sure you want to delete this relative and their log history permanently?</string>
+    <string name="notes_title">Notes &amp; Interests</string>
+    <string name="no_notes_desc">No notes recorded yet</string>
+    <string name="connection_history_title">Connection History</string>
+    <string name="no_logs_title">No connections recorded yet</string>
+    <string name="no_logs_desc">Record your calls and visits to preserve your kinship journey 🌸</string>
+
+    <!-- Communication Log Sheet -->
+    <string name="log_comm_title">Log Communication with %s 🌸</string>
+    <string name="log_comm_desc">Choose the contact method and record it to nurture your bond 💚</string>
+    <string name="comm_type_call">Phone Call 📞</string>
+    <string name="comm_type_visit">Family Visit 🏠</string>
+    <string name="comm_type_message">Message/WhatsApp ✉️</string>
+    <string name="comm_type_gift">Gift/Occasion 🎁</string>
+    <string name="comm_notes_label">Notes or impressions about this contact (optional)</string>
+    <string name="save_confirm_comm">Save &amp; Confirm Contact 🌸</string>
+    <string name="comm_logged_success">Contact logged successfully! ✨</string>
+    <string name="comm_default_blessed">A blessed connection</string>
+    <string name="comm_whatsapp_quick">Quick WhatsApp message</string>
+
+    <!-- Onboarding -->
+    <string name="onboarding_title_0">Welcome to Silah 🌿</string>
+    <string name="onboarding_title_1">Tell Us About You</string>
+    <string name="onboarding_title_2">Add Your Relatives</string>
+    <string name="onboarding_title_3">All Set! 🎉</string>
+    <string name="onboarding_sub_0">Your private companion for nurturing family ties — no ads, no subscriptions.</string>
+    <string name="onboarding_sub_1">We\'ll personalize your reminders with your name.</string>
+    <string name="onboarding_sub_2">Import family members directly from your phone contacts.</string>
+    <string name="onboarding_sub_3">Silah will remind you and track your connections automatically.</string>
+    <string name="choose_language_prompt">Choose your language:</string>
+    <string name="your_name_label">Your Name</string>
+    <string name="name_placeholder">e.g. Ahmed</string>
+    <string name="name_required_error">Name is required</string>
+    <string name="gender_prompt">I am:</string>
+    <string name="gender_male">Male</string>
+    <string name="gender_female">Female</string>
+    <string name="min_relative_error">⚠️ Please add at least one relative.</string>
+    <string name="no_relatives_onboarding">No relatives added yet</string>
+    <string name="tap_button_onboarding">Tap the button above to get started</string>
+    <string name="feature_smart_reminders">Smart reminders based on kinship closeness</string>
+    <string name="feature_call_detect">Auto-detects calls via your call log</string>
+    <string name="feature_private">100% private — data stays on your device</string>
+    <string name="feature_free">Free forever, no ads, no subscriptions</string>
+
+    <!-- Profile & Settings Screen -->
+    <string name="settings_preferences_title">Settings &amp; Preferences ⚙️</string>
+    <string name="display_lang_title">Language</string>
+    <string name="display_lang_desc">Display language</string>
+    <string name="reminder_time_title">Daily Reminder Time</string>
+    <string name="reminder_time_desc">Time to receive daily reminders</string>
+    <string name="notifications_section_title">Notifications &amp; Alerts 🔔</string>
+    <string name="notify_due_title">Due Relatives Reminders</string>
+    <string name="notify_due_desc">Notify when a relative is due for connection</string>
+    <string name="notify_encouragement_title">Encouragement Alerts</string>
+    <string name="notify_encouragement_desc">Uplifting reminders to stay in touch</string>
+    <string name="notify_monthly_title">Monthly Report</string>
+    <string name="notify_monthly_desc">Periodic kinship summary report</string>
+    <string name="edit_your_name">Edit Your Name</string>
+    <string name="change_avatar">Change Avatar</string>
+    <string name="tap_avatar_to_change">Tap avatar to change</string>
+    <string name="cloud_sync_title">Save Progress &amp; Share Achievements</string>
+    <string name="cloud_sync_desc">Account creation and cloud sync coming soon</string>
+    <string name="monthly_log_title">Monthly Connection Log 🌸</string>
+    <string name="connected_legend">Connected</string>
+    <string name="no_contact_legend">No contact</string>
+    <string name="upcoming_legend">Upcoming</string>
+    <string name="about_sila">About Silah</string>
+    <string name="version_label">Version 3.0.0</string>
+
+    <!-- Check In Dialog -->
+    <string name="checkin_title">Did you reach out today? 🌸</string>
+    <string name="checkin_desc">You received a reminder today to connect with these relatives. Let us know if you stayed in touch!</string>
+    <string name="checkin_yes_all">Yes, reached out to all 💚</string>
+    <string name="checkin_later">I\'ll connect with them later ⏳</string>
+    <string name="checkin_yes_single">Yes, Connected ✅</string>
+
+    <!-- Support Sila -->
+    <string name="support_main_title">Support Silah 🤍</string>
+    <string name="support_instapay_title">Support via InstaPay</string>
+    <string name="support_wallet_title">Support via Mobile Wallet</string>
+    <string name="support_free_tag">Silah is 100% Free &amp; Ad-Free</string>
+    <string name="support_free_desc">Silah is built solely to help families stay connected. No ads or subscriptions. Your support helps sustain future developments.</string>
+    <string name="support_impact_title">Your Impact on Silah 📊</string>
+    <string name="support_relatives_contacted">Relatives Contacted</string>
+    <string name="support_logs_recorded">Logs Recorded</string>
+    <string name="support_days_using">Days Using Silah</string>
+    <string name="support_choose_method">Choose Support Method 💳</string>
+    <string name="instapay_title">InstaPay (Egypt)</string>
+    <string name="instapay_desc">Fast &amp; direct transfer via IPA payment address</string>
+    <string name="wallet_title">Mobile Wallet (Egypt)</string>
+    <string name="wallet_desc">Vodafone Cash, Orange, Etisalat, WE</string>
+
+    <!-- Notifications & Background -->
+    <string name="channel_due_name">Daily Kinship Reminders</string>
+    <string name="channel_due_desc">Daily reminders to connect with your relatives</string>
+    <string name="channel_reminders_name">General Kinship Reminders</string>
+    <string name="channel_reminders_desc">General reminders for kinship connection</string>
+    <string name="notif_action_call">📞 Call Now</string>
+    <string name="notif_action_whatsapp">💬 WhatsApp</string>
+    <string name="notif_action_connect">📱 Connect Now</string>
+    <string name="notif_action_open_list">📇 Open Relatives List</string>
+    <string name="notif_snooze_toast">Reminder snoozed for 6 hours ⏰</string>
+    <string name="dialer_error">Unable to open dialer</string>
+    <string name="whatsapp_not_installed">WhatsApp is not installed</string>
+    <string name="call_log_perm_required">Call log permission is required to track incoming and outgoing calls automatically</string>
+
+    <!-- Plurals -->
+    <plurals name="days_ago">
+        <item quantity="one">1 day ago</item>
+        <item quantity="other">%d days ago</item>
+    </plurals>
+
+    <plurals name="hours_ago">
+        <item quantity="one">1 hour ago ⏱️</item>
+        <item quantity="other">%d hours ago ⏱️</item>
+    </plurals>
+
+    <plurals name="minutes_ago">
+        <item quantity="one">1 minute ago ⏱️</item>
+        <item quantity="other">%d minutes ago ⏱️</item>
+    </plurals>
+
+    <plurals name="weeks_ago">
+        <item quantity="one">1 week ago</item>
+        <item quantity="other">%d weeks ago</item>
+    </plurals>
+
+    <plurals name="months_ago">
+        <item quantity="one">1 month ago</item>
+        <item quantity="other">%d months ago</item>
+    </plurals>
+
+    <plurals name="years_ago">
+        <item quantity="one">1 year ago</item>
+        <item quantity="other">%d years ago</item>
+    </plurals>
+
+    <plurals name="streak_days_count">
+        <item quantity="one">1 Day Streak! 🌿</item>
+        <item quantity="other">%d Day Streak! 🌿</item>
+    </plurals>
+
+    <plurals name="synced_calls_count">
+        <item quantity="one">Synced 1 new call automatically! 📞</item>
+        <item quantity="other">Synced %d new calls automatically! 📞</item>
+    </plurals>
+
+    <plurals name="milestone_relatives_count">
+        <item quantity="one">You stayed connected with 1 relative! Keep it up. ✨</item>
+        <item quantity="other">You stayed connected with %d relatives! Keep it up. ✨</item>
+    </plurals>
+
+    <plurals name="added_relatives_count">
+        <item quantity="one">Added (1):</item>
+        <item quantity="other">Added (%d):</item>
+    </plurals>
+
+    <!-- Settings Dialog -->
+    <string name="settings_dialog_title">Silah Settings ⚙️</string>
+    <string name="settings_lang_title">App Language</string>
+    <string name="settings_lang_desc">Choose display language</string>
+    <string name="settings_dark_mode">Dark Mode</string>
+    <string name="settings_dark_mode_desc">Eye-friendly interface in low light</string>
+    <string name="settings_support_card_title">🤍 Support Sila</string>
+    <string name="settings_support_card_desc">Help developer keep Sila free &amp; ad-free</string>
+    <string name="settings_support_btn">Support</string>
+    <string name="settings_notif_title">Notifications Settings 🔔</string>
+    <string name="settings_kin_reminders">Kin Tie Reminders</string>
+    <string name="settings_kin_reminders_desc">Notify when relatives are due for contact</string>
+    <string name="settings_daily_time">Daily Reminder Time</string>
+    <string name="settings_daily_time_desc">Scheduled kinship alert time</string>
+    <string name="settings_change">Change</string>
+    <string name="settings_quick_presets">Quick Presets:</string>
+    <string name="settings_golden_hour">✨ Golden Hour (6:00 - 8:00 PM): Ideal social leisure time after work and before sleep.</string>
+    <string name="settings_reminder_note">🔔 Silah will send your daily reminder at %s, even if the app is closed.</string>
+    <string name="settings_encouragement">Encouragement Messages</string>
+    <string name="settings_encouragement_desc">Weekly and milestone celebration messages</string>
+    <string name="settings_monthly">Monthly Reminders</string>
+    <string name="settings_monthly_desc">Periodic monthly inspiration reminders</string>
+    <string name="settings_battery_title">⚡ Ensure Delivery When Closed</string>
+    <string name="settings_battery_desc">Disable battery optimization so reminders arrive reliably</string>
+    <string name="settings_battery_configure">Configure</string>
+    <string name="settings_backup_info">You can export your relatives list as a JSON file and save it to Google Drive or anywhere else, then restore it later even if you change your phone or reinstall the app.</string>
+    <string name="settings_export_subtitle">%d relatives — will be saved as JSON</string>
+    <string name="settings_import_subtitle">Only new entries will be added (no duplicates)</string>
+    <string name="settings_replay_onboarding">View Introduction &amp; Onboarding 🚀</string>
+    <string name="settings_import_confirm_msg">New relatives from the backup file will be added. Relatives with the same phone number will not be duplicated.\n\nDo you want to continue?</string>
+    <string name="settings_import_confirm_btn">Yes, Choose File</string>
+
+    <!-- Add/Edit Relative Dialog -->
+    <string name="add_relative_title">Add Relative to Silah 🌸</string>
+    <string name="edit_relative_title">Edit %s ✏️</string>
+    <string name="choose_from_contacts">Choose from Contacts 📲</string>
+    <string name="relative_name_label">Relative\'s Name</string>
+    <string name="relative_name_hint">e.g. Mom, Uncle Ahmed</string>
+    <string name="phone_number_label">Phone Number</string>
+    <string name="pick_contact_desc">Pick Contact</string>
+    <string name="relationship_degree_label">Relationship:</string>
+    <string name="relative_name_empty_toast">Please enter the relative\'s name</string>
+    <string name="relative_updated_toast">%s updated successfully ✅</string>
+    <string name="relative_added_toast">%s added to Silah successfully! ✨</string>
+    <string name="save_changes_btn">Save Changes ✅</string>
+    <string name="save_and_activate_btn">Save &amp; Activate Reminder ✨</string>
+
+    <!-- Relationship Degrees -->
+    <string name="degree_grandfather">Grandfather</string>
+    <string name="degree_grandmother">Grandmother</string>
+    <string name="degree_father">Father</string>
+    <string name="degree_mother">Mother</string>
+    <string name="degree_brother">Brother</string>
+    <string name="degree_sister">Sister</string>
+    <string name="degree_uncle_pat">Uncle (Pat.)</string>
+    <string name="degree_aunt_pat">Aunt (Pat.)</string>
+    <string name="degree_uncle_mat">Uncle (Mat.)</string>
+    <string name="degree_aunt_mat">Aunt (Mat.)</string>
+    <string name="degree_other">Other Relatives</string>
+
+    <!-- Intervals -->
+    <string name="interval_daily">Daily</string>
+    <string name="interval_3_days">Every 3 Days</string>
+    <string name="interval_weekly">Weekly</string>
+    <string name="interval_2_weeks">Every 2 Weeks</string>
+    <string name="interval_monthly">Monthly</string>
+    <string name="interval_custom">Custom...</string>
+    <string name="interval_frequency_label">Reminder Frequency:</string>
+    <string name="interval_specify_days">Specify Interval (Days):</string>
+    <string name="interval_quick_steps">Quick Steps:</string>
+    <string name="interval_days_formatted">%d days</string>
+
+    <!-- Kinship Advice Hints -->
+    <string name="advice_parents">💚 Recommended for parents: Daily or every 3 days for filial piety.</string>
+    <string name="advice_siblings">🌿 Recommended for siblings: Weekly to preserve close kinship.</string>
+    <string name="advice_uncles">🌸 Recommended for extended family: Every 2 to 4 weeks.</string>
+    <string name="advice_general">🔔 Silah will notify you when %d days pass without contact.</string>
+
+    <!-- Relative Detail Screen -->
+    <string name="relative_profile">Relative Profile</string>
+    <string name="last_contact_label">Last Contact</string>
+    <string name="copy">Copy</string>
+    <string name="action_whatsapp_full">WhatsApp</string>
+    <string name="action_log_full">Log</string>
+    <string name="communication_history">Communication History</string>
+    <string name="save_changes">Save Changes</string>
+    <string name="delete_relative_confirm_title">Delete %s?</string>
+    <string name="delete_relative_confirm_msg">This relative and all their communication logs will be permanently deleted. This action cannot be undone.</string>
+    <string name="delete_confirm_btn">Yes, Delete</string>
+    <string name="relative_deleted_toast">%s deleted</string>
+    <string name="phone_copied_toast">Phone copied to clipboard 📋</string>
+    <string name="notes_and_preferences">Notes &amp; Preferences</string>
+    <string name="cadence_metric_label">Cadence</string>
+    <string name="total_logs_metric_label">Total Logs</string>
+    <string name="no_logs_for_relative_title">No communication logged yet</string>
+    <string name="no_logs_for_relative_desc">Reach out through the quick actions above and record the blessing.</string>
+    <string name="custom_reminder_cadence_title">Custom Reminder Cadence ⏰</string>
+    <string name="custom_reminder_cadence_desc">Set how often you want to be reminded to connect with %s</string>
+    <string name="reminder_frequency_updated_toast">Reminder frequency updated ✨</string>
+    <plurals name="logs_count">
+        <item quantity="one">%d log</item>
+        <item quantity="other">%d logs</item>
+    </plurals>
+    <plurals name="reminder_cadence_days">
+        <item quantity="one">Every day</item>
+        <item quantity="other">Every %dd</item>
+    </plurals>
+
+
+
+    <!-- Support Sila Additional -->
+    <string name="support_appreciation_banner">Thank you for supporting Sila! May Allah reward you and bless your sustenance ✨</string>
+    <string name="support_wallets_title">Mobile Wallets (Vodafone Cash / EGP)</string>
+    <string name="support_wallets_subtitle">Transfer via Vodafone, Orange, Etisalat Cash or Bank Wallet</string>
+    <string name="instapay_address_label">InstaPay Payment Address (IPA)</string>
+    <string name="instapay_copied_toast">InstaPay address copied successfully ✨</string>
+    <string name="instapay_copy_btn">Copy Address</string>
+    <string name="instapay_open_app_btn">Open App</string>
+    <string name="instapay_open_error">Unable to open InstaPay automatically</string>
+    <string name="wallet_number_label">Electronic Wallet Number (Vodafone Cash)</string>
+    <string name="wallet_copied_toast">Wallet number copied successfully ✨</string>
+    <string name="wallet_copy_btn">Copy Number</string>
+    <string name="wallet_dial_btn">Dial *9#</string>
+    <string name="support_steps_title">Transfer Steps in Detail 📋</string>
+    <string name="step_instapay_1_title">Open InstaPay App</string>
+    <string name="step_instapay_1_desc">Open the InstaPay app on your phone and tap the Send button.</string>
+    <string name="step_instapay_2_title">Select Send via IPA</string>
+    <string name="step_instapay_2_desc">Choose \"Send Money\" then select \"Payment Address (IPA)\".</string>
+    <string name="step_instapay_3_title">Paste Payment Address</string>
+    <string name="step_instapay_3_desc">Enter: %s (or tap Copy Address above).</string>
+    <string name="step_instapay_4_title">Enter Amount &amp; Confirm</string>
+    <string name="step_instapay_4_desc">Enter your voluntary support amount and enter your InstaPay PIN to complete the transfer.</string>
+    <string name="step_wallet_1_title">Dial USSD or Open Wallet App</string>
+    <string name="step_wallet_1_desc">Dial *9# (Vodafone Cash) or open your electronic wallet app (Orange, Etisalat, WE, Bank Wallet).</string>
+    <string name="step_wallet_2_title">Select Transfer Money</string>
+    <string name="step_wallet_2_desc">Select \"Money Transfer\" and choose sending to another mobile number.</string>
+    <string name="step_wallet_3_title">Enter Recipient Number</string>
+    <string name="step_wallet_3_desc">Enter the number: %s (or tap Copy Number above).</string>
+    <string name="step_wallet_4_title">Enter Amount &amp; Wallet PIN</string>
+    <string name="step_wallet_4_desc">Enter your voluntary support amount and your wallet PIN to confirm the transfer.</string>
+
+
+    <!-- Why Kinship Screen -->
+    <string name="why_kinship_title">Why Maintain Kin Ties?</string>
+    <string name="why_kinship_subtitle">Questions &amp; answers from Quran and Sunnah</string>
+    <string name="why_kinship_banner_title">The Nobility of Kinship Ties</string>
+    <string name="why_kinship_banner_quote">\"Whoever loves that his sustenance be expanded and his life prolonged, let him maintain ties of kinship.\"</string>
+    <string name="why_kinship_banner_desc">Kinship ties are not merely a social courtesy, but a profound devotion bringing Allah\'s mercy, expansive sustenance, and barakah.</string>
+    <string name="faq_all">All</string>
+    <string name="faq_quran">Holy Quran</string>
+    <string name="faq_sunnah">Prophetic Sunnah</string>
+    <string name="faq_questions_count">%d Questions Available</string>
+    <string name="faq_tap_to_expand">Tap question to expand</string>
+    <string name="faq_copied_toast">Copied to clipboard ✨</string>
+    <string name="share_via">Share via</string>
+    <string name="share">Share</string>
+
+    <!-- Profile Photo Sheet -->
+    <string name="profile_photo_updated">Profile photo updated! 📸</string>
+    <string name="image_load_failed">Failed to load image</string>
+    <string name="profile_photo_title">Profile Photo</string>
+    <string name="profile_photo_desc">Upload a personal picture or leave it blank with your initials</string>
+    <string name="choose_from_gallery">Choose from Gallery</string>
+    <string name="choose_from_gallery_desc">Pick a photo from your device</string>
+    <string name="profile_photo_removed">Profile photo removed</string>
+    <string name="remove_photo_title">Remove Photo</string>
+    <string name="remove_photo_desc">Revert to name monogram</string>
+
+    <!-- Empty State & Relatives -->
+    <string name="empty_relatives_title">Add your relatives to start keeping kin ties 💚</string>
+    <string name="empty_relatives_subtitle">Choose your relatives from contacts and set a reminder schedule for each one</string>
+    <string name="import_relatives_phone">Import Relatives from Phone 📲</string>
+    <string name="add_relative_manually">Add Relative Manually +</string>
+    <string name="no_contact_yet">No contact yet</string>
+    <string name="direct_call">Direct Call</string>
+    <string name="relative_comm_log_title">%s\'s Communication Log 📜</string>
+    <string name="no_comm_recorded_relative">No communication recorded yet</string>
+    <string name="message">Message</string>
+
+    <!-- Common -->
+    <string name="just_now">Just now ⚡</string>
+    <string name="not_yet">Not yet 🌸</string>
+    <string name="today">Today</string>
+    <string name="am_marker">AM</string>
+    <string name="pm_marker">PM</string>
 </resources>
+

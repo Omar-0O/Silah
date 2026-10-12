@@ -3,10 +3,10 @@ package com.example.data
 import kotlinx.coroutines.flow.Flow
 
 class RelativeRepository(
-    private val relativeDao: RelativeDao,
-    private val communicationLogDao: CommunicationLogDao,
-    private val quickTemplateDao: QuickTemplateDao,
-    private val familyMemoryDao: FamilyMemoryDao
+    val relativeDao: RelativeDao,
+    val communicationLogDao: CommunicationLogDao,
+    val quickTemplateDao: QuickTemplateDao,
+    val familyMemoryDao: FamilyMemoryDao
 ) {
     val allRelatives: Flow<List<Relative>> = relativeDao.getAllRelatives()
     val allLogs: Flow<List<CommunicationLog>> = communicationLogDao.getAllLogs()
@@ -15,6 +15,10 @@ class RelativeRepository(
 
     suspend fun getAllRelativesOnce(): List<Relative> {
         return relativeDao.getAllRelativesOnce()
+    }
+
+    suspend fun getAllLogsOnce(): List<CommunicationLog> {
+        return communicationLogDao.getAllLogsOnce()
     }
 
     suspend fun getRelativeById(id: Int): Relative? {

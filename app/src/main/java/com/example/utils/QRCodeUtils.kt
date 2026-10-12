@@ -21,7 +21,7 @@ object QRCodeUtils {
             }
             bitmap.asImageBitmap()
         } catch (e: Exception) {
-            e.printStackTrace()
+            com.example.core.util.SilaLogger.e("QRCodeUtils", "Failed to generate QR code", e)
             null
         }
     }

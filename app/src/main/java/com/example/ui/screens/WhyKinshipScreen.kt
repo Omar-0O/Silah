@@ -42,16 +42,19 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.annotation.StringRes
+import androidx.compose.ui.res.stringResource
+import com.example.R
 import com.example.ui.dialogs.IslamicFaqItem
 import com.example.ui.dialogs.islamicFaqList
 import com.example.ui.theme.PrimaryGreen
 import com.example.ui.theme.PrimaryGreenLight
 import com.example.ui.theme.SoftGold
 
-enum class FaqCategory(val titleAr: String, val titleEn: String) {
-    ALL("الكل", "All"),
-    QURAN("القرآن الكريم", "Holy Quran"),
-    SUNNAH("السنّة النبوية", "Prophetic Sunnah")
+enum class FaqCategory(@param:StringRes val titleRes: Int) {
+    ALL(R.string.faq_all),
+    QURAN(R.string.faq_quran),
+    SUNNAH(R.string.faq_sunnah)
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -64,6 +67,7 @@ fun WhyKinshipScreen(
 
     val context = LocalContext.current
     val view = LocalView.current
+    @Suppress("DEPRECATION")
     val clipboardManager = LocalClipboardManager.current
 
     var selectedCategory by remember { mutableStateOf(FaqCategory.ALL) }
@@ -79,22 +83,19 @@ fun WhyKinshipScreen(
     }
 
     Scaffold(
-        modifier = Modifier
-            .fillMaxSize()
-            .statusBarsPadding()
-            .navigationBarsPadding(),
+        modifier = Modifier.fillMaxSize(),
         topBar = {
             TopAppBar(
                 title = {
                     Column {
                         Text(
-                            text = if (lang == "en") "Why Maintain Kin Ties?" else "ليه أصل رحمي؟",
+                            text = stringResource(R.string.why_kinship_title),
                             fontSize = 18.sp,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onBackground
                         )
                         Text(
-                            text = if (lang == "en") "Questions & answers from Quran and Sunnah" else "إجابات وبصائر من القرآن والسنّة",
+                            text = stringResource(R.string.why_kinship_subtitle),
                             fontSize = 11.sp,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -107,7 +108,7 @@ fun WhyKinshipScreen(
                     }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = if (lang == "en") "Back" else "رجوع",
+                            contentDescription = stringResource(R.string.back),
                             tint = MaterialTheme.colorScheme.onBackground
                         )
                     }
@@ -161,7 +162,7 @@ fun WhyKinshipScreen(
                                 Text("✨", fontSize = 16.sp)
                             }
                             Text(
-                                text = if (lang == "en") "The Nobility of Kinship Ties" else "عظمة ومكانة صلة الرحم",
+                                text = stringResource(R.string.why_kinship_banner_title),
                                 fontSize = 14.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = SoftGold
@@ -171,7 +172,7 @@ fun WhyKinshipScreen(
                         Spacer(modifier = Modifier.height(10.dp))
 
                         Text(
-                            text = "«مَنْ أَحَبَّ أَنْ يُبْسَطَ لَهُ فِي رِزْقِهِ وَيُنْسَأَ لَهُ فِي أَثَرِهِ فَلْيَصِلْ رَحِمَهُ»",
+                            text = stringResource(R.string.why_kinship_banner_quote),
                             fontSize = 15.sp,
                             fontWeight = FontWeight.ExtraBold,
                             color = Color.White,
@@ -183,10 +184,7 @@ fun WhyKinshipScreen(
                         Spacer(modifier = Modifier.height(8.dp))
 
                         Text(
-                            text = if (lang == "en")
-                                "Kinship ties are not merely a social courtesy, but a profound devotion bringing Allah's mercy, expansive sustenance, and barakah."
-                            else
-                                "صلة الرحم ليست مجرد واجب اجتماعي، بل هي عبادة وقربة جليلة تزيد الرزق وتبارك في العمر وتجلب معية الله ورضوانه.",
+                            text = stringResource(R.string.why_kinship_banner_desc),
                             fontSize = 12.sp,
                             color = Color.White.copy(alpha = 0.85f),
                             lineHeight = 18.sp,
@@ -218,7 +216,7 @@ fun WhyKinshipScreen(
                                 },
                                 label = {
                                     Text(
-                                        text = "${if (lang == "en") cat.titleEn else cat.titleAr} ($count)",
+                                        text = "${stringResource(cat.titleRes)} ($count)",
                                         fontSize = 12.sp,
                                         fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
                                     )
@@ -241,13 +239,13 @@ fun WhyKinshipScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = if (lang == "en") "${filteredList.size} Questions Available" else "${filteredList.size} سؤالاً وجواباً",
+                        text = stringResource(R.string.faq_questions_count, filteredList.size),
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.secondary
                     )
                     Text(
-                        text = if (lang == "en") "Tap question to expand" else "اضغط على السؤال لعرض الإجابة والآية",
+                        text = stringResource(R.string.faq_tap_to_expand),
                         fontSize = 11.sp,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -391,7 +389,7 @@ fun WhyKinshipScreen(
                                                 clipboardManager.setText(AnnotatedString(copyText))
                                                 Toast.makeText(
                                                     context,
-                                                    if (lang == "en") "Copied to clipboard ✨" else "تم نسخ الإجابة والدليل ✨",
+                                                    context.getString(R.string.faq_copied_toast),
                                                     Toast.LENGTH_SHORT
                                                 ).show()
                                             },
@@ -399,7 +397,7 @@ fun WhyKinshipScreen(
                                         ) {
                                             Icon(
                                                 imageVector = Icons.Outlined.ContentCopy,
-                                                contentDescription = if (lang == "en") "Copy" else "نسخ",
+                                                contentDescription = stringResource(R.string.copy),
                                                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
                                                 modifier = Modifier.size(17.dp)
                                             )
@@ -417,7 +415,7 @@ fun WhyKinshipScreen(
                                                 }
                                                 val shareIntent = Intent.createChooser(
                                                     sendIntent,
-                                                    if (lang == "en") "Share via" else "مشاركة عبر"
+                                                    context.getString(R.string.share_via)
                                                 )
                                                 context.startActivity(shareIntent)
                                             },
@@ -425,7 +423,7 @@ fun WhyKinshipScreen(
                                         ) {
                                             Icon(
                                                 imageVector = Icons.Outlined.Share,
-                                                contentDescription = if (lang == "en") "Share" else "مشاركة",
+                                                contentDescription = stringResource(R.string.share),
                                                 tint = PrimaryGreen,
                                                 modifier = Modifier.size(17.dp)
                                             )

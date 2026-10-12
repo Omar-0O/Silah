@@ -30,10 +30,15 @@ import androidx.compose.ui.unit.sp
 import com.example.ui.components.CommitmentHeaderCard
 import com.example.ui.components.DueRelativesCarousel
 import com.example.ui.theme.PrimaryGreen
+import com.example.ui.theme.SilaShapes
 import com.example.ui.theme.SoftGold
+import com.example.ui.theme.spacing
 import com.example.viewmodel.RelativeViewModel
 import java.text.SimpleDateFormat
 import java.util.*
+
+import kotlinx.collections.immutable.toImmutableList
+import kotlinx.collections.immutable.ImmutableList
 
 /**
  * HomeTabScreen — الشاشة الرئيسية (Dashboard Tab)
@@ -59,7 +64,7 @@ fun HomeTabScreen(viewModel: RelativeViewModel) {
         }.sortedByDescending { r ->
             if (r.lastContactDate == 0L) Long.MAX_VALUE
             else System.currentTimeMillis() - r.lastContactDate
-        }
+        }.toImmutableList()
     }
 
     // Stats
@@ -73,6 +78,8 @@ fun HomeTabScreen(viewModel: RelativeViewModel) {
         logs.map { it.relativeId }.distinct().size
     }
 
+    val spacing = MaterialTheme.spacing
+
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
@@ -80,14 +87,13 @@ fun HomeTabScreen(viewModel: RelativeViewModel) {
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .statusBarsPadding()
-                .padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(18.dp),
-            contentPadding = PaddingValues(top = 16.dp, bottom = 100.dp)
+                .padding(horizontal = spacing.lg),
+            verticalArrangement = Arrangement.spacedBy(spacing.lg),
+            contentPadding = PaddingValues(top = spacing.lg, bottom = 100.dp)
         ) {
 
             // 1. Commitment Arc Card
-            item {
+            item(key = "commitment_card") {
                 CommitmentHeaderCard(
                     totalLogsCount = totalLogsCount,
                     uniqueDaysCount = uniqueDaysCount,
@@ -98,9 +104,8 @@ fun HomeTabScreen(viewModel: RelativeViewModel) {
                 )
             }
 
-
-            // 3. Kinship Streak Card
-            item {
+            // 2. Kinship Streak Card
+            item(key = "streak_card") {
                 StreakCard(
                     streakDays = streakDays,
                     last7DaysActivity = last7DaysActivity,
@@ -108,8 +113,8 @@ fun HomeTabScreen(viewModel: RelativeViewModel) {
                 )
             }
 
-            // 4. Due Relatives Carousel
-            item {
+            // 3. Due Relatives Carousel
+            item(key = "due_carousel") {
                 DueRelativesCarousel(
                     dueRelatives = dueRelatives,
                     viewModel = viewModel,
@@ -120,8 +125,6 @@ fun HomeTabScreen(viewModel: RelativeViewModel) {
     }
 }
 
-
-
 // ── Kinship Streak Card ────────────────────────────────────────────────────────
 @Composable
 private fun StreakCard(
@@ -129,58 +132,49 @@ private fun StreakCard(
     last7DaysActivity: List<Boolean>,
     lang: String
 ) {
+    val spacing = MaterialTheme.spacing
     val dayLabels = remember(lang) {
+        val locale = if (lang == "en") Locale.ENGLISH else Locale.forLanguageTag("ar")
+        val dayFormat = SimpleDateFormat("EEE", locale)
         (0..6).map { offset ->
             val cal = Calendar.getInstance().apply {
                 add(Calendar.DAY_OF_YEAR, -offset)
             }
-            val dayOfWeek = cal.get(Calendar.DAY_OF_WEEK)
-            if (lang == "en") {
-                when (dayOfWeek) {
-                    Calendar.SUNDAY -> "Sun"
-                    Calendar.MONDAY -> "Mon"
-                    Calendar.TUESDAY -> "Tue"
-                    Calendar.WEDNESDAY -> "Wed"
-                    Calendar.THURSDAY -> "Thu"
-                    Calendar.FRIDAY -> "Fri"
-                    else -> "Sat"
-                }
-            } else {
-                when (dayOfWeek) {
-                    Calendar.SUNDAY -> "الأحد"
-                    Calendar.MONDAY -> "الأثنين"
-                    Calendar.TUESDAY -> "الثلاثاء"
-                    Calendar.WEDNESDAY -> "الأربعاء"
-                    Calendar.THURSDAY -> "الخميس"
-                    Calendar.FRIDAY -> "الجمعة"
-                    else -> "السبت"
-                }
-            }
+            dayFormat.format(cal.time)
         }
     }
 
     Card(
-        shape = RoundedCornerShape(20.dp),
+        shape = com.example.ui.theme.SilaShapes.Card,
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        border = androidx.compose.foundation.BorderStroke(
+            1.dp,
+            MaterialTheme.colorScheme.outline.copy(alpha = 0.12f)
+        ),
         modifier = Modifier
             .fillMaxWidth()
-            .shadow(3.dp, RoundedCornerShape(20.dp))
+            .shadow(
+                elevation = 3.dp,
+                shape = com.example.ui.theme.SilaShapes.Card,
+                ambientColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.05f),
+                spotColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.08f)
+            )
     ) {
         Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(14.dp)
+            modifier = Modifier.padding(spacing.lg),
+            verticalArrangement = Arrangement.spacedBy(spacing.md)
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                horizontalArrangement = Arrangement.spacedBy(spacing.md),
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Box(
                     modifier = Modifier
-                        .size(44.dp)
+                        .size(46.dp)
                         .background(
-                            color = if (streakDays > 0) PrimaryGreen.copy(alpha = 0.14f)
-                                    else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f),
+                            color = if (streakDays > 0) PrimaryGreen.copy(alpha = 0.12f)
+                                    else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.06f),
                             shape = CircleShape
                         ),
                     contentAlignment = Alignment.Center
@@ -193,24 +187,23 @@ private fun StreakCard(
 
                 Column {
                     Text(
-                        text = if (lang == "en") "$streakDays Day Streak! 🌿"
-                               else if (streakDays == 0) "تتابع صلة الرحم 🌸"
-                               else if (streakDays == 1) "يوم واحد متواصل 🌿"
-                               else if (streakDays == 2) "يومان متواصلان 🌿"
-                               else if (streakDays in 3..10) "$streakDays أيام متتالية 🌿"
-                               else "$streakDays يوماً متتالياً 🌿",
+                        text = androidx.compose.ui.res.pluralStringResource(
+                            com.example.R.plurals.streak_days_count,
+                            streakDays,
+                            streakDays
+                        ),
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface
                     )
                     Text(
                         text = if (streakDays == 0) {
-                            if (lang == "en") "Connect today to start your streak!" else "تواصل اليوم لتبدأ سلسلة صلة الرحم! 🌸"
+                            androidx.compose.ui.res.stringResource(com.example.R.string.streak_zero_desc)
                         } else {
-                            if (lang == "en") "Keep the warmth of family ties blooming! 🌿" else "واصل صلة رحمك يومياً لنيل البركة والرضوان ✨"
+                            androidx.compose.ui.res.stringResource(com.example.R.string.streak_active_desc)
                         },
-                        fontSize = 11.sp,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                        fontSize = 12.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
@@ -230,18 +223,18 @@ private fun StreakCard(
                     ) {
                         Text(
                             text = dayLabel,
-                            fontSize = 10.sp,
-                            fontWeight = if (isToday) FontWeight.Bold else FontWeight.Normal,
+                            fontSize = 11.sp,
+                            fontWeight = if (isToday) FontWeight.Bold else FontWeight.Medium,
                             color = if (isToday) MaterialTheme.colorScheme.primary
-                                    else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                                    else MaterialTheme.colorScheme.onSurfaceVariant
                         )
 
                         Box(
                             modifier = Modifier
-                                .size(32.dp)
+                                .size(34.dp)
                                 .background(
-                                    color = if (isActive) PrimaryGreen.copy(alpha = 0.15f)
-                                            else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.06f),
+                                    color = if (isActive) PrimaryGreen.copy(alpha = 0.14f)
+                                            else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f),
                                     shape = CircleShape
                                 )
                                 .border(
@@ -253,8 +246,8 @@ private fun StreakCard(
                         ) {
                             Text(
                                 text = if (isActive) "🌿" else "•",
-                                fontSize = if (isActive) 13.sp else 16.sp,
-                                color = if (isActive) Color.Unspecified else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
+                                fontSize = if (isActive) 14.sp else 16.sp,
+                                color = if (isActive) Color.Unspecified else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
                             )
                         }
                     }

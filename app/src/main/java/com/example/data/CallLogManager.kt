@@ -76,9 +76,9 @@ object CallLogManager {
                 }
             }
         } catch (e: SecurityException) {
-            e.printStackTrace()
+            com.example.core.util.SilaLogger.e("CallLogManager", "SecurityException reading call log", e)
         } catch (e: Exception) {
-            e.printStackTrace()
+            com.example.core.util.SilaLogger.e("CallLogManager", "Exception reading call log", e)
         }
         return records
     }

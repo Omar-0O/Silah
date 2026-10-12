@@ -122,10 +122,10 @@ object ReminderScheduler {
                     pendingIntent
                 )
             } catch (ex: Exception) {
-                ex.printStackTrace()
+                com.example.core.util.SilaLogger.e("ReminderScheduler", "Failed to schedule alarm fallback", ex)
             }
         } catch (e: Exception) {
-            e.printStackTrace()
+            com.example.core.util.SilaLogger.e("ReminderScheduler", "Failed to schedule daily reminder", e)
         }
 
         // Also ensure periodic work fallback is scheduled
@@ -141,7 +141,7 @@ object ReminderScheduler {
             val pendingIntent = getAlarmPendingIntent(context)
             alarmManager.cancel(pendingIntent)
         } catch (e: Exception) {
-            e.printStackTrace()
+            com.example.core.util.SilaLogger.e("ReminderScheduler", "Failed to cancel daily reminder", e)
         }
     }
 
@@ -172,7 +172,7 @@ object ReminderScheduler {
                 fallbackWork
             )
         } catch (e: Exception) {
-            e.printStackTrace()
+            com.example.core.util.SilaLogger.e("ReminderScheduler", "Failed to schedule periodic work fallback", e)
         }
     }
 
@@ -247,7 +247,7 @@ object ReminderScheduler {
                 editor.apply()
             }
         } catch (e: Exception) {
-            e.printStackTrace()
+            com.example.core.util.SilaLogger.e("ReminderScheduler", "Failed to clean old notified keys", e)
         }
     }
 

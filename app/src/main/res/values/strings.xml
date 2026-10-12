@@ -1,5 +1,7 @@
 <resources>
     <string name="app_name">صِلَةِ</string>
+    <string name="app_tagline">رفيقك الذكي لمتابعة صلة الأرحام</string>
+    <string name="app_logo_desc">شعار صِلَةِ</string>
     <string name="relatives_tab">الأقارب</string>
     <string name="challenges_tab">التحديات</string>
     <string name="settings_title">إعدادات تطبيق صِلَةِ</string>
@@ -14,5 +16,448 @@
     <string name="support_sila">ادعم صِلَةِ 🤍</string>
     <string name="support_sila_desc">ساعد في بقاء التطبيق مجانياً 100% وبدون إعلانات</string>
     <string name="milestone_title">إنجاز جديد في وصل الرحم! ✨</string>
+    <string name="milestone_great_job">🎉 إنجاز رائع في صِلَةِ!</string>
+    <string name="milestone_continue">استمرار 💚</string>
+    <string name="milestone_support">ادعم صِلَةِ</string>
+    <string name="milestone_not_now">ليس الآن</string>
     <string name="close">إغلاق</string>
+    <string name="back">رجوع</string>
+    <string name="save">حفظ</string>
+    <string name="cancel">إلغاء</string>
+    <string name="edit">تعديل</string>
+    <string name="delete">حذف</string>
+    <string name="search">بحث</string>
+    <string name="clear">مسح</string>
+    <string name="continue_text">التالي</string>
+    <string name="get_started">ابدأ الآن 🌸</string>
+    <string name="soon">قريباً</string>
+    <string name="optional">اختياري</string>
+    <string name="import_text">استيراد</string>
+    <string name="manual_entry">إدخال يدوي ✍️</string>
+    <string name="from_contacts">من جهات الاتصال 📱</string>
+    <string name="search_hint">ابحث عن قريب بالاسم أو الهاتف...</string>
+    <string name="no_search_results_title">لا توجد نتائج مطابقة لـ \"%s\"</string>
+    <string name="no_search_results_subtitle">جرّب البحث باسم مختلف أو رقم الهاتف</string>
+    <string name="no_category_results_title">لا توجد أرحام مسجلة في هذا التصنيف</string>
+    <string name="no_category_results_subtitle">اضغط على «الكل» بالأعلى لعرض كافة الأقارب</string>
+    <string name="add_relative_fab_desc">إضافة قريب جديد</string>
+
+    <!-- Tabs -->
+    <string name="tab_home">الرئيسية</string>
+    <string name="tab_relatives">الأقارب</string>
+    <string name="tab_profile">حسابي</string>
+
+    <!-- Categories -->
+    <string name="category_all">الكل</string>
+    <string name="category_parents">والدان</string>
+    <string name="category_siblings">أشقاء</string>
+    <string name="category_uncles_aunts">أعمام/أخوال</string>
+    <string name="category_other">أقارب آخرون</string>
+
+    <!-- Commitment Header & Home -->
+    <string name="tied_label">واصل</string>
+    <string name="total_logs_stat">إجمالي الصلات</string>
+    <string name="days_active_stat">أيام الصلة</string>
+    <string name="relatives_stat">أقارب</string>
+    <string name="greeting_morning">صباح الخير</string>
+    <string name="greeting_afternoon">مساء الخير</string>
+    <string name="greeting_evening">مساء النور</string>
+    <string name="start_kinship_connection">ابدأ صِلَة أرحامك 🌿</string>
+    <string name="due_to_connect">حان وقتُ وَصْلِهِم ✨</string>
+    <string name="no_relatives_home_title">لم تقم بإضافة أقارب بعد 🌿</string>
+    <string name="no_relatives_home_desc">اضغط هنا لإضافة أول قريب، وتبدأ بتوثيق صِلَة أرحامك ومتابعتهم بكل يُسْر.</string>
+    <string name="all_connected_title">جميع أرحامك موصولون بالكامل! 🎉</string>
+    <string name="all_connected_desc">ما شاء الله، التزامك رائع ويقرب المسافات. طابت أيامك ببركة الود والرحمة.</string>
+    <string name="last_contact_prefix">آخر تواصل: %s</string>
+    <string name="streak_zero_desc">تواصل اليوم لتبدأ سلسلة صلة الرحم! 🌸</string>
+    <string name="streak_active_desc">واصل صلة رحمك يومياً لنيل البركة والرضوان ✨</string>
+
+    <!-- Actions -->
+    <string name="action_call">اتصال</string>
+    <string name="action_whatsapp">واتس</string>
+    <string name="action_log">سجّل</string>
+    <string name="action_reminder">تذكير</string>
+    <string name="action_quick_templates">رسائل جاهزة</string>
+
+    <!-- Relative Profile & Detail -->
+    <string name="relative_profile_title">الملف الشخصي</string>
+    <string name="delete_relative_title">حذف القريب</string>
+    <string name="delete_relative_msg">هل أنت متأكد من حذف هذا القريب وسجل تواصله نهائياً؟</string>
+    <string name="notes_title">ملاحظات واهتمامات</string>
+    <string name="no_notes_desc">لا توجد ملاحظات مسجلة بعد</string>
+    <string name="connection_history_title">سجل التواصل</string>
+    <string name="no_logs_title">لم يتم تسجيل تواصل بعد</string>
+    <string name="no_logs_desc">سجّل مكالماتك وزياراتك لتبقى في سجل برك 🌸</string>
+
+    <!-- Communication Log Sheet -->
+    <string name="log_comm_title">تسجيل تواصل مع %s 🌸</string>
+    <string name="log_comm_desc">اختر طريقة التواصل وسجّلها لتبقى في ميزان حسناتك ومسيرتك 💚</string>
+    <string name="comm_type_call">مكالمة هاتفية 📞</string>
+    <string name="comm_type_visit">زيارة عائلية 🏠</string>
+    <string name="comm_type_message">رسالة نصية/واتساب ✉️</string>
+    <string name="comm_type_gift">هدية/مناسبة 🎁</string>
+    <string name="comm_notes_label">ملاحظات أو انطباعات عن التواصل (اختياري)</string>
+    <string name="save_confirm_comm">حفظ وتأكيد التواصل 🌸</string>
+    <string name="comm_logged_success">تم حفظ تسجيل التواصل بنجاح! ✨</string>
+    <string name="comm_default_blessed">تواصل طيب ومبارك</string>
+    <string name="comm_whatsapp_quick">تواصل سريع ومباشر عبر الواتساب</string>
+
+    <!-- Onboarding -->
+    <string name="onboarding_title_0">مرحباً بك في صِلَةِ 🌿</string>
+    <string name="onboarding_title_1">أخبرنا عن نفسك</string>
+    <string name="onboarding_title_2">أضف أرحامك</string>
+    <string name="onboarding_title_3">كل شيء جاهز! 🎉</string>
+    <string name="onboarding_sub_0">رفيقك الخاص في العناية بأرحامك وأقاربك — بدون إعلانات أو اشتراكات.</string>
+    <string name="onboarding_sub_1">عشان نخصّص التذكيرات ليك باسمك.</string>
+    <string name="onboarding_sub_2">استورد أفراد عائلتك مباشرة من جهات اتصالك.</string>
+    <string name="onboarding_sub_3">صِلَةِ هيذكّرك ويتابع تواصلك تلقائياً.</string>
+    <string name="choose_language_prompt">اختر لغتك المفضلة:</string>
+    <string name="your_name_label">اسمك</string>
+    <string name="name_placeholder">مثال: أحمد</string>
+    <string name="name_required_error">الاسم مطلوب</string>
+    <string name="gender_prompt">أنا:</string>
+    <string name="gender_male">ذكر</string>
+    <string name="gender_female">أنثى</string>
+    <string name="min_relative_error">⚠️ يرجى إضافة قريب واحد على الأقل.</string>
+    <string name="no_relatives_onboarding">لا يوجد أقارب مضافون بعد</string>
+    <string name="tap_button_onboarding">اضغط الزر أعلاه للبدء</string>
+    <string name="feature_smart_reminders">تذكيرات ذكية بناءً على درجة القرابة</string>
+    <string name="feature_call_detect">كشف تلقائي للمكالمات عبر سجل الهاتف</string>
+    <string name="feature_private">خصوصية كاملة — بياناتك تبقى على جهازك</string>
+    <string name="feature_free">مجاني للأبد، بدون إعلانات أو اشتراكات</string>
+
+    <!-- Profile & Settings Screen -->
+    <string name="settings_preferences_title">الإعدادات والتفضيلات ⚙️</string>
+    <string name="display_lang_title">لغة التطبيق</string>
+    <string name="display_lang_desc">اختر لغة عرض الواجهة</string>
+    <string name="reminder_time_title">وقت التذكير اليومي</string>
+    <string name="reminder_time_desc">موعد التنبيه اليومي لتفقد أرحامك</string>
+    <string name="notifications_section_title">التنبيهات والإشعارات 🔔</string>
+    <string name="notify_due_title">تذكير بالأقارب المستحقين</string>
+    <string name="notify_due_desc">تنبيه عند حلول موعد صلة أي قريب</string>
+    <string name="notify_encouragement_title">تنبيهات التشجيع</string>
+    <string name="notify_encouragement_desc">رسائل محفزة لصلة الأرحام</string>
+    <string name="notify_monthly_title">التقرير الشهري</string>
+    <string name="notify_monthly_desc">ملخص دوري لتواصلك مع أرحامك</string>
+    <string name="edit_your_name">تعديل اسمك</string>
+    <string name="change_avatar">تغيير الصورة</string>
+    <string name="tap_avatar_to_change">اضغط الصورة للتغيير</string>
+    <string name="cloud_sync_title">أحفظ تقدمك وشارك إنجازك</string>
+    <string name="cloud_sync_desc">إنشاء الحساب ومزامنة الأصدقاء قريباً</string>
+    <string name="monthly_log_title">سجل التواصل الشهر الحالي 🌸</string>
+    <string name="connected_legend">صلت فيه الرحم</string>
+    <string name="no_contact_legend">لم تصل فيه</string>
+    <string name="upcoming_legend">أيام قادمة</string>
+    <string name="about_sila">حول تطبيق صِلَةِ</string>
+    <string name="version_label">الإصدار 3.0.0</string>
+
+    <!-- Check In Dialog -->
+    <string name="checkin_title">هل تواصلت مع أحبابك اليوم؟ 🌸</string>
+    <string name="checkin_desc">أرسلنا لك تذكيراً اليوم للتواصل مع هؤلاء الأقارب الأعزاء. طمئنا هل تم الوصل؟</string>
+    <string name="checkin_yes_all">نعم، تواصلت مع الجميع 💚</string>
+    <string name="checkin_later">سأتواصل معهم لاحقاً ⏳</string>
+    <string name="checkin_yes_single">نعم، تواصلت ✅</string>
+
+    <!-- Support Sila -->
+    <string name="support_main_title">ادعم صِلَةِ 🤍</string>
+    <string name="support_instapay_title">الدعم عبر InstaPay</string>
+    <string name="support_wallet_title">الدعم عبر المحفظة الإلكترونية</string>
+    <string name="support_free_tag">صِلَةِ مجاني 100% وبدون إعلانات</string>
+    <string name="support_free_desc">تطبيق صِلَةِ صُمِّمَ لوجه الله تعالى لمساعدة المسلمين على صلة أرحامهم. لا يحتوي على إعلانات أو اشتراكات، ويسعدنا دعمك لاستمرار تطويره وتحديثه.</string>
+    <string name="support_impact_title">أثرك في صِلَةِ 📊</string>
+    <string name="support_relatives_contacted">أقارب تواصلت معهم</string>
+    <string name="support_logs_recorded">تفاعلات مسجلة</string>
+    <string name="support_days_using">أيام استخدام</string>
+    <string name="support_choose_method">اختر طريقة الدعم 💳</string>
+    <string name="instapay_title">InstaPay (إنستا باي)</string>
+    <string name="instapay_desc">تحويل مباشر وسريع عبر عنوان IPA</string>
+    <string name="wallet_title">محفظة إلكترونية (مصر)</string>
+    <string name="wallet_desc">فودافون كاش، أورنج، اتصالات، وي</string>
+
+    <!-- Notifications & Background -->
+    <string name="channel_due_name">تذكيرات صلة الرحم اليومية</string>
+    <string name="channel_due_desc">قناة تنبيهات لتذكيرك بالتواصل مع أرحامك اليوم</string>
+    <string name="channel_reminders_name">تذكيرات صلة الرحم العامة</string>
+    <string name="channel_reminders_desc">قناة تذكيرات دورية بصلة الأرحام</string>
+    <string name="notif_action_call">📞 اتصال مباشر</string>
+    <string name="notif_action_whatsapp">💬 واتساب</string>
+    <string name="notif_action_connect">📱 تواصل الآن</string>
+    <string name="notif_action_open_list">📇 فتح قائمة الأقارب</string>
+    <string name="notif_snooze_toast">هنذكرك بعد 6 ساعات ⏰</string>
+    <string name="dialer_error">تعذر فتح لوحة الاتصال</string>
+    <string name="whatsapp_not_installed">تطبيق الواتساب غير مثبت على الجهاز</string>
+    <string name="call_log_perm_required">صلاحية سجل المكالمات مطلوبة للتعرف التلقائي على الاتصالات الواردة والصادرة</string>
+
+    <!-- Plurals -->
+    <plurals name="days_ago">
+        <item quantity="zero">اليوم</item>
+        <item quantity="one">منذ يوم واحد</item>
+        <item quantity="two">منذ يومين</item>
+        <item quantity="few">منذ %d أيام</item>
+        <item quantity="many">منذ %d يوماً</item>
+        <item quantity="other">منذ %d يوم</item>
+    </plurals>
+
+    <plurals name="hours_ago">
+        <item quantity="one">منذ ساعة واحدة ⏱️</item>
+        <item quantity="two">منذ ساعتين ⏱️</item>
+        <item quantity="few">منذ %d ساعات ⏱️</item>
+        <item quantity="many">منذ %d ساعة ⏱️</item>
+        <item quantity="other">منذ %d ساعة ⏱️</item>
+    </plurals>
+
+    <plurals name="minutes_ago">
+        <item quantity="one">منذ دقيقة واحدة ⏱️</item>
+        <item quantity="two">منذ دقيقتين ⏱️</item>
+        <item quantity="few">منذ %d دقائق ⏱️</item>
+        <item quantity="many">منذ %d دقيقة ⏱️</item>
+        <item quantity="other">منذ %d دقيقة ⏱️</item>
+    </plurals>
+
+    <plurals name="weeks_ago">
+        <item quantity="one">منذ أسبوع</item>
+        <item quantity="two">منذ أسبوعين</item>
+        <item quantity="few">منذ %d أسابيع</item>
+        <item quantity="many">منذ %d أسبوعاً</item>
+        <item quantity="other">منذ %d أسبوع</item>
+    </plurals>
+
+    <plurals name="months_ago">
+        <item quantity="one">منذ شهر</item>
+        <item quantity="two">منذ شهرين</item>
+        <item quantity="few">منذ %d أشهر</item>
+        <item quantity="many">منذ %d شهراً</item>
+        <item quantity="other">منذ %d شهر</item>
+    </plurals>
+
+    <plurals name="years_ago">
+        <item quantity="one">منذ سنة</item>
+        <item quantity="two">منذ سنتين</item>
+        <item quantity="few">منذ %d سنوات</item>
+        <item quantity="many">منذ %d سنة</item>
+        <item quantity="other">منذ %d سنة</item>
+    </plurals>
+
+    <plurals name="streak_days_count">
+        <item quantity="zero">تتابع صلة الرحم 🌸</item>
+        <item quantity="one">يوم واحد متواصل 🌿</item>
+        <item quantity="two">يومان متواصلان 🌿</item>
+        <item quantity="few">%d أيام متتالية 🌿</item>
+        <item quantity="many">%d يوماً متتالياً 🌿</item>
+        <item quantity="other">%d يوم متتالي 🌿</item>
+    </plurals>
+
+    <plurals name="synced_calls_count">
+        <item quantity="one">تمت مزامنة اتصال واحد تلقائياً! 📞</item>
+        <item quantity="two">تمت مزامنة اتصالين تلقائياً! 📞</item>
+        <item quantity="few">تمت مزامنة %d اتصالات جديدة تلقائياً! 📞</item>
+        <item quantity="many">تمت مزامنة %d اتصالاً جديداً تلقائياً! 📞</item>
+        <item quantity="other">تمت مزامنة %d اتصال جديد تلقائياً! 📞</item>
+    </plurals>
+
+    <plurals name="milestone_relatives_count">
+        <item quantity="few">تواصلت بحمد الله مع %d من أقاربك! بارك الله فيك وحفظ روابطك العائلية. ✨</item>
+        <item quantity="many">تواصلت بحمد الله مع %d من أقاربك! بارك الله فيك وحفظ روابطك العائلية. ✨</item>
+        <item quantity="other">تواصلت بحمد الله مع %d من أقاربك! بارك الله فيك وحفظ روابطك العائلية. ✨</item>
+    </plurals>
+
+    <plurals name="added_relatives_count">
+        <item quantity="few">المضافون (%d):</item>
+        <item quantity="many">المضافون (%d):</item>
+        <item quantity="other">المضافون (%d):</item>
+    </plurals>
+
+    <!-- Settings Dialog -->
+    <string name="settings_dialog_title">إعدادات تطبيق صِلَةِ ⚙️</string>
+    <string name="settings_lang_title">لغة التطبيق (Language)</string>
+    <string name="settings_lang_desc">اختر لغة عرض الواجهة</string>
+    <string name="settings_dark_mode">الوضع الداكن (Dark Mode)</string>
+    <string name="settings_dark_mode_desc">واجهة مريحة للعين في الإضاءة الخافتة</string>
+    <string name="settings_support_card_title">🤍 ادعم صِلَةِ</string>
+    <string name="settings_support_card_desc">ساعد المطور في بقاء صِلَة مجاني وبدون إعلانات</string>
+    <string name="settings_support_btn">ادعم</string>
+    <string name="settings_notif_title">إعدادات التنبيهات 🔔</string>
+    <string name="settings_kin_reminders">تذكير صلة الرحم</string>
+    <string name="settings_kin_reminders_desc">التنبيه عند حلول موعد التواصل مع الأقارب</string>
+    <string name="settings_daily_time">وقت التذكير اليومي</string>
+    <string name="settings_daily_time_desc">الوقت المحدد لإرسال تنبيهات الأرحام</string>
+    <string name="settings_change">تعديل</string>
+    <string name="settings_quick_presets">أوقات مقترحة سريعة:</string>
+    <string name="settings_golden_hour">✨ التوقيت الذهبي (٦:٠٠ - ٨:٠٠ م): أفضل أوقات الفراغ الاجتماعي وتجنب ساعات العمل والنوم.</string>
+    <string name="settings_reminder_note">🔔 سيصلك تنبيه صلة الرحم يومياً عند الساعة %s حتى لو كان التطبيق مغلقاً.</string>
+    <string name="settings_encouragement">رسائل التشجيع</string>
+    <string name="settings_encouragement_desc">رسائل الإنجازات والتأملات الأسبوعية</string>
+    <string name="settings_monthly">التذكيرات الشهرية</string>
+    <string name="settings_monthly_desc">تذكيرات إلهامية للتواصل بشكل دوري كل شهر</string>
+    <string name="settings_battery_title">⚡ لضمان وصول التنبيهات والتطبيق مغلق</string>
+    <string name="settings_battery_desc">استثنِ صِلَة من قيود توفير الطاقة حتى تصلك التنبيهات في موعدها</string>
+    <string name="settings_battery_configure">ضبط</string>
+    <string name="settings_backup_info">يمكنك تصدير قائمة أقاربك كملف JSON وحفظه في Google Drive أو أي مكان آخر، ثم استعادتها لاحقاً حتى لو غيّرت هاتفك أو أعدت تثبيت التطبيق.</string>
+    <string name="settings_export_subtitle">%d قريب — سيُحفظ كملف JSON</string>
+    <string name="settings_import_subtitle">ستُضاف الأرقام الجديدة فقط (دون تكرار)</string>
+    <string name="settings_replay_onboarding">عرض الشاشة التعريفية للأرحام 🚀</string>
+    <string name="settings_import_confirm_msg">سيتم إضافة الأقارب الجدد من ملف النسخة الاحتياطية. الأقارب الذين لديهم نفس رقم الهاتف لن يتكرروا.\n\nهل تريد المتابعة؟</string>
+    <string name="settings_import_confirm_btn">نعم، اختر الملف</string>
+
+    <!-- Add/Edit Relative Dialog -->
+    <string name="add_relative_title">إضافة قريب لـ صِلَةِ 🌸</string>
+    <string name="edit_relative_title">تعديل بيانات %s ✏️</string>
+    <string name="choose_from_contacts">اختر من جهات الاتصال 📲</string>
+    <string name="relative_name_label">اسم القريب</string>
+    <string name="relative_name_hint">مثال: أمي الغالية، عاطف</string>
+    <string name="phone_number_label">رقم الهاتف</string>
+    <string name="pick_contact_desc">اختر من جهات الاتصال</string>
+    <string name="relationship_degree_label">درجة القرابة:</string>
+    <string name="relative_name_empty_toast">يرجى كتابة اسم القريب على الأقل</string>
+    <string name="relative_updated_toast">تم تحديث بيانات %s بنجاح ✅</string>
+    <string name="relative_added_toast">تمت إضافة %s بنجاح في صِلَةِ! ✨</string>
+    <string name="save_changes_btn">حفظ التعديلات ✅</string>
+    <string name="save_and_activate_btn">حفظ وتفعيل التذكير ✨</string>
+
+    <!-- Relationship Degrees -->
+    <string name="degree_grandfather">جد</string>
+    <string name="degree_grandmother">جدة</string>
+    <string name="degree_father">أب</string>
+    <string name="degree_mother">أم</string>
+    <string name="degree_brother">أخ</string>
+    <string name="degree_sister">أخت</string>
+    <string name="degree_uncle_pat">عم</string>
+    <string name="degree_aunt_pat">عمة</string>
+    <string name="degree_uncle_mat">خال</string>
+    <string name="degree_aunt_mat">خالة</string>
+    <string name="degree_other">أقارب آخرون</string>
+
+    <!-- Intervals -->
+    <string name="interval_daily">يومياً</string>
+    <string name="interval_3_days">كل 3 أيام</string>
+    <string name="interval_weekly">كل أسبوع</string>
+    <string name="interval_2_weeks">كل أسبوعين</string>
+    <string name="interval_monthly">كل شهر</string>
+    <string name="interval_custom">مخصص...</string>
+    <string name="interval_frequency_label">معدل التذكير الدوري:</string>
+    <string name="interval_specify_days">حدد الفترة بالأيام:</string>
+    <string name="interval_quick_steps">خطوات سريعة:</string>
+    <string name="interval_days_formatted">%d يوماً</string>
+
+    <!-- Kinship Advice Hints -->
+    <string name="advice_parents">💚 موصى به للوالدين: يومياً أو كل 3 أيام لبرهما ودوام الصلة.</string>
+    <string name="advice_siblings">🌿 موصى به للإخوة والأخوات: أسبوعياً لحفظ المودة والتآخي.</string>
+    <string name="advice_uncles">🌸 موصى به للأعمام والأخوال: كل أسبوعين إلى شهر لإحياء صلة الرحم.</string>
+    <string name="advice_general">🔔 ستتلقى تنبيهاً لطيفاً عند مرور %d يوماً دون تواصل.</string>
+
+    <!-- Relative Detail Screen -->
+    <string name="relative_profile">الملف الشخصي</string>
+    <string name="last_contact_label">آخر تواصل</string>
+    <string name="copy">نسخ</string>
+    <string name="action_whatsapp_full">واتساب</string>
+    <string name="action_log_full">سجّل صلة</string>
+    <string name="communication_history">سجل صلة الرحم</string>
+    <string name="save_changes">حفظ التعديل</string>
+    <string name="delete_relative_confirm_title">حذف %s؟</string>
+    <string name="delete_relative_confirm_msg">سيتم حذف هذا القريب وكل سجلات تواصله نهائياً. هذا الإجراء لا يمكن التراجع عنه.</string>
+    <string name="delete_confirm_btn">نعم، احذف</string>
+    <string name="relative_deleted_toast">تم حذف %s</string>
+    <string name="phone_copied_toast">تم نسخ الرقم إلى الحافظة 📋</string>
+    <string name="notes_and_preferences">ملاحظات وتفضيلات</string>
+    <string name="cadence_metric_label">فترة الوصل</string>
+    <string name="total_logs_metric_label">سجل الوصل</string>
+    <string name="no_logs_for_relative_title">لم تسجل أي صلة مع %s بعد</string>
+    <string name="no_logs_for_relative_desc">بادر بالسؤال عنه عبر الأزرار السريعة بالأعلى واكسب أجر صلة الرحم ✨</string>
+    <string name="custom_reminder_cadence_title">تخصيص فترة التذكير ⏰</string>
+    <string name="custom_reminder_cadence_desc">حدد دورية التذكير الأنسب لك للتواصل مع %s</string>
+    <string name="reminder_frequency_updated_toast">تم تحديث موعد التذكير بنجاح ✨</string>
+    <plurals name="logs_count">
+        <item quantity="zero">0 تواصل</item>
+        <item quantity="one">تواصل واحد</item>
+        <item quantity="two">تواصُلان</item>
+        <item quantity="few">%d تواصلات</item>
+        <item quantity="many">%d تواصلاً</item>
+        <item quantity="other">%d تواصل</item>
+    </plurals>
+    <plurals name="reminder_cadence_days">
+        <item quantity="one">تذكير يومي</item>
+        <item quantity="two">تذكير كل يومين</item>
+        <item quantity="few">تذكير كل %d أيام</item>
+        <item quantity="many">تذكير كل %d يوماً</item>
+        <item quantity="other">تذكير كل %d يوم</item>
+    </plurals>
+
+
+
+    <!-- Support Sila Additional -->
+    <string name="support_appreciation_banner">شكرًا لدعمك لصِلَةِ! جزاك الله خيراً وبارك في رزقك ✨</string>
+    <string name="support_wallets_title">المحفظة الإلكترونية (فودافون كاش)</string>
+    <string name="support_wallets_subtitle">تحويل من فودافون/اتصالات/أورنج كاش أو محفظة بنكية</string>
+    <string name="instapay_address_label">عنوان الدفع الخاص بـ InstaPay (IPA)</string>
+    <string name="instapay_copied_toast">تم نسخ عنوان InstaPay بنجاح ✨</string>
+    <string name="instapay_copy_btn">نسخ العنوان</string>
+    <string name="instapay_open_app_btn">فتح التطبيق</string>
+    <string name="instapay_open_error">تعذر فتح تطبيق InstaPay تلقائياً</string>
+    <string name="wallet_number_label">رقم المحفظة الإلكترونية (فودافون كاش)</string>
+    <string name="wallet_copied_toast">تم نسخ الرقم بنجاح ✨</string>
+    <string name="wallet_copy_btn">نسخ الرقم</string>
+    <string name="wallet_dial_btn">طلب *9#</string>
+    <string name="support_steps_title">خطوات التحويل بالتفصيل 📋</string>
+    <string name="step_instapay_1_title">افتح تطبيق InstaPay</string>
+    <string name="step_instapay_1_desc">قم بفتح تطبيق إنستا باي على هاتفك واضغط على زر الإرسال.</string>
+    <string name="step_instapay_2_title">اختر الإرسال عبر عنوان IPA</string>
+    <string name="step_instapay_2_desc">اختر "إرسال نقود" ثم حدد الخيار "عنوان الدفع (IPA)".</string>
+    <string name="step_instapay_3_title">الصق عنوان الدفع</string>
+    <string name="step_instapay_3_desc">أدخل العنوان: %s (أو اضغط زر نسخ العنوان أعلاه).</string>
+    <string name="step_instapay_4_title">حدد المبلغ واضغط تأكيد</string>
+    <string name="step_instapay_4_desc">اكتب مبلغ التبرع الاختياري وأدخل الرقم السري لـ InstaPay لإتمام التحويل.</string>
+    <string name="step_wallet_1_title">افتح كود المحفظة أو التطبيق</string>
+    <string name="step_wallet_1_desc">اطلب كود *9# (فودافون كاش) أو افتح تطبيق المحفظة الخاص بك (أورنج كاش، اتصالات، WE، محفظة البنك).</string>
+    <string name="step_wallet_2_title">اختر تحويل الأموال</string>
+    <string name="step_wallet_2_desc">حدد خيار "تحويل الأموال" ثم اختر الإرسال إلى رقم آخر.</string>
+    <string name="step_wallet_3_title">أدخل الرقم المستلم</string>
+    <string name="step_wallet_3_desc">اكتب الرقم: %s (أو استخدم زر نسخ الرقم أعلاه).</string>
+    <string name="step_wallet_4_title">حدد المبلغ والرقم السري</string>
+    <string name="step_wallet_4_desc">أدخل مبلغ التبرع الاختياري ثم أدخل الرقم السري للمحفظة لتأكيد التحويل.</string>
+
+
+    <!-- Why Kinship Screen -->
+    <string name="why_kinship_title">ليه أصل رحمي؟</string>
+    <string name="why_kinship_subtitle">إجابات وبصائر من القرآن والسنّة</string>
+    <string name="why_kinship_banner_title">عظمة ومكانة صلة الرحم</string>
+    <string name="why_kinship_banner_quote">«مَنْ أَحَبَّ أَنْ يُبْسَطَ لَهُ فِي رِزْقِهِ وَيُنْسَأَ لَهُ فِي أَثَرِهِ فَلْيَصِلْ رَحِمَهُ»</string>
+    <string name="why_kinship_banner_desc">صلة الرحم ليست مجرد واجب اجتماعي، بل هي عبادة وقربة جليلة تزيد الرزق وتبارك في العمر وتجلب معية الله ورضوانه.</string>
+    <string name="faq_all">الكل</string>
+    <string name="faq_quran">القرآن الكريم</string>
+    <string name="faq_sunnah">السنّة النبوية</string>
+    <string name="faq_questions_count">%d سؤالاً وجواباً</string>
+    <string name="faq_tap_to_expand">اضغط على السؤال لعرض الإجابة والآية</string>
+    <string name="faq_copied_toast">تم نسخ الإجابة والدليل ✨</string>
+    <string name="share_via">مشاركة عبر</string>
+    <string name="share">مشاركة</string>
+
+    <!-- Profile Photo Sheet -->
+    <string name="profile_photo_updated">تم تحديث الصورة الشخصية بنجاح 📸</string>
+    <string name="image_load_failed">تعذر تحميل الصورة، يرجى المحاولة مرة أخرى</string>
+    <string name="profile_photo_title">الصورة الشخصية</string>
+    <string name="profile_photo_desc">يمكنك رفع صورة شخصية لك أو تركها بحرف اسمك</string>
+    <string name="choose_from_gallery">اختيار صورة من المعرض</string>
+    <string name="choose_from_gallery_desc">اختر صورة شخصية من جهازك</string>
+    <string name="profile_photo_removed">تمت إزالة الصورة الشخصية</string>
+    <string name="remove_photo_title">إزالة الصورة الحالية</string>
+    <string name="remove_photo_desc">العودة للرمز التعبيري بالحرف</string>
+
+    <!-- Empty State & Relatives -->
+    <string name="empty_relatives_title">أضف أقاربك لتبدأ مسيرة صلة الرحم 💚</string>
+    <string name="empty_relatives_subtitle">اختر أقاربك من جهات الاتصال وحدد موعد التذكير المناسب لكل منهم</string>
+    <string name="import_relatives_phone">استيراد الأقارب من الهاتف 📲</string>
+    <string name="add_relative_manually">إضافة قريب يدوياً ＋</string>
+    <string name="no_contact_yet">لم تتواصل بعد</string>
+    <string name="direct_call">اتصال مباشر</string>
+    <string name="relative_comm_log_title">سجل تواصل %s 📜</string>
+    <string name="no_comm_recorded_relative">لم يتم تسجيل تواصل مع هذا القريب بعد</string>
+    <string name="message">رسالة</string>
+
+    <!-- Common -->
+    <string name="just_now">منذ لحظات ⚡</string>
+    <string name="not_yet">لم يتم بعد 🌸</string>
+    <string name="today">اليوم</string>
+    <string name="am_marker">صباحاً (ص)</string>
+    <string name="pm_marker">مساءً (م)</string>
 </resources>
+

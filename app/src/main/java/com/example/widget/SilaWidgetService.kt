@@ -48,7 +48,7 @@ class SilaWidgetFactory(private val context: Context) : RemoteViewsService.Remot
                 }.thenBy { it.name }
             )
         } catch (e: Exception) {
-            e.printStackTrace()
+            com.example.core.util.SilaLogger.e("SilaWidgetService", "Error loading widget data", e)
             relativesList = emptyList()
         }
     }

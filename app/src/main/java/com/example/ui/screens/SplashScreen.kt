@@ -59,7 +59,7 @@ fun SplashScreen(onFinished: () -> Unit) {
             ) {
                 Image(
                     painter = painterResource(id = R.drawable.ic_sila_logo),
-                    contentDescription = "شعار صِلَةِ",
+                    contentDescription = androidx.compose.ui.res.stringResource(R.string.app_logo_desc),
                     modifier = Modifier
                         .fillMaxSize()
                         .clip(CircleShape)
@@ -78,7 +78,7 @@ fun SplashScreen(onFinished: () -> Unit) {
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(
-                        text = "صِلَةِ",
+                        text = androidx.compose.ui.res.stringResource(R.string.app_name),
                         fontSize = 32.sp,
                         fontWeight = FontWeight.Bold,
                         color = PrimaryGreen,
@@ -89,7 +89,7 @@ fun SplashScreen(onFinished: () -> Unit) {
                     Spacer(modifier = Modifier.height(8.dp))
 
                     Text(
-                        text = "رفيقك الذكي لمتابعة صلة الأرحام",
+                        text = androidx.compose.ui.res.stringResource(R.string.app_tagline),
                         fontSize = 17.sp,
                         fontWeight = FontWeight.SemiBold,
                         color = Color(0xFF2D4B3E),

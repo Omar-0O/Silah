@@ -47,6 +47,9 @@ import com.example.ui.theme.*
 import com.example.utils.DateUtils
 import com.example.viewmodel.RelativeStatus
 import com.example.viewmodel.RelativeViewModel
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.pluralStringResource
+import com.example.R
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -62,6 +65,7 @@ fun RelativeDetailScreen(
 
     val context = LocalContext.current
     val view = LocalView.current
+    @Suppress("DEPRECATION")
     val clipboardManager = LocalClipboardManager.current
     val lang by viewModel.selectedLanguage.collectAsState()
     val allLogs by viewModel.logs.collectAsState()
@@ -69,6 +73,7 @@ fun RelativeDetailScreen(
     val currentRelative = relatives.find { it.id == relative.id } ?: relative
     val status = viewModel.getRelativeStatus(currentRelative)
     val statusColor = status.color
+    val spacing = MaterialTheme.spacing
 
     var showIntervalSheet by remember { mutableStateOf(false) }
     var showDeleteConfirmDialog by remember { mutableStateOf(false) }
@@ -90,7 +95,7 @@ fun RelativeDetailScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .statusBarsPadding()
-                    .padding(horizontal = 16.dp, vertical = 10.dp),
+                    .padding(horizontal = spacing.lg, vertical = 10.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -100,7 +105,7 @@ fun RelativeDetailScreen(
                         view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
                         onBack()
                     },
-                    shape = RoundedCornerShape(14.dp),
+                    shape = SilaShapes.Button,
                     color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.55f),
                     border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.12f)),
                     modifier = Modifier.size(40.dp)
@@ -108,7 +113,7 @@ fun RelativeDetailScreen(
                     Box(contentAlignment = Alignment.Center) {
                         Icon(
                             Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = if (lang == "en") "Back" else "رجوع",
+                            contentDescription = stringResource(R.string.back),
                             tint = MaterialTheme.colorScheme.onSurface,
                             modifier = Modifier.size(19.dp)
                         )
@@ -117,21 +122,21 @@ fun RelativeDetailScreen(
 
                 // Title
                 Text(
-                    text = if (lang == "en") "Relative Profile" else "الملف الشخصي",
+                    text = stringResource(R.string.relative_profile),
                     fontSize = 15.sp,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.85f)
                 )
 
                 // Top Actions: Edit & Delete
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Row(horizontalArrangement = Arrangement.spacedBy(spacing.sm)) {
                     // Edit Button
                     Surface(
                         onClick = {
                             view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
                             viewModel.showEditRelativeDialog.value = currentRelative
                         },
-                        shape = RoundedCornerShape(14.dp),
+                        shape = SilaShapes.Button,
                         color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.55f),
                         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.12f)),
                         modifier = Modifier.size(40.dp)
@@ -139,7 +144,7 @@ fun RelativeDetailScreen(
                         Box(contentAlignment = Alignment.Center) {
                             Icon(
                                 Icons.Outlined.Edit,
-                                contentDescription = if (lang == "en") "Edit" else "تعديل",
+                                contentDescription = stringResource(R.string.edit),
                                 tint = MaterialTheme.colorScheme.primary,
                                 modifier = Modifier.size(18.dp)
                             )
@@ -152,7 +157,7 @@ fun RelativeDetailScreen(
                             view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
                             showDeleteConfirmDialog = true
                         },
-                        shape = RoundedCornerShape(14.dp),
+                        shape = SilaShapes.Button,
                         color = AlertRed.copy(alpha = 0.10f),
                         border = BorderStroke(1.dp, AlertRed.copy(alpha = 0.20f)),
                         modifier = Modifier.size(40.dp)
@@ -160,7 +165,7 @@ fun RelativeDetailScreen(
                         Box(contentAlignment = Alignment.Center) {
                             Icon(
                                 Icons.Outlined.DeleteOutline,
-                                contentDescription = if (lang == "en") "Delete" else "حذف",
+                                contentDescription = stringResource(R.string.delete),
                                 tint = AlertRed,
                                 modifier = Modifier.size(19.dp)
                             )
@@ -174,7 +179,7 @@ fun RelativeDetailScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding),
-            contentPadding = PaddingValues(bottom = 40.dp)
+            contentPadding = PaddingValues(bottom = spacing.section)
         ) {
             // ── Soothing Hero Identity ────────────────────────────────────
             item {
@@ -246,7 +251,7 @@ fun RelativeDetailScreen(
                                 view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
                                 showIntervalSheet = true
                             },
-                            shape = RoundedCornerShape(50.dp),
+                            shape = SilaShapes.Pill,
                             color = statusColor.copy(alpha = 0.12f),
                             border = BorderStroke(1.dp, statusColor.copy(alpha = 0.28f))
                         ) {
@@ -274,10 +279,11 @@ fun RelativeDetailScreen(
                                     modifier = Modifier.size(13.dp)
                                 )
                                 Text(
-                                    text = if (lang == "en")
-                                        "Every ${currentRelative.contactIntervalDays}d"
-                                    else
-                                        "تذكير كل ${currentRelative.contactIntervalDays} ${if (currentRelative.contactIntervalDays <= 10) "أيام" else "يوم"}",
+                                    text = pluralStringResource(
+                                        R.plurals.reminder_cadence_days,
+                                        currentRelative.contactIntervalDays,
+                                        currentRelative.contactIntervalDays
+                                    ),
                                     fontSize = 11.sp,
                                     color = statusColor,
                                     fontWeight = FontWeight.Medium
@@ -305,7 +311,7 @@ fun RelativeDetailScreen(
                     // 1. Call Action
                     SoftActionButton(
                         icon = Icons.Outlined.Call,
-                        label = if (lang == "en") "Call" else "اتصال",
+                        label = stringResource(R.string.action_call),
                         containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.7f),
                         contentColor = MaterialTheme.colorScheme.primary,
                         borderColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.22f),
@@ -318,7 +324,7 @@ fun RelativeDetailScreen(
                             } catch (e: Exception) {
                                 Toast.makeText(
                                     context,
-                                    if (lang == "en") "Unable to open dialer" else "تعذر فتح لوحة الاتصال",
+                                    context.getString(R.string.dialer_error),
                                     Toast.LENGTH_SHORT
                                 ).show()
                             }
@@ -328,7 +334,7 @@ fun RelativeDetailScreen(
                     // 2. WhatsApp Action
                     SoftActionButton(
                         icon = Icons.AutoMirrored.Outlined.Chat,
-                        label = if (lang == "en") "WhatsApp" else "واتساب",
+                        label = stringResource(R.string.action_whatsapp_full),
                         containerColor = Color(0xFF25D366).copy(alpha = 0.12f),
                         contentColor = Color(0xFF1E8E49),
                         borderColor = Color(0xFF25D366).copy(alpha = 0.28f),
@@ -351,7 +357,7 @@ fun RelativeDetailScreen(
                             } catch (e: Exception) {
                                 Toast.makeText(
                                     context,
-                                    if (lang == "en") "WhatsApp not installed" else "تطبيق الواتساب غير مثبت على الجهاز",
+                                    context.getString(R.string.whatsapp_not_installed),
                                     Toast.LENGTH_SHORT
                                 ).show()
                             }
@@ -361,7 +367,7 @@ fun RelativeDetailScreen(
                     // 3. Log Interaction Action
                     SoftActionButton(
                         icon = Icons.Outlined.CheckCircle,
-                        label = if (lang == "en") "Log" else "سجّل صلة",
+                        label = stringResource(R.string.action_log_full),
                         containerColor = SoftGold.copy(alpha = 0.18f),
                         contentColor = SoftGoldDark,
                         borderColor = SoftGold.copy(alpha = 0.35f),
@@ -375,15 +381,15 @@ fun RelativeDetailScreen(
 
             // ── Kinship Pulse / Quick Insights ────────────────────────────
             item {
-                Spacer(modifier = Modifier.height(10.dp))
+                Spacer(modifier = Modifier.height(spacing.sm))
                 Card(
-                    shape = RoundedCornerShape(20.dp),
+                    shape = SilaShapes.Card,
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.10f)),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.12f)),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 18.dp)
-                        .shadow(2.dp, RoundedCornerShape(20.dp), spotColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.05f))
+                        .padding(horizontal = spacing.lg)
+                        .shadow(2.dp, SilaShapes.Card, spotColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.05f))
                 ) {
                     Row(
                         modifier = Modifier
@@ -395,8 +401,8 @@ fun RelativeDetailScreen(
                         // Metric 1: Last Contact
                         KinshipMetricItem(
                             icon = Icons.Outlined.History,
-                            value = DateUtils.formatRelativeTimeExact(currentRelative.lastContactDate, lang),
-                            label = if (lang == "en") "Last Contact" else "آخر تواصل",
+                            value = DateUtils.formatRelativeTime(context, currentRelative.lastContactDate),
+                            label = stringResource(R.string.last_contact_label),
                             modifier = Modifier.weight(1f)
                         )
 
@@ -410,8 +416,8 @@ fun RelativeDetailScreen(
                         // Metric 2: Total Interactions
                         KinshipMetricItem(
                             icon = Icons.Outlined.Forum,
-                            value = if (lang == "en") "${relativeLogs.size}" else "${relativeLogs.size} صلة",
-                            label = if (lang == "en") "Total Logs" else "سجل الوصل",
+                            value = pluralStringResource(R.plurals.logs_count, relativeLogs.size, relativeLogs.size),
+                            label = stringResource(R.string.total_logs_metric_label),
                             modifier = Modifier.weight(1f)
                         )
 
@@ -425,8 +431,12 @@ fun RelativeDetailScreen(
                         // Metric 3: Target Frequency
                         KinshipMetricItem(
                             icon = Icons.Outlined.Schedule,
-                            value = if (lang == "en") "${currentRelative.contactIntervalDays}d" else "${currentRelative.contactIntervalDays} يوم",
-                            label = if (lang == "en") "Cadence" else "فترة الوصل",
+                            value = pluralStringResource(
+                                R.plurals.reminder_cadence_days,
+                                currentRelative.contactIntervalDays,
+                                currentRelative.contactIntervalDays
+                            ),
+                            label = stringResource(R.string.cadence_metric_label),
                             modifier = Modifier.weight(1f)
                         )
                     }
@@ -435,15 +445,15 @@ fun RelativeDetailScreen(
 
             // ── Contact Information & Notes ───────────────────────────────
             item {
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(spacing.md))
                 Card(
-                    shape = RoundedCornerShape(20.dp),
+                    shape = SilaShapes.Card,
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.10f)),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.12f)),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 18.dp)
-                        .shadow(2.dp, RoundedCornerShape(20.dp), spotColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.05f))
+                        .padding(horizontal = spacing.lg)
+                        .shadow(2.dp, SilaShapes.Card, spotColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.05f))
                 ) {
                     Column(
                         modifier = Modifier.padding(16.dp),
@@ -476,7 +486,7 @@ fun RelativeDetailScreen(
                                 }
                                 Column {
                                     Text(
-                                        text = if (lang == "en") "Phone Number" else "رقم الهاتف",
+                                        text = stringResource(R.string.phone_number_label),
                                         fontSize = 11.sp,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75f)
                                     )
@@ -496,7 +506,7 @@ fun RelativeDetailScreen(
                                     clipboardManager.setText(AnnotatedString(currentRelative.phone))
                                     Toast.makeText(
                                         context,
-                                        if (lang == "en") "Phone copied to clipboard 📋" else "تم نسخ الرقم إلى الحافظة 📋",
+                                        context.getString(R.string.phone_copied_toast),
                                         Toast.LENGTH_SHORT
                                     ).show()
                                 },
@@ -507,7 +517,7 @@ fun RelativeDetailScreen(
                             ) {
                                 Icon(
                                     Icons.Outlined.ContentCopy,
-                                    contentDescription = if (lang == "en") "Copy" else "نسخ",
+                                    contentDescription = stringResource(R.string.copy),
                                     tint = MaterialTheme.colorScheme.onSurfaceVariant,
                                     modifier = Modifier.size(16.dp)
                                 )
@@ -537,7 +547,7 @@ fun RelativeDetailScreen(
                                 }
                                 Column {
                                     Text(
-                                        text = if (lang == "en") "Notes & Preferences" else "ملاحظات وتفضيلات",
+                                        text = stringResource(R.string.notes_and_preferences),
                                         fontSize = 11.sp,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75f)
                                     )
@@ -575,7 +585,7 @@ fun RelativeDetailScreen(
                             modifier = Modifier.size(19.dp)
                         )
                         Text(
-                            text = if (lang == "en") "Communication History" else "سجل صلة الرحم",
+                            text = stringResource(R.string.communication_history),
                             fontSize = 15.sp,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onBackground
@@ -588,7 +598,7 @@ fun RelativeDetailScreen(
                             color = MaterialTheme.colorScheme.primary.copy(alpha = 0.10f)
                         ) {
                             Text(
-                                text = if (lang == "en") "${relativeLogs.size} logs" else "${relativeLogs.size} تواصل",
+                                text = pluralStringResource(R.plurals.logs_count, relativeLogs.size, relativeLogs.size),
                                 fontSize = 11.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.primary,
@@ -622,20 +632,14 @@ fun RelativeDetailScreen(
                             Text("🌿", fontSize = 32.sp)
                             Spacer(modifier = Modifier.height(8.dp))
                             Text(
-                                text = if (lang == "en")
-                                    "No communication logged yet"
-                                else
-                                    "لم تسجل أي صلة مع ${currentRelative.name} بعد",
+                                text = stringResource(R.string.no_logs_for_relative_title, currentRelative.name),
                                 fontSize = 14.sp,
                                 fontWeight = FontWeight.SemiBold,
                                 color = MaterialTheme.colorScheme.onSurface
                             )
                             Spacer(modifier = Modifier.height(4.dp))
                             Text(
-                                text = if (lang == "en")
-                                    "Reach out through the quick actions above and record the blessing."
-                                else
-                                    "بادر بالسؤال عنه عبر الأزرار السريعة بالأعلى واكسب أجر صلة الرحم ✨",
+                                text = stringResource(R.string.no_logs_for_relative_desc),
                                 fontSize = 12.sp,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75f),
                                 textAlign = TextAlign.Center
@@ -644,7 +648,7 @@ fun RelativeDetailScreen(
                     }
                 }
             } else {
-                items(relativeLogs, key = { log -> "${log.id}_${log.timestamp}" }) { log ->
+                items(relativeLogs, key = { it.id }) { log ->
                     TimelineItem(
                         log = log,
                         dateFormat = dateFormat,
@@ -662,16 +666,13 @@ fun RelativeDetailScreen(
             onDismissRequest = { showDeleteConfirmDialog = false },
             title = {
                 Text(
-                    text = if (lang == "en") "Delete ${currentRelative.name}?" else "حذف ${currentRelative.name}؟",
+                    text = stringResource(R.string.delete_relative_confirm_title, currentRelative.name),
                     fontWeight = FontWeight.Bold
                 )
             },
             text = {
                 Text(
-                    text = if (lang == "en")
-                        "This relative and all their communication logs will be permanently deleted. This action cannot be undone."
-                    else
-                        "سيتم حذف هذا القريب وكل سجلات تواصله نهائياً. هذا الإجراء لا يمكن التراجع عنه.",
+                    text = stringResource(R.string.delete_relative_confirm_msg),
                     lineHeight = 22.sp
                 )
             },
@@ -683,7 +684,7 @@ fun RelativeDetailScreen(
                         showDeleteConfirmDialog = false
                         Toast.makeText(
                             context,
-                            if (lang == "en") "${currentRelative.name} deleted" else "تم حذف ${currentRelative.name}",
+                            context.getString(R.string.relative_deleted_toast, currentRelative.name),
                             Toast.LENGTH_SHORT
                         ).show()
                         onBack()
@@ -692,14 +693,14 @@ fun RelativeDetailScreen(
                     shape = RoundedCornerShape(12.dp)
                 ) {
                     Text(
-                        if (lang == "en") "Yes, Delete" else "نعم، احذف",
+                        stringResource(R.string.delete_confirm_btn),
                         fontWeight = FontWeight.Bold
                     )
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showDeleteConfirmDialog = false }) {
-                    Text(if (lang == "en") "Cancel" else "إلغاء")
+                    Text(stringResource(R.string.cancel))
                 }
             },
             shape = RoundedCornerShape(20.dp)
@@ -714,7 +715,7 @@ fun RelativeDetailScreen(
         ModalBottomSheet(
             onDismissRequest = { showIntervalSheet = false },
             containerColor = MaterialTheme.colorScheme.surface,
-            shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
+            shape = SilaShapes.BottomSheet,
             dragHandle = {
                 BottomSheetDefaults.DragHandle(
                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f)
@@ -730,17 +731,14 @@ fun RelativeDetailScreen(
             ) {
                 Column {
                     Text(
-                        text = if (lang == "en") "Custom Reminder Cadence ⏰" else "تخصيص فترة التذكير ⏰",
+                        text = stringResource(R.string.custom_reminder_cadence_title),
                         fontSize = 17.sp,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = if (lang == "en")
-                            "Set how often you want to be reminded to connect with ${currentRelative.name}"
-                        else
-                            "حدد دورية التذكير الأنسب لك للتواصل مع ${currentRelative.name}",
+                        text = stringResource(R.string.custom_reminder_cadence_desc, currentRelative.name),
                         fontSize = 12.sp,
                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
                     )
@@ -769,7 +767,7 @@ fun RelativeDetailScreen(
                             .height(48.dp),
                         shape = RoundedCornerShape(14.dp)
                     ) {
-                        Text(if (lang == "en") "Cancel" else "إلغاء", fontWeight = FontWeight.Medium)
+                        Text(stringResource(R.string.cancel), fontWeight = FontWeight.Medium)
                     }
 
                     Button(
@@ -778,7 +776,7 @@ fun RelativeDetailScreen(
                             viewModel.updateRelativeInterval(currentRelative, tempInterval)
                             Toast.makeText(
                                 context,
-                                if (lang == "en") "Reminder frequency updated ✨" else "تم تحديث موعد التذكير بنجاح ✨",
+                                context.getString(R.string.reminder_frequency_updated_toast),
                                 Toast.LENGTH_SHORT
                             ).show()
                             showIntervalSheet = false
@@ -789,7 +787,7 @@ fun RelativeDetailScreen(
                         colors = ButtonDefaults.buttonColors(containerColor = PrimaryGreen),
                         shape = RoundedCornerShape(14.dp)
                     ) {
-                        Text(if (lang == "en") "Save Changes" else "حفظ التعديل", fontWeight = FontWeight.Bold)
+                        Text(stringResource(R.string.save_changes), fontWeight = FontWeight.Bold)
                     }
                 }
                 Spacer(modifier = Modifier.height(16.dp))
@@ -835,10 +833,17 @@ private fun SoftActionButton(
             view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
             onClick()
         },
-        shape = RoundedCornerShape(16.dp),
+        shape = SilaShapes.ActionCard,
         color = containerColor,
         border = BorderStroke(1.dp, borderColor),
-        modifier = modifier.height(52.dp)
+        modifier = modifier
+            .height(52.dp)
+            .shadow(
+                elevation = 2.dp,
+                shape = SilaShapes.ActionCard,
+                ambientColor = borderColor.copy(alpha = 0.05f),
+                spotColor = borderColor.copy(alpha = 0.12f)
+            )
     ) {
         Row(
             modifier = Modifier

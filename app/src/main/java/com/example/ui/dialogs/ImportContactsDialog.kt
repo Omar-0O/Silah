@@ -33,6 +33,10 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
+import androidx.compose.ui.res.stringResource
+import com.example.R
+import com.example.utils.DateUtils
 import androidx.core.content.ContextCompat
 import com.example.data.CallLogManager
 import com.example.ui.components.ReminderIntervalSelector
@@ -75,15 +79,29 @@ fun ImportContactsDialog(
         }
     }
 
-    Dialog(onDismissRequest = onDismiss) {
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(usePlatformDefaultWidth = false)
+    ) {
         CompositionLocalProvider(LocalLayoutDirection provides layoutDirection) {
-            Card(
-                shape = RoundedCornerShape(24.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+            BoxWithConstraints(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .fillMaxHeight(0.85f)
+                    .fillMaxSize()
+                    .imePadding()
+                    .padding(16.dp),
+                contentAlignment = Alignment.Center
             ) {
+                val isTablet = maxWidth > 600.dp
+                val dialogWidth = if (isTablet) 560.dp else maxWidth
+
+                Card(
+                    shape = RoundedCornerShape(24.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                    modifier = Modifier
+                        .width(dialogWidth)
+                        .fillMaxWidth()
+                        .fillMaxHeight(0.85f)
+                ) {
                 Column(
                     modifier = Modifier.padding(20.dp)
                 ) {
@@ -310,6 +328,7 @@ fun ImportContactsDialog(
                 }
             }
         }
+        }
     }
 }
 
@@ -325,21 +344,6 @@ private fun ContactSetupInlineForm(
     var intervalDays by remember { mutableIntStateOf(7) }
 
     val degrees = listOf("والدان", "أشقاء", "أعمام/أخوال", "أقارب آخرون")
-    val degreeLabels = if (lang == "en") listOf("Parents", "Siblings", "Uncles/Aunts", "Other Relatives") else degrees
-
-    val intervals = if (lang == "en") listOf(
-        Pair(1, "Daily"),
-        Pair(3, "Every 3 days"),
-        Pair(7, "Weekly"),
-        Pair(14, "Every 2 weeks"),
-        Pair(30, "Monthly")
-    ) else listOf(
-        Pair(1, "يومياً"),
-        Pair(3, "كل 3 أيام"),
-        Pair(7, "كل أسبوع"),
-        Pair(14, "كل أسبوعين"),
-        Pair(30, "كل شهر")
-    )
 
     Column(
         modifier = Modifier
@@ -349,13 +353,13 @@ private fun ContactSetupInlineForm(
             .padding(12.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        Text(if (lang == "en") "Relationship:" else "درجة القرابة:", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+        Text(stringResource(R.string.relationship_degree_label), fontSize = 11.sp, fontWeight = FontWeight.Bold)
         LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            items(degrees.zip(degreeLabels)) { (degree, label) ->
+            items(degrees) { degree ->
                 FilterChip(
                     selected = relationshipDegree == degree,
                     onClick = { relationshipDegree = degree },
-                    label = { Text(label, fontSize = 10.sp) },
+                    label = { Text(DateUtils.translateDegree(degree, lang), fontSize = 10.sp) },
                     shape = RoundedCornerShape(10.dp)
                 )
             }
@@ -374,7 +378,7 @@ private fun ContactSetupInlineForm(
             shape = RoundedCornerShape(12.dp),
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text(if (lang == "en") "Save & Enable Reminder ✨" else "حفظ وتفعيل التذكير ✨", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+            Text(stringResource(R.string.save_and_activate_btn), fontSize = 12.sp, fontWeight = FontWeight.Bold)
         }
     }
 }

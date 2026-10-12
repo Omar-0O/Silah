@@ -32,10 +32,13 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import com.example.data.Relative
 import com.example.ui.components.ReminderIntervalSelector
 import com.example.ui.theme.SoftGold
 import com.example.viewmodel.RelativeViewModel
+import androidx.compose.ui.res.stringResource
+import com.example.R
 
 /**
  * AddEditRelativeDialog:
@@ -113,27 +116,31 @@ fun AddEditRelativeDialog(
         existingRelatives.map { it.phone.replace("[^\\d+]".toRegex(), "").takeLast(9) }.toSet()
     }
 
-    val degrees = listOf("جد", "جدة", "أب", "أم", "أخ", "أخت", "عم", "عمة", "خال", "خالة", "أقارب آخرون")
-    val degreeLabels = if (lang == "en")
-        listOf("Grandfather", "Grandmother", "Father", "Mother", "Brother", "Sister", "Uncle (Pat.)", "Aunt (Pat.)", "Uncle (Mat.)", "Aunt (Mat.)", "Other Relatives")
-    else degrees
-
-    val intervals = if (lang == "en") listOf(
-        Pair(1, "Daily"),
-        Pair(3, "Every 3 Days"),
-        Pair(7, "Weekly"),
-        Pair(14, "Every 2 Weeks"),
-        Pair(30, "Monthly")
-    ) else listOf(
-        Pair(1, "يومياً"),
-        Pair(3, "كل 3 أيام"),
-        Pair(7, "كل أسبوع"),
-        Pair(14, "كل أسبوعين"),
-        Pair(30, "كل شهر")
+    val degrees = listOf(
+        Pair("جد", R.string.degree_grandfather),
+        Pair("جدة", R.string.degree_grandmother),
+        Pair("أب", R.string.degree_father),
+        Pair("أم", R.string.degree_mother),
+        Pair("أخ", R.string.degree_brother),
+        Pair("أخت", R.string.degree_sister),
+        Pair("عم", R.string.degree_uncle_pat),
+        Pair("عمة", R.string.degree_aunt_pat),
+        Pair("خال", R.string.degree_uncle_mat),
+        Pair("خالة", R.string.degree_aunt_mat),
+        Pair("أقارب آخرون", R.string.degree_other)
     )
 
-    Dialog(onDismissRequest = onDismiss) {
-        BoxWithConstraints {
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(usePlatformDefaultWidth = false)
+    ) {
+        BoxWithConstraints(
+            modifier = Modifier
+                .fillMaxSize()
+                .imePadding()
+                .padding(16.dp),
+            contentAlignment = Alignment.Center
+        ) {
             val isTablet = maxWidth > 600.dp
             val dialogWidth = if (isTablet) 560.dp else maxWidth
 
@@ -153,9 +160,9 @@ fun AddEditRelativeDialog(
                 // Dialog Title
                 Text(
                     text = if (isEditMode)
-                        (if (lang == "en") "Edit ${relativeToEdit?.name} ✏️" else "تعديل بيانات ${relativeToEdit?.name} ✏️")
+                        stringResource(R.string.edit_relative_title, relativeToEdit?.name ?: "")
                     else
-                        (if (lang == "en") "Add Relative to Silah 🌸" else "إضافة قريب لـ صِلَةِ 🌸"),
+                        stringResource(R.string.add_relative_title),
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.primary
@@ -189,7 +196,7 @@ fun AddEditRelativeDialog(
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                text = if (lang == "en") "Choose from Contacts 📲" else "اختر من جهات الاتصال 📲",
+                                text = stringResource(R.string.choose_from_contacts),
                                 fontSize = 13.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onSecondaryContainer
@@ -215,8 +222,8 @@ fun AddEditRelativeDialog(
                                 relationshipDegree = viewModel.suggestRelationshipDegree(it)
                             }
                         },
-                        label = { Text(if (lang == "en") "Relative's Name" else "اسم القريب") },
-                        placeholder = { Text(if (lang == "en") "e.g. Mom, Uncle Ahmed" else "مثال: أمي الغالية، عاطف") },
+                        label = { Text(stringResource(R.string.relative_name_label)) },
+                        placeholder = { Text(stringResource(R.string.relative_name_hint)) },
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(16.dp),
                         singleLine = true
@@ -225,7 +232,7 @@ fun AddEditRelativeDialog(
                     OutlinedTextField(
                         value = phone,
                         onValueChange = { phone = it },
-                        label = { Text(if (lang == "en") "Phone Number" else "رقم الهاتف") },
+                        label = { Text(stringResource(R.string.phone_number_label)) },
                         placeholder = { Text("+201000000000") },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
                         trailingIcon = {
@@ -233,7 +240,7 @@ fun AddEditRelativeDialog(
                                 IconButton(onClick = { viewModel.launchContactPicker() }) {
                                     Icon(
                                         Icons.Default.ContactPhone,
-                                        contentDescription = if (lang == "en") "Pick Contact" else "اختر من جهات الاتصال",
+                                        contentDescription = stringResource(R.string.pick_contact_desc),
                                         tint = MaterialTheme.colorScheme.primary
                                     )
                                 }
@@ -245,13 +252,13 @@ fun AddEditRelativeDialog(
                     )
 
                     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                        Text(if (lang == "en") "Relationship:" else "درجة القرابة:", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                        Text(stringResource(R.string.relationship_degree_label), fontSize = 12.sp, fontWeight = FontWeight.Bold)
                         LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            items(degrees.zip(degreeLabels)) { (degree, label) ->
+                            items(degrees) { (degreeKey, stringResId) ->
                                 FilterChip(
-                                    selected = relationshipDegree == degree,
-                                    onClick = { relationshipDegree = degree },
-                                    label = { Text(label, fontSize = 11.sp) },
+                                    selected = relationshipDegree == degreeKey,
+                                    onClick = { relationshipDegree = degreeKey },
+                                    label = { Text(stringResource(stringResId), fontSize = 11.sp) },
                                     shape = RoundedCornerShape(12.dp)
                                 )
                             }
@@ -273,7 +280,7 @@ fun AddEditRelativeDialog(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         TextButton(onClick = onDismiss) {
-                            Text(if (lang == "en") "Cancel" else "إلغاء", color = MaterialTheme.colorScheme.secondary)
+                            Text(stringResource(R.string.cancel), color = MaterialTheme.colorScheme.secondary)
                         }
                         Spacer(modifier = Modifier.width(8.dp))
                         Button(
@@ -281,8 +288,7 @@ fun AddEditRelativeDialog(
                                 if (name.trim().isBlank()) {
                                     Toast.makeText(
                                         context,
-                                        if (lang == "en") "Please enter the relative's name"
-                                        else "يرجى كتابة اسم القريب على الأقل",
+                                        context.getString(R.string.relative_name_empty_toast),
                                         Toast.LENGTH_SHORT
                                     ).show()
                                     return@Button
@@ -292,14 +298,14 @@ fun AddEditRelativeDialog(
                                     viewModel.editRelative(relativeToEdit, name.trim(), phone.trim(), relationshipDegree, intervalDays, notes.trim())
                                     Toast.makeText(
                                         context,
-                                        if (lang == "en") "$name updated successfully ✅" else "تم تحديث بيانات $name بنجاح ✅",
+                                        context.getString(R.string.relative_updated_toast, name),
                                         Toast.LENGTH_SHORT
                                     ).show()
                                 } else {
                                     viewModel.addRelative(name.trim(), phone.trim(), relationshipDegree, intervalDays, notes.trim())
                                     Toast.makeText(
                                         context,
-                                        if (lang == "en") "$name added to Silah successfully! ✨" else "تمت إضافة $name بنجاح في صِلَةِ! ✨",
+                                        context.getString(R.string.relative_added_toast, name),
                                         Toast.LENGTH_SHORT
                                     ).show()
                                 }
@@ -309,8 +315,8 @@ fun AddEditRelativeDialog(
                             shape = RoundedCornerShape(14.dp)
                         ) {
                             Text(
-                                if (isEditMode) (if (lang == "en") "Save Changes ✅" else "حفظ التعديلات ✅")
-                                else (if (lang == "en") "Save & Activate Reminder ✨" else "حفظ وتفعيل التذكير ✨"),
+                                if (isEditMode) stringResource(R.string.save_changes_btn)
+                                else stringResource(R.string.save_and_activate_btn),
                                 fontWeight = FontWeight.Bold
                             )
                         }
@@ -327,9 +333,7 @@ private fun InlineContactSetupForm(
     initialName: String,
     viewModel: RelativeViewModel,
     lang: String,
-    degrees: List<String>,
-    degreeLabels: List<String>,
-    intervals: List<Pair<Int, String>>,
+    degrees: List<Pair<String, Int>>,
     onSave: (degree: String, intervalDays: Int) -> Unit
 ) {
     var relationshipDegree by remember { mutableStateOf(viewModel.suggestRelationshipDegree(initialName)) }
@@ -343,13 +347,13 @@ private fun InlineContactSetupForm(
             .padding(12.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        Text(if (lang == "en") "Relationship Degree:" else "درجة القرابة:", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+        Text(stringResource(R.string.relationship_degree_label), fontSize = 11.sp, fontWeight = FontWeight.Bold)
         LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            items(degrees.zip(degreeLabels)) { (degree, label) ->
+            items(degrees) { (degreeKey, stringResId) ->
                 FilterChip(
-                    selected = relationshipDegree == degree,
-                    onClick = { relationshipDegree = degree },
-                    label = { Text(label, fontSize = 10.sp) },
+                    selected = relationshipDegree == degreeKey,
+                    onClick = { relationshipDegree = degreeKey },
+                    label = { Text(stringResource(stringResId), fontSize = 10.sp) },
                     shape = RoundedCornerShape(10.dp)
                 )
             }
@@ -369,7 +373,7 @@ private fun InlineContactSetupForm(
             modifier = Modifier.fillMaxWidth()
         ) {
             Text(
-                if (lang == "en") "Save & Activate Reminder ✨" else "حفظ وتفعيل التذكير ✨",
+                stringResource(R.string.save_and_activate_btn),
                 fontSize = 12.sp,
                 fontWeight = FontWeight.Bold
             )
