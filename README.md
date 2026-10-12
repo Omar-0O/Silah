@@ -145,4 +145,6 @@ app/build/outputs/apk/debug/app-debug.apk
 
 ## 📄 License & Privacy
 
-**Silah** is open-source and built with a **100% Privacy-First Principle**. No personal data, contacts, or call logs ever leave your device.
+**Silah** is free and open-source software, licensed under the **GNU General Public License v3.0 (GPLv3)**. See the [LICENSE](LICENSE) file for more details.
+
+Built with a **100% Privacy-First Principle**: no personal data, contacts, or call logs ever leave your device.
